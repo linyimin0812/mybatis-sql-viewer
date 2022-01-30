@@ -1,0 +1,25 @@
+<idea-plugin>
+    <id>org.linyimin.mybatis-sql-viewer</id>
+    <name>Mybatis Sql Viewer</name>
+    <vendor email="linyimin520812@gmail.com" url="https://github.com/linyimin-bupt">linyimin</vendor>
+
+    <description><![CDATA[
+    将mapper文件中的xml语句转换成sql语句，支持参数mock，sql复制，执行
+    ]]></description>
+
+    <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+        <dom.fileMetaData rootTagName="mapper" implementation="io.github.linyimin.plugin.description.MapperDescription"/>
+        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.MapperInterfaceLineMakerProvider" />
+        <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.MapperXmlLineMakerProvider" />
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>

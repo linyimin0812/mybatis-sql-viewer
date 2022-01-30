@@ -1,0 +1,25 @@
+# Logs
+logs
+*.log
+
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+.DS_Store
+
+
+.idea
+
+target
+
+*.iml
+
+gradle
+
+build
+
+.gradle
