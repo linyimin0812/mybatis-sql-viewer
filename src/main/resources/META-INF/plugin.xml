@@ -15,8 +15,10 @@
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
         <dom.fileMetaData rootTagName="mapper" implementation="io.github.linyimin.plugin.description.MapperDescription"/>
-        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.MapperInterfaceLineMakerProvider" />
-        <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.MapperXmlLineMakerProvider" />
+        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.jump.MapperInterfaceJumpLineMakerProvider" />
+        <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.jump.MapperXmlJumpLineMakerProvider" />
+        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.generate.MapperInterfaceGenerateSqlLineMakerProvider" />
+        <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.generate.MapperXmlGenerateSqlLineMakerProvider" />
     </extensions>
 
     <actions>
