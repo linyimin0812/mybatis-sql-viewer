@@ -11,10 +11,7 @@ import java.util.List;
  **/
 public class Constant {
     public static final String MAPPER = "mapper";
-    public static final List<String> MYBATIS_OP = Lists.newArrayList(
-            "insert",
-            "update",
-            "delete",
-            "select"
+    public static final List<String> MYBATIS_OPS = Lists.newArrayList(
+            "insert", "update", "delete", "select"
     );
 }

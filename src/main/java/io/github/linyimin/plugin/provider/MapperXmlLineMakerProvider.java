@@ -7,7 +7,6 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.util.xml.DomElement;
 import com.intellij.util.xml.DomUtil;
@@ -88,7 +87,7 @@ public class MapperXmlLineMakerProvider extends MapperLineMakerProviderAbstract 
     public List<PsiElement> processMapperMethod(PsiElement element) {
         XmlTag xmlTag = (XmlTag) element;
 
-        if (!Constant.MYBATIS_OP.contains(xmlTag.getName())) {
+        if (!Constant.MYBATIS_OPS.contains(xmlTag.getName())) {
             return Collections.emptyList();
         }
 
