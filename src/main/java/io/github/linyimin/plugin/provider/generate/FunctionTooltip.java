@@ -1,9 +1,16 @@
 package io.github.linyimin.plugin.provider.generate;
 
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.util.Function;
+import com.intellij.util.xml.DomElement;
+import com.intellij.util.xml.DomUtil;
+import io.github.linyimin.plugin.dom.model.IdDomElement;
+
+import java.util.Objects;
 
 
 /**
@@ -23,13 +30,17 @@ public class FunctionTooltip implements Function<PsiElement, String> {
 
     @Override
     public String fun(PsiElement psiElement) {
-        if (psiElement instanceof PsiMethod) {
-            PsiMethod psiMethod = (PsiMethod) psiElement;
+        if (psiElement instanceof PsiIdentifier && psiElement.getParent() instanceof PsiMethod) {
+            PsiMethod psiMethod = (PsiMethod) psiElement.getParent();
             return msg + psiMethod.getName();
         }
         if (psiElement instanceof XmlTag) {
-            XmlTag xmlTag = (XmlTag) psiElement;
-            return msg + xmlTag.getName();
+            DomElement domElement = DomUtil.getDomElement(psiElement);
+            if (Objects.isNull(domElement)) {
+                return null;
+            }
+            String id = ((IdDomElement)domElement).getId().getRawText();
+            return msg + id;
         }
         return null;
     }
