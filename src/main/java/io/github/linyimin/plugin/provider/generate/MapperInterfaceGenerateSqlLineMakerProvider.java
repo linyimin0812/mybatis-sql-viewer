@@ -38,7 +38,7 @@ public class MapperInterfaceGenerateSqlLineMakerProvider implements LineMarkerPr
                 identifierOwner.getNameIdentifier().getTextRange(),
                 IconUtils.GENERATE_ICON,
                 tooltip,
-                null,
+                new SqlGenerateNavigationHandler(),
                 GutterIconRenderer.Alignment.CENTER,
                 () -> "mybatis-sql-viewer");
     }

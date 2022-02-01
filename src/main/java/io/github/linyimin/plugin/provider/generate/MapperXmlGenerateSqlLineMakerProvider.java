@@ -36,7 +36,7 @@ public class MapperXmlGenerateSqlLineMakerProvider implements LineMarkerProvider
                 xmlTag.getNavigationElement().getTextRange(),
                 IconUtils.GENERATE_ICON,
                 tooltip,
-                null,
+                new SqlGenerateNavigationHandler(),
                 GutterIconRenderer.Alignment.CENTER,
                 () -> "mybatis-sql-viewer");
     }
