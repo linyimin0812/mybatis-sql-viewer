@@ -8,6 +8,8 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.xml.XmlTag;
+import com.intellij.psi.xml.XmlToken;
+import com.intellij.psi.xml.XmlTokenType;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.utils.IconUtils;
 import io.github.linyimin.plugin.utils.MapperDomUtils;
@@ -29,11 +31,18 @@ public class MapperXmlJumpLineMakerProvider extends RelatedItemLineMarkerProvide
     @Override
     protected void collectNavigationMarkers(@NotNull PsiElement element, @NotNull Collection<? super RelatedItemLineMarkerInfo<?>> result) {
 
-        if (!MapperDomUtils.isElementWithinMapperXml(element)) {
+        // 避免LineMarker is supposed to be registered for leaf elements only, but got: XmlTag:select Warning
+        if (!(element instanceof XmlToken) || ((XmlToken)element).getTokenType() != XmlTokenType.XML_START_TAG_START) {
             return;
         }
 
-        List<PsiElement> target = acquireTarget(element);
+        PsiElement tag = element.getParent();
+
+        if (!MapperDomUtils.isElementWithinMapperXml(tag)) {
+            return;
+        }
+
+        List<PsiElement> target = acquireTarget(tag);
 
         if (CollectionUtils.isEmpty(target)) {
             return;
@@ -45,9 +54,7 @@ public class MapperXmlJumpLineMakerProvider extends RelatedItemLineMarkerProvide
                 .setTargets(target)
                 .setTooltipTitle("Navigation to Target in Mapper Class");
 
-        XmlTag xmlTag = (XmlTag) element;
-
-        result.add(builder.createLineMarkerInfo(xmlTag.getNavigationElement()));
+        result.add(builder.createLineMarkerInfo(element));
     }
 
     private List<PsiElement> acquireTarget(PsiElement element) {

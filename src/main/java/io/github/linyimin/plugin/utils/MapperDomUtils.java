@@ -1,8 +1,10 @@
 package io.github.linyimin.plugin.utils;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
@@ -10,8 +12,10 @@ import com.intellij.util.xml.DomElement;
 import com.intellij.util.xml.DomFileElement;
 import com.intellij.util.xml.DomService;
 import com.intellij.util.xml.DomUtil;
+import io.github.linyimin.plugin.dom.model.MybatisConfiguration;
 import io.github.linyimin.plugin.dom.model.IdDomElement;
 import io.github.linyimin.plugin.dom.model.Mapper;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -37,6 +41,20 @@ public final class MapperDomUtils {
         XmlTag rootTag = ((XmlFile) file).getRootTag();
 
         return Objects.nonNull(rootTag) && "mapper".equals(rootTag.getName());
+
+    }
+
+
+    public static boolean isMybatisConfigurationFile(PsiFile file) {
+        if (!isXml(file)) {
+            return false;
+        }
+
+        XmlTag rootTag = ((XmlFile) file).getRootTag();
+
+        return Objects.nonNull(rootTag)
+                && "configuration".equals(rootTag.getName()) &&
+                StringUtils.contains(rootTag.getText(), "mappers");
 
     }
 
@@ -122,6 +140,15 @@ public final class MapperDomUtils {
         }).collect(Collectors.toList());
     }
 
+    public static String getIdFromMethod(PsiMethod psiMethod) {
+        PsiClass psiClass = psiMethod.getContainingClass();
+        assert psiClass != null;
+        String qualifiedName = psiClass.getQualifiedName();
+        String methodName = psiMethod.getName();
+
+        return qualifiedName + "." + methodName;
+    }
+
     /**
      * 判断mapper xml中的psiElement是否是mapper接口中方法的实现
      * @param psiElement {@link PsiElement}
@@ -144,5 +171,20 @@ public final class MapperDomUtils {
         }
 
         return domElement instanceof IdDomElement;
+    }
+
+
+    /**
+     * 获取mybatis configuration
+     * @param project {@link Project}
+     * @return {@link MybatisConfiguration}
+     */
+    public static MybatisConfiguration findConfiguration(Project project) {
+        GlobalSearchScope scope = GlobalSearchScope.allScope(project);
+        List<DomFileElement<MybatisConfiguration>> elements = DomService.getInstance().getFileElements(MybatisConfiguration.class, project, scope);
+
+        return elements.stream()
+                .map(DomFileElement::getRootElement)
+                .findFirst().orElse(null);
     }
 }

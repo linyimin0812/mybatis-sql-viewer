@@ -1,6 +1,5 @@
 package io.github.linyimin.plugin.provider.generate;
 
-import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiMethod;

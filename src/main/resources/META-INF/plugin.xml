@@ -15,10 +15,16 @@
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
         <dom.fileMetaData rootTagName="mapper" implementation="io.github.linyimin.plugin.description.MapperDescription"/>
+        <dom.fileMetaData rootTagName="configuration" implementation="io.github.linyimin.plugin.description.MapperConfigurationDescription" />
+        
         <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.jump.MapperInterfaceJumpLineMakerProvider" />
         <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.jump.MapperXmlJumpLineMakerProvider" />
         <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.generate.MapperInterfaceGenerateSqlLineMakerProvider" />
         <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.generate.MapperXmlGenerateSqlLineMakerProvider" />
+
+        <applicationService serviceImplementation="io.github.linyimin.plugin.service.MybatisDatasourceStateComponent" order="first" />
+        <projectService serviceImplementation="io.github.linyimin.plugin.service.MybatisSqlStateComponent" order="first" />
+        <projectService serviceImplementation="io.github.linyimin.plugin.service.SqlParamGenerateService" order="first" />
 
         <toolWindow id="mybatis-sql-viewer" doNotActivateOnStart="true" factoryClass="io.github.linyimin.plugin.window.MybatisSqlViewerToolWindowFactory" anchor="right" secondary="false" />
     </extensions>

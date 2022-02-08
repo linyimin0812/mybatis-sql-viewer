@@ -5,6 +5,8 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.xml.XmlTag;
+import com.intellij.psi.xml.XmlToken;
+import com.intellij.psi.xml.XmlTokenType;
 import io.github.linyimin.plugin.dom.Constant;
 import io.github.linyimin.plugin.utils.IconUtils;
 import io.github.linyimin.plugin.utils.MapperDomUtils;
@@ -18,22 +20,29 @@ public class MapperXmlGenerateSqlLineMakerProvider implements LineMarkerProvider
     @Override
     public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
 
-        // 只处理Mapper接口中的内容
-        if (!MapperDomUtils.isElementWithinMapperXml(element)) {
+        // 避免LineMarker is supposed to be registered for leaf elements only, but got: XmlTag:select Warning
+        if (!(element instanceof XmlToken) || ((XmlToken)element).getTokenType() != XmlTokenType.XML_START_TAG_START) {
             return null;
         }
 
-        XmlTag xmlTag = (XmlTag) element;
+        PsiElement tag = element.getParent();
+
+        // 只处理Mapper接口中的内容
+        if (!MapperDomUtils.isElementWithinMapperXml(tag)) {
+            return null;
+        }
+
+        XmlTag xmlTag = (XmlTag) tag;
 
         if (!Constant.MYBATIS_OPS.contains(xmlTag.getName())) {
             return null;
         }
 
-        FunctionTooltip tooltip = new FunctionTooltip(element);
+        FunctionTooltip tooltip = new FunctionTooltip(tag);
 
         return new LineMarkerInfo<>(
-                xmlTag.getNavigationElement(),
-                xmlTag.getNavigationElement().getTextRange(),
+                element,
+                element.getTextRange(),
                 IconUtils.GENERATE_ICON,
                 tooltip,
                 new SqlGenerateNavigationHandler(),
