@@ -32,13 +32,21 @@ public class MybatisSqlUtils {
 
         InputStream in = IOUtils.toInputStream(mybatisConfiguration, Charset.defaultCharset());
 
-        Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
-        Configuration configuration = sqlSessionFactory.getConfiguration();
+        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(MybatisPojoCompile.classLoader);
+            Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
 
-        BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
 
-        return formatSql(configuration, sql);
+            SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+            Configuration configuration = sqlSessionFactory.getConfiguration();
+
+            BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
+
+            return formatSql(configuration, sql);
+        } finally {
+            Thread.currentThread().setContextClassLoader(currentClassLoader);
+        }
     }
 
     private static String formatSql(Configuration configuration, BoundSql boundSql) {
