@@ -1,13 +1,13 @@
 package io.github.linyimin.plugin.service;
 
 import com.alibaba.fastjson.JSON;
-import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiUtil;
+import com.intellij.psi.xml.XmlElement;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import com.siyeh.ig.psiutils.CollectionUtils;
@@ -16,6 +16,7 @@ import io.github.linyimin.plugin.dom.Constant;
 import io.github.linyimin.plugin.dom.model.MybatisConfiguration;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.utils.JavaUtils;
 import io.github.linyimin.plugin.utils.MapperDomUtils;
 import io.github.linyimin.plugin.utils.MybatisSqlUtils;
 import org.apache.commons.collections.MapUtils;
@@ -34,7 +35,42 @@ public class SqlParamGenerateService {
 
     public String generateSql(Project project, String methodQualifiedName, String params) {
 
-        MybatisConfiguration mybatisConfiguration = MapperDomUtils.findConfiguration(project);
+        List<PsiMethod> psiMethods = JavaUtils.findMethod(project, methodQualifiedName);
+
+        if (org.apache.commons.collections.CollectionUtils.isEmpty(psiMethods)) {
+            Messages.showInfoMessage(String.format("method %s is not exist.", methodQualifiedName), Constant.APPLICATION_NAME);
+            return StringUtils.EMPTY;
+        }
+
+        String mybatisConfig = getMybatisConfiguration(project, psiMethods.get(0));
+
+        boolean isNeedCompile = checkNeedCompile(mybatisConfig, methodQualifiedName, params);
+
+        if (isNeedCompile) {
+            MybatisPojoCompile.compile(project);
+        }
+
+        return MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params);
+
+    }
+
+    private boolean checkNeedCompile(String mybatisConfig, String methodQualifiedName, String params) {
+        if (Objects.isNull(MybatisPojoCompile.classLoader)) {
+            return true;
+        }
+
+        try {
+            MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params);
+        } catch (Exception e) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private String getMybatisConfiguration(Project project, PsiMethod psiMethod) {
+
+        MybatisConfiguration mybatisConfiguration = MapperDomUtils.findConfiguration(project, psiMethod);
         if (Objects.isNull(mybatisConfiguration)) {
             Messages.showInfoMessage("Mybatis配置文件不存在", Constant.APPLICATION_NAME);
             return StringUtils.EMPTY;
@@ -47,10 +83,18 @@ public class SqlParamGenerateService {
 
         String mybatisConfig = mybatisConfiguration.getParent().getXmlElement().getText();
 
-        MybatisPojoCompile.compile(project);
+        // 不处理plugins
+        XmlElement xmlElement = mybatisConfiguration.getXmlElement();
 
-        return MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params);
+        if (Objects.nonNull(xmlElement) && xmlElement instanceof XmlTag) {
+            XmlTag[] tags = ((XmlTag) xmlElement).findSubTags("plugins");
+            if (tags.length > 0) {
+                String plugins = tags[0].getText();
+                mybatisConfig = mybatisConfig.replace(plugins, StringUtils.EMPTY);
+            }
+        }
 
+        return mybatisConfig;
     }
 
 
@@ -112,10 +156,25 @@ public class SqlParamGenerateService {
 
             Map<String, Object> param = new HashMap<>();
 
-            if (isNormalType(psiClass.getQualifiedName())) {
-                param.put(name, getPrimitiveDefaultValue(name, psiClass.getQualifiedName()));
+            if (Objects.isNull(psiClass) || isNormalType(psiClass.getQualifiedName())) {
+                String paramType;
+                if (Objects.isNull(psiClass)) {
+                    if (type instanceof PsiArrayType) {
+                        paramType = ((PsiArrayType) type).getComponentType().getCanonicalText();
+                    } else {
+                        paramType = type.getCanonicalText();
+                    }
+                } else {
+                    paramType = psiClass.getQualifiedName();
+                }
+                param.put(name, getPrimitiveDefaultValue(name, paramType));
             } else {
-                param = getFieldFromClass(paramNameType.psiClass);
+                Map<String, Object> classParam = getFieldFromClass(psiClass);
+                if (paramNameType.isParamAnnotation) {
+                    param.putAll(classParam);
+                } else {
+                    param.put(name, classParam);
+                }
             }
 
             // 数组或者列表
@@ -157,9 +216,11 @@ public class SqlParamGenerateService {
                     list.add(value);
                 } else {
                     PsiClass psiClassInArray = PsiUtil.resolveClassInType(deepType);
-                    Map<String, Object> temp = getFieldFromClass(psiClassInArray);
-                    if (MapUtils.isNotEmpty(temp)) {
-                        list.add(temp);
+                    if (Objects.nonNull(psiClassInArray) && !StringUtils.equals(psiClassInArray.getQualifiedName(), psiClass.getQualifiedName())) {
+                        Map<String, Object> temp = getFieldFromClass(psiClassInArray);
+                        if (MapUtils.isNotEmpty(temp)) {
+                            list.add(temp);
+                        }
                     }
                 }
 
@@ -184,9 +245,11 @@ public class SqlParamGenerateService {
                     list.add(value);
                 } else {
                     PsiClass iterableClass = PsiUtil.resolveClassInClassTypeOnly(iterableType);
-                    Map<String, Object> temp = getFieldFromClass(iterableClass);
-                    if (MapUtils.isNotEmpty(temp)) {
-                        list.add(temp);
+                    if (Objects.nonNull(iterableClass) && !StringUtils.equals(iterableClass.getQualifiedName(), psiClass.getQualifiedName())) {
+                        Map<String, Object> temp = getFieldFromClass(iterableClass);
+                        if (MapUtils.isNotEmpty(temp)) {
+                            list.add(temp);
+                        }
                     }
                 }
 
@@ -196,10 +259,16 @@ public class SqlParamGenerateService {
             }
 
             // class
-            Map<String, Object> temp = getFieldFromClass(PsiUtil.resolveClassInType(type));
-            if (MapUtils.isNotEmpty(temp)) {
-                param.put(fieldName, temp);
+            PsiClass typePsiClass = PsiUtil.resolveClassInType(type);
+            if (Objects.nonNull(typePsiClass) && StringUtils.equals(typePsiClass.getQualifiedName(), psiClass.getQualifiedName())) {
+                param.put(fieldName, new HashMap<>());
+            } else {
+                Map<String, Object> temp = getFieldFromClass(typePsiClass);
+                if (MapUtils.isNotEmpty(temp)) {
+                    param.put(fieldName, temp);
+                }
             }
+
 
         }
 
@@ -235,7 +304,7 @@ public class SqlParamGenerateService {
             String paramAnnotationValue = getParamAnnotationValue(param);
             String name = StringUtils.isBlank(paramAnnotationValue) ? param.getName() : paramAnnotationValue;
 
-            ParamNameType paramNameType = new ParamNameType(name, psiClass, param.getType());
+            ParamNameType paramNameType = new ParamNameType(name, psiClass, param.getType(), StringUtils.isNotEmpty(paramAnnotationValue));
             result.add(paramNameType);
         }
         return result;
@@ -290,11 +359,13 @@ public class SqlParamGenerateService {
         private final String name;
         private final PsiClass psiClass;
         private final PsiType psiType;
+        private final boolean isParamAnnotation;
 
-        public ParamNameType(String name, PsiClass psiClass, PsiType psiType) {
+        public ParamNameType(String name, PsiClass psiClass, PsiType psiType, boolean isParamAnnotation) {
             this.name = name;
             this.psiClass = psiClass;
             this.psiType = psiType;
+            this.isParamAnnotation = isParamAnnotation;
         }
     }
 

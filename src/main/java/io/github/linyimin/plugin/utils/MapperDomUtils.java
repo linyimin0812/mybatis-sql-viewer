@@ -179,7 +179,7 @@ public final class MapperDomUtils {
      * @param project {@link Project}
      * @return {@link MybatisConfiguration}
      */
-    public static MybatisConfiguration findConfiguration(Project project) {
+    public static MybatisConfiguration findConfiguration(Project project, PsiMethod psiMethod) {
         GlobalSearchScope scope = GlobalSearchScope.allScope(project);
         List<DomFileElement<MybatisConfiguration>> elements = DomService.getInstance().getFileElements(MybatisConfiguration.class, project, scope);
 

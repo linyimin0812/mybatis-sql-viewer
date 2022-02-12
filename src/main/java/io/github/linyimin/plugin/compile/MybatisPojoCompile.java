@@ -1,18 +1,23 @@
 package io.github.linyimin.plugin.compile;
 
 import com.intellij.compiler.impl.ProjectCompileScope;
+import com.intellij.ide.plugins.cl.PluginClassLoader;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderEnumerator;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.util.lang.UrlClassLoader;
+import io.github.linyimin.plugin.dom.Constant;
+import io.github.linyimin.plugin.utils.JavaUtils;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -23,7 +28,8 @@ public class MybatisPojoCompile {
 
     // TODO: 需要优化成只编译Mybatis需要的类
 
-    public static ClassLoader classLoader;
+    public static UrlClassLoader classLoader;
+    public static List<String> preDependencies;
 
     public static void compile(Project project) {
 
@@ -35,9 +41,12 @@ public class MybatisPojoCompile {
     }
 
     public static void setClassLoader(Project project) {
-        final List<URL> urls = new ArrayList<>();
+
+        List<String> dependencies = getProjectDependencies(project);
+
+        List<URL> urls = new ArrayList<>();
         final List<String> list = OrderEnumerator.orderEntries(project).recursively().runtimeOnly().getPathsList().getPathList();
-        for (String path : list) {
+        for (String path : dependencies) {
             try {
                 urls.add(new File(FileUtil.toSystemIndependentName(path)).toURI().toURL());
             }
@@ -45,6 +54,90 @@ public class MybatisPojoCompile {
                 Messages.showErrorDialog(e.getMessage(), "MalformedURLException");
             }
         }
-        classLoader = UrlClassLoader.build().urls(urls).parent(ClassLoader.getSystemClassLoader()).get();
+
+        if (Objects.nonNull(classLoader)) {
+            changeLoaderUrls(preDependencies, dependencies);
+        } else {
+            createProjectLoader(urls);
+            preDependencies = dependencies;
+        }
     }
+
+    private static List<String> getProjectDependencies(Project project) {
+
+        Set<String> mapperDependencies = JavaUtils.getAllDependenciesRecursive(project);
+
+        List<String> list = OrderEnumerator
+                .orderEntries(project)
+                .recursively()
+                .runtimeOnly()
+                .withoutSdk()
+                .getPathsList()
+                .getPathList()
+                .stream()
+                .filter(path -> path.contains(Constant.MYBATIS_LOGGING_LOG4J)
+                        || path.contains(Constant.MYBATIS_LOGGING_SLF4J)
+                        || path.contains(project.getName())
+                ).collect(Collectors.toList());
+
+
+        list.addAll(mapperDependencies);
+
+        return list;
+    }
+
+    private static void createProjectLoader(List<URL> urls) {
+        classLoader = UrlClassLoader.build().urls(urls).parent(ClassLoader.getSystemClassLoader()).get();
+        attachPluginParentLoader(classLoader);
+    }
+
+    private static void attachPluginParentLoader(UrlClassLoader classLoader) {
+        PluginClassLoader pluginClassLoader = (PluginClassLoader) MybatisPojoCompile.class.getClassLoader();
+
+        Class<? extends PluginClassLoader> pluginClassLoaderClass = pluginClassLoader.getClass();
+
+        try {
+            Field field = pluginClassLoaderClass.getDeclaredField(Constant.PLUGIN_CLASS_LOADER_PARENTS);
+            field.setAccessible(true);
+
+            ClassLoader[] parents = (ClassLoader[]) field.get(pluginClassLoader);
+            if (Objects.isNull(parents)) {
+                parents = new ClassLoader[] {classLoader};
+                field.set(pluginClassLoader, parents);
+            } else {
+                ClassLoader[] newParents = new ClassLoader[parents.length + 1];
+                newParents[parents.length] = classLoader;
+                System.arraycopy(parents, 0, newParents, 0, parents.length);
+                field.set(pluginClassLoader, newParents);
+            }
+
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private static void changeLoaderUrls(List<String> preDependencies, List<String> dependencies) {
+
+        List<String> list = new ArrayList<>(dependencies);
+
+        for (String preDependency : preDependencies) {
+            list.remove(preDependency);
+        }
+
+        if (CollectionUtils.isEmpty(list)) {
+            return;
+        }
+
+        for (String path : list) {
+            try {
+                URL url = new File(FileUtil.toSystemIndependentName(path)).toURI().toURL();
+                classLoader.addURL(url);
+            }
+            catch (MalformedURLException e) {
+                Messages.showErrorDialog(e.getMessage(), "MalformedURLException");
+            }
+        }
+    }
+
 }

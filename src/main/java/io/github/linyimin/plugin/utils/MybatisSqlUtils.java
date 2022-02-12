@@ -31,22 +31,14 @@ public class MybatisSqlUtils {
     public static String getSql(String mybatisConfiguration, String qualifiedMethod, String params) {
 
         InputStream in = IOUtils.toInputStream(mybatisConfiguration, Charset.defaultCharset());
+        Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
 
-        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(MybatisPojoCompile.classLoader);
-            Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        Configuration configuration = sqlSessionFactory.getConfiguration();
 
+        BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
 
-            SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
-            Configuration configuration = sqlSessionFactory.getConfiguration();
-
-            BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
-
-            return formatSql(configuration, sql);
-        } finally {
-            Thread.currentThread().setContextClassLoader(currentClassLoader);
-        }
+        return formatSql(configuration, sql);
     }
 
     private static String formatSql(Configuration configuration, BoundSql boundSql) {
@@ -111,9 +103,9 @@ public class MybatisSqlUtils {
 
     public static String mysqlConnectTest(String url, String user, String password) {
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            return "com.mysql.jdbc.Driver class not found";
+            return "com.mysql.cj.jdbc.Driver class not found";
         }
 
         try (Connection ignored = DriverManager.getConnection(url, user, password)) {
@@ -128,7 +120,7 @@ public class MybatisSqlUtils {
         Statement stmt = null;
         StringBuilder sb = new StringBuilder();
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(url,user,password);
             stmt = connection.createStatement();
             boolean isSuccess = stmt.execute(sql);
