@@ -50,7 +50,7 @@ public class SqlParamGenerateService {
             MybatisPojoCompile.compile(project);
         }
 
-        return MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params);
+        return MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params, false);
 
     }
 
@@ -60,7 +60,7 @@ public class SqlParamGenerateService {
         }
 
         try {
-            MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params);
+            MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params, true);
         } catch (Exception | NoClassDefFoundError e) {
             return true;
         }

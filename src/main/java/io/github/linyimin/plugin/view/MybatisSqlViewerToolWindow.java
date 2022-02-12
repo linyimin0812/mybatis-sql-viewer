@@ -1,5 +1,9 @@
 package io.github.linyimin.plugin.view;
 
+import com.intellij.json.JsonFileType;
+import com.intellij.json.JsonLanguage;
+import com.intellij.openapi.fileTypes.PlainTextFileType;
+import com.intellij.openapi.fileTypes.PlainTextLanguage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.wm.ToolWindow;
@@ -34,7 +38,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private JTextArea connectionInfoTextArea;
     private JPanel params;
     private JTextArea result;
-    private JTextArea sql;
+    private JPanel sql;
 
     private final Project myProject;
 
@@ -68,15 +72,16 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         methodName.setText(config.getMethod());
         result.setText(config.getResult());
-        ((JsonTextField) params).setText(config.getParams());
-        sql.setText(config.getSql());
+        ((MyTextField) params).setText(config.getParams());
+        ((MyTextField) sql).setText(config.getSql());
+
         // 默认每次打开，都展示第一个tab
         tabbedPane.setSelectedIndex(0);
     }
 
     private void createUIComponents() {
-        params = new JsonTextField(this.myProject);
-
+        params = new MyTextField(this.myProject, JsonLanguage.INSTANCE, JsonFileType.INSTANCE);
+        sql = new MyTextField(this.myProject, PlainTextLanguage.INSTANCE, PlainTextFileType.INSTANCE);
     }
 
     private void addComponentListener() {
@@ -84,12 +89,12 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         port.getDocument().addDocumentListener(new DatasourceChangeListener());
         database.getDocument().addDocumentListener(new DatasourceChangeListener());
 
-        ((JsonTextField) params).addDocumentListener(new com.intellij.openapi.editor.event.DocumentListener() {
+        ((MyTextField) params).addDocumentListener(new com.intellij.openapi.editor.event.DocumentListener() {
             @Override
             public void documentChanged(com.intellij.openapi.editor.event.@NotNull DocumentEvent event) {
                 MybatisSqlConfiguration config = myProject.getService(MybatisSqlStateComponent.class).getState();
                 assert config != null;
-                config.setParams(((JsonTextField) params).getText());
+                config.setParams(((MyTextField) params).getText());
             }
         });
 
@@ -115,7 +120,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
             // 点击sql tab时生成sql
             if (selectedIndex == TabbedComponentType.sql.index) {
-                sql.setText("Loading...");
+                ((MyTextField) sql).setText("Loading...");
                 generateSql();
             }
 
@@ -137,7 +142,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         String sqlStr = generateService.generateSql(myProject, sqlConfig.getMethod(), sqlConfig.getParams());
         sqlConfig.setSql(sqlStr);
 
-        sql.setText(sqlStr);
+        ((MyTextField) sql).setText(sqlStr);
     }
 
     private void executeSql() {
@@ -146,7 +151,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         String passwordText = String.valueOf(password.getPassword());
         String resultText;
         try {
-            resultText = MybatisSqlUtils.executeSql(urlText, user.getText(), passwordText, sql.getText());
+            resultText = MybatisSqlUtils.executeSql(urlText, user.getText(), passwordText, ((MyTextField) sql).getText());
         } catch (SQLException e) {
             resultText = "Execute Sql Failed. err: " + e.getMessage();
         }

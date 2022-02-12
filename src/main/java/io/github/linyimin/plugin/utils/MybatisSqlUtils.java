@@ -3,7 +3,9 @@ package io.github.linyimin.plugin.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.github.vertical_blank.sqlformatter.SqlFormatter;
+import com.intellij.openapi.ui.Messages;
 import io.github.linyimin.plugin.compile.MybatisPojoCompile;
+import io.github.linyimin.plugin.dom.Constant;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.ibatis.io.Resources;
@@ -28,17 +30,24 @@ import java.util.*;
  **/
 public class MybatisSqlUtils {
 
-    public static String getSql(String mybatisConfiguration, String qualifiedMethod, String params) {
+    public static String getSql(String mybatisConfiguration, String qualifiedMethod, String params, boolean isCheck) {
 
-        InputStream in = IOUtils.toInputStream(mybatisConfiguration, Charset.defaultCharset());
-        Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
+        try {
+            InputStream in = IOUtils.toInputStream(mybatisConfiguration, Charset.defaultCharset());
+            Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
 
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
-        Configuration configuration = sqlSessionFactory.getConfiguration();
+            SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+            Configuration configuration = sqlSessionFactory.getConfiguration();
 
-        BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
+            BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
 
-        return formatSql(configuration, sql);
+            return formatSql(configuration, sql);
+        } catch (Exception e) {
+            if (!isCheck) {
+                Messages.showInfoMessage(e.getMessage(), Constant.APPLICATION_NAME);
+            }
+            throw e;
+        }
     }
 
     private static String formatSql(Configuration configuration, BoundSql boundSql) {

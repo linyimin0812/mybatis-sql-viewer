@@ -1,12 +1,12 @@
 package io.github.linyimin.plugin.view;
 
-import com.intellij.json.JsonFileType;
-import com.intellij.json.JsonLanguage;
+import com.intellij.lang.Language;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorSettings;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileTypes.LanguageFileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -18,15 +18,19 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * @author yiminlin
- * @date 2022/02/02 11:51 上午
+ * @date 2022/02/13 2:11 上午
+ * @description TODO:
  **/
-public class JsonTextField extends LanguageTextField {
-
+public class MyTextField extends LanguageTextField {
     private final Project myProject;
+    private final Language language;
+    private final LanguageFileType fileType;
 
-    public JsonTextField(Project myProject) {
-        super(JsonLanguage.INSTANCE, myProject, "", false);
+    public MyTextField(Project myProject, Language language, LanguageFileType fileType) {
+        super(language, myProject, "", false);
         this.myProject = myProject;
+        this.language = language;
+        this.fileType = fileType;
     }
 
     @Override
@@ -38,9 +42,9 @@ public class JsonTextField extends LanguageTextField {
 
     @Override
     public void setText(@Nullable String text) {
-        super.setFileType(JsonFileType.INSTANCE);
+        super.setFileType(fileType);
         ReadAction.nonBlocking(() -> {
-            Document document = createDocument(text, JsonLanguage.INSTANCE, myProject, new SimpleDocumentCreator());
+            Document document = createDocument(text, language, myProject, new SimpleDocumentCreator());
             setDocument(document);
             PsiFile psiFile = PsiDocumentManager.getInstance(myProject).getPsiFile(document);
             if (psiFile != null) {
