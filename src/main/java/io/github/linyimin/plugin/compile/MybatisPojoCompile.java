@@ -45,7 +45,6 @@ public class MybatisPojoCompile {
         List<String> dependencies = getProjectDependencies(project);
 
         List<URL> urls = new ArrayList<>();
-        final List<String> list = OrderEnumerator.orderEntries(project).recursively().runtimeOnly().getPathsList().getPathList();
         for (String path : dependencies) {
             try {
                 urls.add(new File(FileUtil.toSystemIndependentName(path)).toURI().toURL());

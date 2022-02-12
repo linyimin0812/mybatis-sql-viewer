@@ -34,6 +34,8 @@ public class Constant {
     public static final String MYBATIS_LOGGING_SLF4J = "slf4j";
     public static final String MYBATIS_LOGGING_LOG4J = "log4j";
 
+    public static final String JAR_FILE_END = "!";
+
     private static final String PATTERN = "yyyy-MM-dd HH:mm:ss";
     private static final DateFormat DF = new SimpleDateFormat(PATTERN);
     public static Map<String, Object> normalTypes = new ContainerUtil.ImmutableMapBuilder<String, Object>()

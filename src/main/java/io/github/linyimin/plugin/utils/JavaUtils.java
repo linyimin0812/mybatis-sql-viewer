@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.compiled.ClsFileImpl;
 import com.intellij.psi.search.GlobalSearchScope;
+import io.github.linyimin.plugin.dom.Constant;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -169,8 +170,8 @@ public class JavaUtils {
                 visited.add(clazz);
 
                 Set<PsiClass> dependencies = getAllDependencies(clazz);
-                dependencies.remove(psiClass);
-                queue.addAll(visited);
+                dependencies.removeAll(visited);
+                queue.addAll(dependencies);
             }
 
             visited.remove(psiClass);
@@ -180,6 +181,7 @@ public class JavaUtils {
         return allDependencies.stream()
                 .map(item -> item.getContainingFile().getVirtualFile().getCanonicalPath())
                 .filter(path -> StringUtils.isNotEmpty(path) && path.contains("jar!"))
+                .map(path -> StringUtils.substring(path, 0, path.lastIndexOf(Constant.JAR_FILE_END)))
                 .collect(Collectors.toSet());
     }
 }

@@ -61,7 +61,7 @@ public class SqlParamGenerateService {
 
         try {
             MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params);
-        } catch (Exception e) {
+        } catch (Exception | NoClassDefFoundError e) {
             return true;
         }
 
@@ -171,9 +171,9 @@ public class SqlParamGenerateService {
             } else {
                 Map<String, Object> classParam = getFieldFromClass(psiClass);
                 if (paramNameType.isParamAnnotation) {
-                    param.putAll(classParam);
-                } else {
                     param.put(name, classParam);
+                } else {
+                    param.putAll(classParam);
                 }
             }
 
