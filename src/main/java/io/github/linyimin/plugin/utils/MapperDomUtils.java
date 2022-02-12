@@ -1,5 +1,7 @@
 package io.github.linyimin.plugin.utils;
 
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -181,9 +183,17 @@ public final class MapperDomUtils {
      */
     public static MybatisConfiguration findConfiguration(Project project, PsiMethod psiMethod) {
         GlobalSearchScope scope = GlobalSearchScope.allScope(project);
+
+        Module module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
+
         List<DomFileElement<MybatisConfiguration>> elements = DomService.getInstance().getFileElements(MybatisConfiguration.class, project, scope);
 
         return elements.stream()
+                .filter(configuration -> {
+                    assert module != null;
+                    assert configuration.getModule() != null;
+                    return StringUtils.equals(module.getName(), configuration.getModule().getName());
+                })
                 .map(DomFileElement::getRootElement)
                 .findFirst().orElse(null);
     }
