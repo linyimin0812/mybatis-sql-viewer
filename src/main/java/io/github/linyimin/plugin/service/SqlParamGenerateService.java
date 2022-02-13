@@ -272,12 +272,8 @@ public class SqlParamGenerateService {
                     param.put(fieldName, temp);
                 }
             }
-
-
         }
-
         return param;
-
     }
 
     /**

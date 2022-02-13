@@ -7,7 +7,27 @@
     <idea-version since-build="IU-201" />
 
     <description><![CDATA[
-    将mapper文件中的xml语句转换成sql语句，支持参数mock，sql复制，执行
+    Mybatis-Sql-Viewer Plugin is a idea plugin for mybatis. <br />
+
+    <img src="https://linyimin-picture.oss-cn-hangzhou.aliyuncs.com/how-to-use.gif" />
+
+    <br/>
+
+    Mybatis-Sql-Viewer is an enhanced plugin for idea to support mybatis,here is the main functions:
+    <ul>
+        <li>navigate from the code to mapper and from the mapper back to code</li>
+        <li>The xml statement/method in the mapper file convert to sql statement, which supports parameters mock, data source configuration, and sql execution</li>
+    </ul>
+
+    Mybatis-Sql-Viewer是一款增强idea对mybatis支持的插件，主要功能如下：<br/>
+    <ul>
+        <li>快速从代码跳转到mapper及从mapper返回代码</li>
+        <li>mapper文件中的xml语句/方法转换成sql语句，支持参数mock、数据源配置、sql执行</li>
+    </ul>
+
+    <br/>
+    <a href="https://github.com/linyimin-bupt/mybatis-sql-viewer">Github</a> Welcome to star(欢迎star)
+    <br/>
     ]]></description>
 
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
