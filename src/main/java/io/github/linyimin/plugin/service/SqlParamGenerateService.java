@@ -170,7 +170,7 @@ public class SqlParamGenerateService {
                 param.put(name, getPrimitiveDefaultValue(name, paramType));
             } else {
                 Map<String, Object> classParam = getFieldFromClass(psiClass);
-                if (paramNameType.isParamAnnotation) {
+                if (paramNameType.isParamAnnotation || isArray(type)) {
                     param.put(name, classParam);
                 } else {
                     param.putAll(classParam);
@@ -178,7 +178,7 @@ public class SqlParamGenerateService {
             }
 
             // 数组或者列表
-            if (type instanceof PsiArrayType || CollectionUtils.isCollectionClassOrInterface(type)) {
+            if (isArray(type)) {
                param.put(name, Lists.newArrayList(param.get(name)));
             }
 
@@ -186,6 +186,10 @@ public class SqlParamGenerateService {
         }
 
         return JSON.toJSONString(params, true);
+    }
+
+    private boolean isArray(PsiType type) {
+        return type instanceof PsiArrayType || CollectionUtils.isCollectionClassOrInterface(type);
     }
 
     private Map<String, Object> getFieldFromClass(PsiClass psiClass) {
