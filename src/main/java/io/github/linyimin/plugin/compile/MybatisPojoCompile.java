@@ -5,8 +5,10 @@ import com.intellij.ide.plugins.cl.PluginClassLoader;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderEnumerator;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.lang.UrlClassLoader;
 import io.github.linyimin.plugin.dom.Constant;
 import io.github.linyimin.plugin.utils.JavaUtils;
@@ -18,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -58,8 +61,8 @@ public class MybatisPojoCompile {
             changeLoaderUrls(preDependencies, dependencies);
         } else {
             createProjectLoader(urls);
-            preDependencies = dependencies;
         }
+        preDependencies = dependencies;
     }
 
     private static List<String> getProjectDependencies(Project project) {
@@ -76,13 +79,23 @@ public class MybatisPojoCompile {
                 .stream()
                 .filter(path -> path.contains(Constant.MYBATIS_LOGGING_LOG4J)
                         || path.contains(Constant.MYBATIS_LOGGING_SLF4J)
-                        || path.contains(project.getName())
-                ).collect(Collectors.toList());
+                        || isProjectModule(project, path))
+                .collect(Collectors.toList());
 
 
         list.addAll(mapperDependencies);
 
         return list;
+    }
+
+    private static boolean isProjectModule(Project project, String path) {
+        VirtualFile[] vFiles = ProjectRootManager.getInstance(project).getContentRootsFromAllModules();
+        Set<String> moduleNames = Stream.of(vFiles).map(VirtualFile::getName).collect(Collectors.toSet());
+
+        moduleNames.add(project.getName());
+        moduleNames.add(project.getBasePath());
+
+        return moduleNames.stream().anyMatch(path::contains);
     }
 
     private static void createProjectLoader(List<URL> urls) {
@@ -99,14 +112,12 @@ public class MybatisPojoCompile {
 
         try {
             field = pluginClassLoaderClass.getDeclaredField(Constant.PLUGIN_CLASS_LOADER_PARENTS);
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+        } catch (NoSuchFieldException ignored) {
         }
 
         try {
             field = pluginClassLoaderClass.getDeclaredField(Constant.PLUGIN_CLASS_LOADER_MY_PARENTS);
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+        } catch (NoSuchFieldException ignored) {
         }
 
         if (Objects.isNull(field)) {

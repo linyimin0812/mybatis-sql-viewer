@@ -43,7 +43,7 @@ public class MyTextField extends LanguageTextField {
     @Override
     public void setText(@Nullable String text) {
         super.setFileType(fileType);
-        ReadAction.nonBlocking(() -> {
+        ReadAction.run(() -> {
             Document document = createDocument(text, language, myProject, new SimpleDocumentCreator());
             setDocument(document);
             PsiFile psiFile = PsiDocumentManager.getInstance(myProject).getPsiFile(document);
@@ -55,7 +55,7 @@ public class MyTextField extends LanguageTextField {
                         }
                 );
             }
-        }).executeSynchronously();
+        });
     }
 
     private void setUpEditor(EditorEx editor) {
