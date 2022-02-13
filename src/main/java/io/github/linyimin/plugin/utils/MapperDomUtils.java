@@ -188,7 +188,7 @@ public final class MapperDomUtils {
 
         List<DomFileElement<MybatisConfiguration>> elements = DomService.getInstance().getFileElements(MybatisConfiguration.class, project, scope);
 
-        return elements.stream()
+        MybatisConfiguration mybatisConfiguration = elements.stream()
                 .filter(configuration -> {
                     assert module != null;
                     assert configuration.getModule() != null;
@@ -196,5 +196,41 @@ public final class MapperDomUtils {
                 })
                 .map(DomFileElement::getRootElement)
                 .findFirst().orElse(null);
+
+        if (Objects.nonNull(mybatisConfiguration)) {
+            return mybatisConfiguration;
+        }
+
+
+        return findConfigurationByPsiMethod(project, elements, psiMethod);
+
+    }
+
+    private static MybatisConfiguration findConfigurationByPsiMethod(Project project, List<DomFileElement<MybatisConfiguration>> elements, PsiMethod psiMethod) {
+
+        if (Objects.isNull(psiMethod.getContainingClass())) {
+            return null;
+        }
+
+        List<Mapper> mappers = MapperDomUtils.findMappersByNamespace(project, psiMethod.getContainingClass().getQualifiedName());
+
+        if (CollectionUtils.isEmpty(mappers)) {
+            return null;
+        }
+
+        XmlTag xmlTag = mappers.get(0).getXmlTag();
+        if (Objects.isNull(xmlTag) || Objects.isNull(xmlTag.getContainingFile())) {
+            return null;
+        }
+
+        String mapperFileName = xmlTag.getContainingFile().getName();
+
+
+        return elements.stream()
+                .map(DomFileElement::getRootElement)
+                .filter(configuration -> {
+                    XmlTag tag = configuration.getXmlTag();
+                    return Objects.nonNull(tag) && StringUtils.contains(tag.getText(), mapperFileName);
+                }).findFirst().orElse(null);
     }
 }

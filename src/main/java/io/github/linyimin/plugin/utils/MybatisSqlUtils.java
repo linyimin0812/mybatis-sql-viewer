@@ -32,7 +32,12 @@ public class MybatisSqlUtils {
 
     public static String getSql(String mybatisConfiguration, String qualifiedMethod, String params, boolean isCheck) {
 
+        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+
         try {
+
+            Thread.currentThread().setContextClassLoader(MybatisPojoCompile.classLoader);
+
             InputStream in = IOUtils.toInputStream(mybatisConfiguration, Charset.defaultCharset());
             Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
 
@@ -47,6 +52,8 @@ public class MybatisSqlUtils {
                 Messages.showInfoMessage(e.getMessage(), Constant.APPLICATION_NAME);
             }
             throw e;
+        } finally {
+            Thread.currentThread().setContextClassLoader(currentClassLoader);
         }
     }
 
