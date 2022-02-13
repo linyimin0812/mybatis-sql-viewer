@@ -4,7 +4,7 @@
     <vendor email="linyimin520812@gmail.com" url="https://github.com/linyimin-bupt">linyimin</vendor>
 
 
-    <idea-version since-build="IU-201" />
+    <idea-version since-build="201" />
 
     <description><![CDATA[
     Mybatis-Sql-Viewer Plugin is a idea plugin for mybatis. <br />
