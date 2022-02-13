@@ -95,8 +95,26 @@ public class MybatisPojoCompile {
 
         Class<? extends PluginClassLoader> pluginClassLoaderClass = pluginClassLoader.getClass();
 
+        Field field = null;
+
         try {
-            Field field = pluginClassLoaderClass.getDeclaredField(Constant.PLUGIN_CLASS_LOADER_PARENTS);
+            field = pluginClassLoaderClass.getDeclaredField(Constant.PLUGIN_CLASS_LOADER_PARENTS);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            field = pluginClassLoaderClass.getDeclaredField(Constant.PLUGIN_CLASS_LOADER_MY_PARENTS);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+
+        if (Objects.isNull(field)) {
+            Messages.showInfoMessage("Unsupported this version", Constant.APPLICATION_NAME);
+            return;
+        }
+
+        try {
             field.setAccessible(true);
 
             ClassLoader[] parents = (ClassLoader[]) field.get(pluginClassLoader);
@@ -109,8 +127,7 @@ public class MybatisPojoCompile {
                 System.arraycopy(parents, 0, newParents, 0, parents.length);
                 field.set(pluginClassLoader, newParents);
             }
-
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
 

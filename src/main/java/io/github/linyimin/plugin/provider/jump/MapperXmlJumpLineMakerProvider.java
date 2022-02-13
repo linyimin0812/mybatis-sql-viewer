@@ -7,7 +7,6 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import com.intellij.psi.xml.XmlTokenType;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
 public class MapperXmlJumpLineMakerProvider extends RelatedItemLineMarkerProvider {
 
     @Override
-    protected void collectNavigationMarkers(@NotNull PsiElement element, @NotNull Collection<? super RelatedItemLineMarkerInfo<?>> result) {
+    protected void collectNavigationMarkers(@NotNull PsiElement element, @NotNull Collection<? super RelatedItemLineMarkerInfo> result) {
 
         // 避免LineMarker is supposed to be registered for leaf elements only, but got: XmlTag:select Warning
         if (!(element instanceof XmlToken) || ((XmlToken)element).getTokenType() != XmlTokenType.XML_START_TAG_START) {

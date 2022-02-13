@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class MapperInterfaceJumpLineMakerProvider extends RelatedItemLineMarkerProvider {
 
     @Override
-    protected void collectNavigationMarkers(@NotNull PsiElement element, @NotNull Collection<? super RelatedItemLineMarkerInfo<?>> result) {
+    protected void collectNavigationMarkers(@NotNull PsiElement element, @NotNull Collection<? super RelatedItemLineMarkerInfo> result) {
 
         // 只处理Mapper接口中的内容
         if (!JavaUtils.isElementWithinMapperInterface(element)) {

@@ -29,6 +29,7 @@ public class Constant {
 
     public static final String DATABASE_URL_TEMPLATE = "jdbc:mysql://%s:%s/%s";
 
+    public static final String PLUGIN_CLASS_LOADER_MY_PARENTS = "myParents";
     public static final String PLUGIN_CLASS_LOADER_PARENTS = "parents";
 
     public static final String MYBATIS_LOGGING_SLF4J = "slf4j";

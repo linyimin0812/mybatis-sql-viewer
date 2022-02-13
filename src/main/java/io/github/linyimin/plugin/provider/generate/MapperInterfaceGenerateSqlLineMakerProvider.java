@@ -39,8 +39,7 @@ public class MapperInterfaceGenerateSqlLineMakerProvider implements LineMarkerPr
                 IconUtils.GENERATE_ICON,
                 tooltip,
                 new SqlGenerateNavigationHandler(),
-                GutterIconRenderer.Alignment.CENTER,
-                () -> "mybatis-sql-viewer");
+                GutterIconRenderer.Alignment.CENTER);
     }
 
 }
