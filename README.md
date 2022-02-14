@@ -15,7 +15,7 @@ Mybatis-Sql-Viewer是一款增强idea对mybatis支持的插件，主要功能如
 
 ## 使用
 
-![](https://linyimin-picture.oss-cn-hangzhou.aliyuncs.com/how-to-use.gif)
+![](./src/main/resources/images/how-to-use.gif)
 
 ## 注意
 
