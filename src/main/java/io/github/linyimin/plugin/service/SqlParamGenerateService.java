@@ -18,10 +18,12 @@ import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.JavaUtils;
 import io.github.linyimin.plugin.utils.MapperDomUtils;
-import io.github.linyimin.plugin.utils.MybatisSqlUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author yiminlin
@@ -42,59 +44,65 @@ public class SqlParamGenerateService {
             return StringUtils.EMPTY;
         }
 
-        String mybatisConfig = getMybatisConfiguration(project, psiMethods.get(0));
+        List<String> mybatisConfigs = getMybatisConfigurations(project, psiMethods.get(0));
 
-        boolean isNeedCompile = checkNeedCompile(mybatisConfig, methodQualifiedName, params);
+        boolean isNeedCompile = checkNeedCompile(mybatisConfigs, methodQualifiedName, params);
 
         if (isNeedCompile) {
             MybatisPojoCompile.compile(project);
         }
 
-        return MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params, false);
+        return getSql(mybatisConfigs, methodQualifiedName, params);
 
     }
 
-    private boolean checkNeedCompile(String mybatisConfig, String methodQualifiedName, String params) {
+    private boolean checkNeedCompile(List<String> mybatisConfigs, String methodQualifiedName, String params) {
         if (Objects.isNull(MybatisPojoCompile.classLoader)) {
-            return true;
+            return  true;
         }
 
         try {
-            MybatisSqlUtils.getSql(mybatisConfig, methodQualifiedName, params, true);
-        } catch (Exception | NoClassDefFoundError e) {
+            getSql(mybatisConfigs, methodQualifiedName, params);
+        } catch (Throwable e) {
             return true;
         }
 
         return false;
     }
 
-    private String getMybatisConfiguration(Project project, PsiMethod psiMethod) {
+    private List<String> getMybatisConfigurations(Project project, PsiMethod psiMethod) {
 
-        MybatisConfiguration mybatisConfiguration = MapperDomUtils.findConfiguration(project, psiMethod);
-        if (Objects.isNull(mybatisConfiguration)) {
+        List<MybatisConfiguration> mybatisConfigurations = MapperDomUtils.findConfiguration(project, psiMethod);
+        if (org.apache.commons.collections.CollectionUtils.isEmpty(mybatisConfigurations)) {
             Messages.showInfoMessage("Mybatis配置文件不存在", Constant.APPLICATION_NAME);
-            return StringUtils.EMPTY;
+            return Collections.emptyList();
         }
 
-        if (Objects.isNull(mybatisConfiguration.getParent().getXmlElement())) {
+        mybatisConfigurations = mybatisConfigurations.stream().filter(mybatisConfiguration -> Objects.nonNull(mybatisConfiguration.getParent().getXmlElement())).collect(Collectors.toList());
+
+        if (org.apache.commons.collections.CollectionUtils.isEmpty(mybatisConfigurations)) {
             Messages.showInfoMessage("Mybatis配置文件错误", Constant.APPLICATION_NAME);
-            return StringUtils.EMPTY;
+            return Collections.emptyList();
         }
 
-        String mybatisConfig = mybatisConfiguration.getParent().getXmlElement().getText();
+        return mybatisConfigurations.stream().map(mybatisConfiguration -> {
+            String mybatisConfig = mybatisConfiguration.getParent().getXmlElement().getText();
 
-        // 不处理plugins
-        XmlElement xmlElement = mybatisConfiguration.getXmlElement();
+            // 不处理plugins
+            XmlElement xmlElement = mybatisConfiguration.getXmlElement();
 
-        if (Objects.nonNull(xmlElement) && xmlElement instanceof XmlTag) {
-            XmlTag[] tags = ((XmlTag) xmlElement).findSubTags("plugins");
-            if (tags.length > 0) {
-                String plugins = tags[0].getText();
-                mybatisConfig = mybatisConfig.replace(plugins, StringUtils.EMPTY);
+            if (Objects.nonNull(xmlElement) && xmlElement instanceof XmlTag) {
+                XmlTag[] tags = ((XmlTag) xmlElement).findSubTags("plugins");
+                if (tags.length > 0) {
+                    String plugins = tags[0].getText();
+                    mybatisConfig = mybatisConfig.replace(plugins, StringUtils.EMPTY);
+                }
             }
-        }
 
-        return mybatisConfig;
+            return mybatisConfig;
+        }).collect(Collectors.toList());
+
+
     }
 
 
@@ -179,7 +187,7 @@ public class SqlParamGenerateService {
 
             // 数组或者列表
             if (isArray(type)) {
-               param.put(name, Lists.newArrayList(param.get(name)));
+                param.put(name, Lists.newArrayList(param.get(name)));
             }
 
             params.putAll(param);
@@ -367,6 +375,34 @@ public class SqlParamGenerateService {
             this.psiType = psiType;
             this.isParamAnnotation = isParamAnnotation;
         }
+    }
+
+    private String getSql(List<String> mybatisConfigurations, String qualifiedMethod, String params) {
+
+        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+
+        try {
+            Thread.currentThread().setContextClassLoader(MybatisPojoCompile.classLoader);
+            Class<?> clazz = MybatisPojoCompile.classLoader.loadClass("io.github.linyimin.plugin.utils.MybatisSqlUtils");
+            Object object = clazz.newInstance();
+            Method method = clazz.getDeclaredMethod("getSql", String.class, String.class, String.class);
+
+            int length = mybatisConfigurations.size();
+            for (int i = 0; i < length - 1; i++) {
+                try {
+                    return (String) method.invoke(object, mybatisConfigurations.get(i), qualifiedMethod, params);
+                } catch (Throwable ignored) {
+
+                }
+            }
+
+            return (String) method.invoke(object, mybatisConfigurations.get(length - 1), qualifiedMethod, params);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(currentClassLoader);
+        }
+
     }
 
 }

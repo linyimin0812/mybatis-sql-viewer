@@ -181,24 +181,24 @@ public final class MapperDomUtils {
      * @param project {@link Project}
      * @return {@link MybatisConfiguration}
      */
-    public static MybatisConfiguration findConfiguration(Project project, PsiMethod psiMethod) {
+    public static List<MybatisConfiguration> findConfiguration(Project project, PsiMethod psiMethod) {
         GlobalSearchScope scope = GlobalSearchScope.allScope(project);
 
         Module module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
 
         List<DomFileElement<MybatisConfiguration>> elements = DomService.getInstance().getFileElements(MybatisConfiguration.class, project, scope);
 
-        MybatisConfiguration mybatisConfiguration = elements.stream()
+        List<MybatisConfiguration> mybatisConfigurations = elements.stream()
                 .filter(configuration -> {
                     assert module != null;
                     assert configuration.getModule() != null;
                     return StringUtils.equals(module.getName(), configuration.getModule().getName());
                 })
                 .map(DomFileElement::getRootElement)
-                .findFirst().orElse(null);
+                .collect(Collectors.toList());
 
-        if (Objects.nonNull(mybatisConfiguration)) {
-            return mybatisConfiguration;
+        if (CollectionUtils.isNotEmpty(mybatisConfigurations)) {
+            return mybatisConfigurations;
         }
 
 
@@ -206,7 +206,7 @@ public final class MapperDomUtils {
 
     }
 
-    private static MybatisConfiguration findConfigurationByPsiMethod(Project project, List<DomFileElement<MybatisConfiguration>> elements, PsiMethod psiMethod) {
+    private static List<MybatisConfiguration> findConfigurationByPsiMethod(Project project, List<DomFileElement<MybatisConfiguration>> elements, PsiMethod psiMethod) {
 
         if (Objects.isNull(psiMethod.getContainingClass())) {
             return null;
@@ -231,6 +231,6 @@ public final class MapperDomUtils {
                 .filter(configuration -> {
                     XmlTag tag = configuration.getXmlTag();
                     return Objects.nonNull(tag) && StringUtils.contains(tag.getText(), mapperFileName);
-                }).findFirst().orElse(null);
+                }).collect(Collectors.toList());
     }
 }

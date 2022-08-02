@@ -3,11 +3,8 @@ package io.github.linyimin.plugin.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.github.vertical_blank.sqlformatter.SqlFormatter;
-import com.intellij.openapi.ui.Messages;
-import io.github.linyimin.plugin.compile.MybatisPojoCompile;
-import io.github.linyimin.plugin.dom.Constant;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.Charsets;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -19,10 +16,13 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author yiminlin
@@ -30,31 +30,18 @@ import java.util.*;
  **/
 public class MybatisSqlUtils {
 
-    public static String getSql(String mybatisConfiguration, String qualifiedMethod, String params, boolean isCheck) {
+    private static final Pattern PATTERN = Pattern.compile("The expression '(.*)' evaluated to a null value");
+    public String getSql(String mybatisConfiguration, String qualifiedMethod, String params) {
 
-        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+        InputStream in = new ByteArrayInputStream(mybatisConfiguration.getBytes(Charsets.toCharset(Charset.defaultCharset())));
+        Resources.setDefaultClassLoader(Thread.currentThread().getContextClassLoader());
 
-        try {
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        Configuration configuration = sqlSessionFactory.getConfiguration();
 
-            Thread.currentThread().setContextClassLoader(MybatisPojoCompile.classLoader);
+        BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
 
-            InputStream in = IOUtils.toInputStream(mybatisConfiguration, Charset.defaultCharset());
-            Resources.setDefaultClassLoader(MybatisPojoCompile.classLoader);
-
-            SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
-            Configuration configuration = sqlSessionFactory.getConfiguration();
-
-            BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
-
-            return formatSql(configuration, sql);
-        } catch (Exception e) {
-            if (!isCheck) {
-                Messages.showInfoMessage(e.getMessage(), Constant.APPLICATION_NAME);
-            }
-            throw e;
-        } finally {
-            Thread.currentThread().setContextClassLoader(currentClassLoader);
-        }
+        return formatSql(configuration, sql);
     }
 
     private static String formatSql(Configuration configuration, BoundSql boundSql) {
@@ -110,11 +97,25 @@ public class MybatisSqlUtils {
 
     private static BoundSql getBoundSql(Configuration configuration, String qualifiedMethod, String params) {
 
-        Map<String, Object> map = JSON.parseObject(params, new TypeReference<>(){});
+        Map<String, Object> map = JSON.parseObject(params, new TypeReference<Map<String, Object>>(){});
 
         MappedStatement ms = configuration.getMappedStatement(qualifiedMethod);
 
-        return ms.getBoundSql(map);
+        try {
+            return ms.getBoundSql(map);
+        } catch (Throwable e) {
+            Matcher matcher = PATTERN.matcher(e.getMessage());
+
+            if (matcher.find()) {
+                String param = matcher.group(1);
+                for (Object o : map.values()) {
+                    if (o instanceof Collection) {
+                        map.put(param, o);
+                    }
+                }
+            }
+            return ms.getBoundSql(map);
+        }
     }
 
     public static String mysqlConnectTest(String url, String user, String password) {
@@ -164,7 +165,7 @@ public class MybatisSqlUtils {
                 sb.append(String.format("Query OK, %d row affected", row));
             }
 
-        } catch(Exception e) {
+        } catch(Throwable e) {
             sb.append("Query Failed, err: ").append(e.getMessage());
         } finally {
             if (Objects.nonNull(connection)) {

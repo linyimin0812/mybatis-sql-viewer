@@ -5,6 +5,7 @@ import com.intellij.json.JsonLanguage;
 import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.fileTypes.PlainTextLanguage;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.wm.ToolWindow;
 import io.github.linyimin.plugin.dom.Constant;
@@ -134,15 +135,19 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     }
 
     private void generateSql() {
-        SqlParamGenerateService generateService = myProject.getService(SqlParamGenerateService.class);
+        try {
+            SqlParamGenerateService generateService = myProject.getService(SqlParamGenerateService.class);
 
-        MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getState();
-        assert sqlConfig != null;
+            MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getState();
+            assert sqlConfig != null;
 
-        String sqlStr = generateService.generateSql(myProject, sqlConfig.getMethod(), sqlConfig.getParams());
-        sqlConfig.setSql(sqlStr);
+            String sqlStr = generateService.generateSql(myProject, sqlConfig.getMethod(), sqlConfig.getParams());
+            sqlConfig.setSql(sqlStr);
 
-        ((MyTextField) sql).setText(sqlStr);
+            ((MyTextField) sql).setText(sqlStr);
+        } catch (Throwable e) {
+            Messages.showInfoMessage("generate sql error. err: " + e.getMessage(), Constant.APPLICATION_NAME);
+        }
     }
 
     private void executeSql() {

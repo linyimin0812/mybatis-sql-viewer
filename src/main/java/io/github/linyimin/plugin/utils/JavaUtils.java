@@ -153,6 +153,7 @@ public class JavaUtils {
         List<PsiClass> psiClassList = namespaces
                 .stream()
                 .map(namespace -> JavaUtils.findClazz(project, namespace))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         Set<PsiClass> allDependencies = new HashSet<>();
