@@ -12,6 +12,7 @@ import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import com.siyeh.ig.psiutils.CollectionUtils;
 import io.github.linyimin.plugin.compile.MybatisPojoCompile;
+import io.github.linyimin.plugin.compile.ProjectLoader;
 import io.github.linyimin.plugin.dom.Constant;
 import io.github.linyimin.plugin.dom.model.MybatisConfiguration;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
@@ -46,23 +47,28 @@ public class SqlParamGenerateService {
 
         List<String> mybatisConfigs = getMybatisConfigurations(project, psiMethods.get(0));
 
-        boolean isNeedCompile = checkNeedCompile(mybatisConfigs, methodQualifiedName, params);
+        MybatisPojoCompile.compile(project);
 
-        if (isNeedCompile) {
-            MybatisPojoCompile.compile(project);
+        ProjectLoader loader = MybatisPojoCompile.getClassLoader(project);
+
+        if (Objects.isNull(loader)) {
+            return "Oops! There are something wrong with the plugin. Please try later.";
         }
 
-        return getSql(mybatisConfigs, methodQualifiedName, params);
+        return getSql(project, mybatisConfigs, methodQualifiedName, params);
 
     }
 
-    private boolean checkNeedCompile(List<String> mybatisConfigs, String methodQualifiedName, String params) {
-        if (Objects.isNull(MybatisPojoCompile.classLoader)) {
-            return  true;
+    private boolean checkNeedCompile(Project project, List<String> mybatisConfigs, String methodQualifiedName, String params) {
+
+        ProjectLoader classLoader = MybatisPojoCompile.getClassLoader(project);
+
+        if (Objects.isNull(classLoader)) {
+            return true;
         }
 
         try {
-            getSql(mybatisConfigs, methodQualifiedName, params);
+            getSql(project, mybatisConfigs, methodQualifiedName, params);
         } catch (Throwable e) {
             return true;
         }
@@ -332,6 +338,7 @@ public class SqlParamGenerateService {
 
         return nameValuePairs.stream()
                 .map(PsiNameValuePair::getLiteralValue)
+                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(StringUtils.EMPTY);
     }
@@ -377,13 +384,15 @@ public class SqlParamGenerateService {
         }
     }
 
-    private String getSql(List<String> mybatisConfigurations, String qualifiedMethod, String params) {
+    private String getSql(Project project, List<String> mybatisConfigurations, String qualifiedMethod, String params) {
 
         ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
 
+        ProjectLoader projectLoader = MybatisPojoCompile.getClassLoader(project);
+
         try {
-            Thread.currentThread().setContextClassLoader(MybatisPojoCompile.classLoader);
-            Class<?> clazz = MybatisPojoCompile.classLoader.loadClass("io.github.linyimin.plugin.utils.MybatisSqlUtils");
+            Thread.currentThread().setContextClassLoader(projectLoader);
+            Class<?> clazz = projectLoader.loadClass("io.github.linyimin.plugin.utils.MybatisSqlUtils");
             Object object = clazz.newInstance();
             Method method = clazz.getDeclaredMethod("getSql", String.class, String.class, String.class);
 

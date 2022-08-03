@@ -57,7 +57,7 @@ public class SqlGenerateNavigationHandler implements GutterIconNavigationHandler
      * @param toolWindow {@link ToolWindow}
      */
     private void activateWindow(ToolWindow toolWindow) {
-        toolWindow.setAutoHide(true);
+        toolWindow.setAutoHide(false);
         toolWindow.activate(null);
         Content content = toolWindow.getContentManager().getContent(0);
         assert content != null;

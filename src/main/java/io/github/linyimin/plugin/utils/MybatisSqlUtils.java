@@ -26,22 +26,27 @@ import java.util.regex.Pattern;
 
 /**
  * @author yiminlin
- * @date 2022/02/05 3:15 上午
+ * @date 2022/02/05 3:15 上午`
  **/
 public class MybatisSqlUtils {
 
     private static final Pattern PATTERN = Pattern.compile("The expression '(.*)' evaluated to a null value");
     public String getSql(String mybatisConfiguration, String qualifiedMethod, String params) {
 
-        InputStream in = new ByteArrayInputStream(mybatisConfiguration.getBytes(Charsets.toCharset(Charset.defaultCharset())));
-        Resources.setDefaultClassLoader(Thread.currentThread().getContextClassLoader());
+        try {
+            InputStream in = new ByteArrayInputStream(mybatisConfiguration.getBytes(Charsets.toCharset(Charset.defaultCharset())));
+            Resources.setDefaultClassLoader(Thread.currentThread().getContextClassLoader());
 
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
-        Configuration configuration = sqlSessionFactory.getConfiguration();
+            SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+            Configuration configuration = sqlSessionFactory.getConfiguration();
 
-        BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
+            BoundSql sql = getBoundSql(configuration, qualifiedMethod, params);
 
-        return formatSql(configuration, sql);
+            return formatSql(configuration, sql);
+        } catch (Throwable t) {
+            return "Oops! There are something wrong when generate sql statement.\n" + t.getMessage();
+        }
+
     }
 
     private static String formatSql(Configuration configuration, BoundSql boundSql) {

@@ -4,21 +4,16 @@ import com.intellij.compiler.impl.ProjectCompileScope;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.OrderEnumerator;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.VirtualFile;
 import io.github.linyimin.plugin.utils.JavaUtils;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -27,10 +22,12 @@ import java.util.stream.Stream;
  **/
 public class MybatisPojoCompile {
 
-    // TODO: 需要优化成只编译Mybatis需要的类
+    private static final Map<Project, ProjectLoader> projectClassLoaderMap = new ConcurrentHashMap<>();
 
-    public static ProjectLoader classLoader;
-    public static List<String> preDependencies;
+    public static ProjectLoader getClassLoader(Project project) {
+
+        return projectClassLoaderMap.get(project);
+    }
 
     public static void compile(Project project) {
 
@@ -47,12 +44,16 @@ public class MybatisPojoCompile {
 
         List<URL> urls = pathToURL(dependencies);
 
-        if (Objects.nonNull(classLoader)) {
-            changeLoaderUrls(preDependencies, dependencies);
-        } else {
-            createProjectLoader(urls);
+        ProjectLoader classLoader = projectClassLoaderMap.get(project);
+
+        try {
+            classLoader.close();
+        } catch (Throwable ignored) {
         }
-        preDependencies = dependencies;
+
+        classLoader = createProjectLoader(urls);
+
+        projectClassLoaderMap.put(project, classLoader);
     }
 
     private static List<URL> pathToURL(List<String> paths) {
@@ -96,44 +97,11 @@ public class MybatisPojoCompile {
         return list;
     }
 
-    private static boolean isProjectModule(Project project, String path) {
-        VirtualFile[] vFiles = ProjectRootManager.getInstance(project).getContentRootsFromAllModules();
-        Set<String> moduleNames = Stream.of(vFiles).map(VirtualFile::getName).collect(Collectors.toSet());
-
-        moduleNames.add(project.getName());
-        moduleNames.add(project.getBasePath());
-
-        return moduleNames.stream().anyMatch(path::contains);
-    }
-
-    private static void createProjectLoader(List<URL> urls) {
+    private static ProjectLoader createProjectLoader(List<URL> urls) {
 
         URL[] urlArr = urls.toArray(new URL[0]);
 
-        classLoader = new ProjectLoader(urlArr, MybatisPojoCompile.class.getClassLoader());
-    }
-
-    private static void changeLoaderUrls(List<String> preDependencies, List<String> dependencies) {
-
-        List<String> list = new ArrayList<>(dependencies);
-
-        for (String preDependency : preDependencies) {
-            list.remove(preDependency);
-        }
-
-        if (CollectionUtils.isEmpty(list)) {
-            return;
-        }
-
-        try {
-            classLoader.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        List<URL> urls = pathToURL(dependencies);
-        classLoader = new ProjectLoader(urls.toArray(new URL[0]), MybatisPojoCompile.class.getClassLoader());
-
+        return new ProjectLoader(urlArr, MybatisPojoCompile.class.getClassLoader());
     }
 
 }
