@@ -11,7 +11,6 @@ import com.intellij.psi.xml.XmlToken;
 import com.intellij.psi.xml.XmlTokenType;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.utils.IconUtils;
-import io.github.linyimin.plugin.utils.MapperDomUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,10 +35,6 @@ public class MapperXmlJumpLineMakerProvider extends RelatedItemLineMarkerProvide
         }
 
         PsiElement tag = element.getParent();
-
-        if (!MapperDomUtils.isElementWithinMapperXml(tag)) {
-            return;
-        }
 
         List<PsiElement> target = acquireTarget(tag);
 

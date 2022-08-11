@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'org.linyimin'
-version '1.0.0'
+version '1.0.1'
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/public/' }
@@ -28,14 +28,22 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
-      <ul>
-        <li>navigate from the code to mapper and from the mapper back to code</li>
-        <li>The xml statement/method in the mapper file convert to sql statement, which supports parameters mock, data source configuration, and sql execution</li>
-    </ul>
-    <ul>
-        <li>快速从代码跳转到mapper及从mapper返回代码</li>
-        <li>mapper文件中的xml语句/方法转换成sql语句，支持参数mock、数据源配置、sql执行</li>
-    </ul>
+        <h4>1.0.1</h4>
+        <ul>
+            <li>Compatible with other plugins</li>
+        </ul>
+        <ul>
+            <li>兼容其他插件</li>
+        </ul>
+        <h4>1.0.0</h4>
+        <ul>
+            <li>navigate from the code to mapper and from the mapper back to code</li>
+            <li>The xml statement/method in the mapper file convert to sql statement, which supports parameters mock, data source configuration, and sql execution</li>
+        </ul>
+        <ul>
+            <li>快速从代码跳转到mapper及从mapper返回代码</li>
+            <li>mapper文件中的xml语句/方法转换成sql语句，支持参数mock、数据源配置、sql执行</li>
+        </ul>
     """
 }
 

@@ -37,13 +37,11 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <dom.fileMetaData rootTagName="mapper" implementation="io.github.linyimin.plugin.description.MapperDescription"/>
-        <dom.fileMetaData rootTagName="configuration" implementation="io.github.linyimin.plugin.description.MapperConfigurationDescription" />
-        
-        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.jump.MapperInterfaceJumpLineMakerProvider" />
-        <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.jump.MapperXmlJumpLineMakerProvider" />
-        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.github.linyimin.plugin.provider.generate.MapperInterfaceGenerateSqlLineMakerProvider" />
-        <codeInsight.lineMarkerProvider language="XML" implementationClass="io.github.linyimin.plugin.provider.generate.MapperXmlGenerateSqlLineMakerProvider" />
+
+        <codeInsight.lineMarkerProvider id="mybatis.sql.viewer.MapperInterfaceJumpLineMakerProvider" language="JAVA" implementationClass="io.github.linyimin.plugin.provider.jump.MapperInterfaceJumpLineMakerProvider" />
+        <codeInsight.lineMarkerProvider id="mybatis.sql.viewer.MapperXmlJumpLineMakerProvider" language="XML" implementationClass="io.github.linyimin.plugin.provider.jump.MapperXmlJumpLineMakerProvider" />
+        <codeInsight.lineMarkerProvider id="mybatis.sql.viewer.MapperInterfaceGenerateSqlLineMakerProvider" language="JAVA" implementationClass="io.github.linyimin.plugin.provider.generate.MapperInterfaceGenerateSqlLineMakerProvider" />
+        <codeInsight.lineMarkerProvider id="mybatis.sql.viewer.MapperXmlGenerateSqlLineMakerProvider" language="XML" implementationClass="io.github.linyimin.plugin.provider.generate.MapperXmlGenerateSqlLineMakerProvider" />
 
         <applicationService serviceImplementation="io.github.linyimin.plugin.service.MybatisDatasourceStateComponent" order="first" />
         <projectService serviceImplementation="io.github.linyimin.plugin.service.MybatisSqlStateComponent" order="first" />

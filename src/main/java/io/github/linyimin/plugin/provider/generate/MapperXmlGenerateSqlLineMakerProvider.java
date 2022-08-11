@@ -9,7 +9,6 @@ import com.intellij.psi.xml.XmlToken;
 import com.intellij.psi.xml.XmlTokenType;
 import io.github.linyimin.plugin.dom.Constant;
 import io.github.linyimin.plugin.utils.IconUtils;
-import io.github.linyimin.plugin.utils.MapperDomUtils;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -26,11 +25,6 @@ public class MapperXmlGenerateSqlLineMakerProvider implements LineMarkerProvider
         }
 
         PsiElement tag = element.getParent();
-
-        // 只处理Mapper接口中的内容
-        if (!MapperDomUtils.isElementWithinMapperXml(tag)) {
-            return null;
-        }
 
         XmlTag xmlTag = (XmlTag) tag;
 

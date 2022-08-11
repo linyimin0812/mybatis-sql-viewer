@@ -3,28 +3,24 @@ package io.github.linyimin.plugin.service;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.util.PsiUtil;
-import com.intellij.psi.xml.XmlElement;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import com.siyeh.ig.psiutils.CollectionUtils;
+import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
 import io.github.linyimin.plugin.compile.MybatisPojoCompile;
 import io.github.linyimin.plugin.compile.ProjectLoader;
 import io.github.linyimin.plugin.dom.Constant;
-import io.github.linyimin.plugin.dom.model.MybatisConfiguration;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.JavaUtils;
-import io.github.linyimin.plugin.utils.MapperDomUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author yiminlin
@@ -41,11 +37,14 @@ public class SqlParamGenerateService {
         List<PsiMethod> psiMethods = JavaUtils.findMethod(project, methodQualifiedName);
 
         if (org.apache.commons.collections.CollectionUtils.isEmpty(psiMethods)) {
-            Messages.showInfoMessage(String.format("method %s is not exist.", methodQualifiedName), Constant.APPLICATION_NAME);
-            return StringUtils.EMPTY;
+            return String.format("Oops! Method %s is not exist.", methodQualifiedName);
         }
 
-        List<String> mybatisConfigs = getMybatisConfigurations(project, psiMethods.get(0));
+        List<String> mybatisConfigs = MybatisXmlContentCache.acquireConfigurations(project);
+
+        if (org.apache.commons.collections.CollectionUtils.isEmpty(mybatisConfigs)) {
+            return "Oops! The plugin can't find the configuration file.";
+        }
 
         MybatisPojoCompile.compile(project);
 
@@ -58,59 +57,6 @@ public class SqlParamGenerateService {
         return getSql(project, mybatisConfigs, methodQualifiedName, params);
 
     }
-
-    private boolean checkNeedCompile(Project project, List<String> mybatisConfigs, String methodQualifiedName, String params) {
-
-        ProjectLoader classLoader = MybatisPojoCompile.getClassLoader(project);
-
-        if (Objects.isNull(classLoader)) {
-            return true;
-        }
-
-        try {
-            getSql(project, mybatisConfigs, methodQualifiedName, params);
-        } catch (Throwable e) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private List<String> getMybatisConfigurations(Project project, PsiMethod psiMethod) {
-
-        List<MybatisConfiguration> mybatisConfigurations = MapperDomUtils.findConfiguration(project, psiMethod);
-        if (org.apache.commons.collections.CollectionUtils.isEmpty(mybatisConfigurations)) {
-            Messages.showInfoMessage("Mybatis配置文件不存在", Constant.APPLICATION_NAME);
-            return Collections.emptyList();
-        }
-
-        mybatisConfigurations = mybatisConfigurations.stream().filter(mybatisConfiguration -> Objects.nonNull(mybatisConfiguration.getParent().getXmlElement())).collect(Collectors.toList());
-
-        if (org.apache.commons.collections.CollectionUtils.isEmpty(mybatisConfigurations)) {
-            Messages.showInfoMessage("Mybatis配置文件错误", Constant.APPLICATION_NAME);
-            return Collections.emptyList();
-        }
-
-        return mybatisConfigurations.stream().map(mybatisConfiguration -> {
-            String mybatisConfig = mybatisConfiguration.getParent().getXmlElement().getText();
-
-            // 不处理plugins
-            XmlElement xmlElement = mybatisConfiguration.getXmlElement();
-
-            if (Objects.nonNull(xmlElement) && xmlElement instanceof XmlTag) {
-                XmlTag[] tags = ((XmlTag) xmlElement).findSubTags("plugins");
-                if (tags.length > 0) {
-                    String plugins = tags[0].getText();
-                    mybatisConfig = mybatisConfig.replace(plugins, StringUtils.EMPTY);
-                }
-            }
-
-            return mybatisConfig;
-        }).collect(Collectors.toList());
-
-
-    }
-
 
     private void updateMybatisSqlConfig(PsiElement psiElement) {
 
@@ -399,7 +345,11 @@ public class SqlParamGenerateService {
             int length = mybatisConfigurations.size();
             for (int i = 0; i < length - 1; i++) {
                 try {
-                    return (String) method.invoke(object, mybatisConfigurations.get(i), qualifiedMethod, params);
+                    String result = (String) method.invoke(object, mybatisConfigurations.get(i), qualifiedMethod, params);
+                    if (StringUtils.contains(result, "Oops! There are something wrong when generate sql statement.")) {
+                        continue;
+                    }
+                    return result;
                 } catch (Throwable ignored) {
 
                 }

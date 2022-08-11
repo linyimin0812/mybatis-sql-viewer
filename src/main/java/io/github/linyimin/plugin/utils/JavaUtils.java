@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.compiled.ClsFileImpl;
 import com.intellij.psi.search.GlobalSearchScope;
+import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
 import io.github.linyimin.plugin.dom.Constant;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -45,7 +46,7 @@ public class JavaUtils {
             return false;
         }
 
-        List<String> namespaces = MapperDomUtils.getNamespaces(psiElement.getProject());
+        List<String> namespaces = MybatisXmlContentCache.acquireByNamespace(psiElement.getProject());
 
         PsiClass psiClass = (PsiClass) psiElement;
         String qualifiedName = psiClass.getQualifiedName();
@@ -148,7 +149,7 @@ public class JavaUtils {
     }
 
     public static Set<String> getAllDependenciesRecursive(Project project) {
-        List<String> namespaces = MapperDomUtils.getNamespaces(project);
+        List<String> namespaces = MybatisXmlContentCache.acquireByNamespace(project);
 
         List<PsiClass> psiClassList = namespaces
                 .stream()

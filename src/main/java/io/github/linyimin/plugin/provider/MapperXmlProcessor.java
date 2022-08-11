@@ -4,14 +4,11 @@ import com.google.common.collect.Lists;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.impl.source.xml.XmlTagImpl;
+import com.intellij.psi.xml.XmlAttribute;
 import com.intellij.psi.xml.XmlTag;
-import com.intellij.util.xml.DomElement;
-import com.intellij.util.xml.DomUtil;
 import io.github.linyimin.plugin.dom.Constant;
-import io.github.linyimin.plugin.dom.model.IdDomElement;
-import io.github.linyimin.plugin.dom.model.Mapper;
 import io.github.linyimin.plugin.utils.JavaUtils;
-import io.github.linyimin.plugin.utils.MapperDomUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.util.Collections;
 import java.util.List;
@@ -36,16 +33,13 @@ public class MapperXmlProcessor {
             return Collections.emptyList();
         }
 
-        DomElement domElement = DomUtil.getDomElement(xmlTag);
+        XmlAttribute attribute = xmlTag.getAttribute("namespace");
 
-        if (!(domElement instanceof Mapper)) {
+        if (attribute == null) {
             return Collections.emptyList();
         }
 
-        Mapper mapper = (Mapper) domElement;
-
-        String namespace = mapper.getNamespace().getRawText();
-        PsiClass psiClass = JavaUtils.findClazz(psiElement.getProject(), namespace);
+        PsiClass psiClass = JavaUtils.findClazz(psiElement.getProject(), attribute.getValue());
 
         return Objects.isNull(psiClass) ? Collections.emptyList() : Lists.newArrayList(psiClass);
     }
@@ -62,17 +56,26 @@ public class MapperXmlProcessor {
             return Collections.emptyList();
         }
 
-        DomElement domElement = DomUtil.getDomElement(xmlTag);
-
-        if (!(domElement instanceof IdDomElement)) {
+        XmlAttribute attribute = xmlTag.getAttribute("id");
+        if (attribute == null) {
             return Collections.emptyList();
         }
 
-        IdDomElement idDomElement = (IdDomElement) domElement;
-        Mapper mapper = MapperDomUtils.findMapper(domElement);
+        String methodName = attribute.getValue();
 
-        String qualifiedName = mapper.getNamespace().getRawText();
-        String methodName = idDomElement.getId().getRawText();
+        PsiElement parent = xmlTag.getParent();
+
+        if (parent == null) {
+            return Collections.emptyList();
+        }
+
+        XmlAttribute parentAttribute = ((XmlTagImpl) parent).getAttribute("namespace");
+
+        if (parentAttribute == null) {
+            return Collections.emptyList();
+        }
+
+        String qualifiedName = parentAttribute.getValue();
 
         return JavaUtils.findMethod(element.getProject(), qualifiedName, methodName);
 
