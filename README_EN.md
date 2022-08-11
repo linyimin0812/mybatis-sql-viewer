@@ -15,7 +15,7 @@ Mybatis-Sql-Viewer is an enhanced plugin for idea to support mybatis,here is the
 
 ## How to Use
 
-![](./src/main/resources/images/how-to-use.gif)
+![](https://linyimin-picture.oss-cn-hangzhou.aliyuncs.com/how-to-use.gif)
 
 
 ## Notice
