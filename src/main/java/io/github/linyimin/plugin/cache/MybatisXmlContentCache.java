@@ -11,6 +11,7 @@ import com.intellij.psi.xml.XmlAttribute;
 import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
 import io.github.linyimin.plugin.utils.MapperDomUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -26,9 +27,11 @@ public class MybatisXmlContentCache {
 
     private static final Map<Project, Map<String /* namespace */, List<String> /* method name list */>> projectMybatisMapperMap = new HashMap<>();
 
-    private static final Map<Project, Map<String /* namespace */, List<XmlTag>>> projectMapperNamespaceMap = new HashMap<>();
+    private static final Map<Project, Map<String /* namespace */, Set<XmlTag>>> projectMapperNamespaceMap = new HashMap<>();
 
-    private static final Map<Project, Map<String /* method qualified name */, List<XmlTag>>> projectMapperMethodMap = new HashMap<>();
+    private static final Map<Project, Map<String /* method qualified name */, Set<XmlTag>>> projectMapperMethodMap = new HashMap<>();
+
+    private static final Map<Project, Map<String /* method qualified name */, String /* mapper xml string */>> projectMethodToMapperFilePath = new HashMap<>();
 
 
     public static List<String> acquireConfigurations(Project project) {
@@ -48,22 +51,28 @@ public class MybatisXmlContentCache {
         return new ArrayList<>(namespaces);
     }
 
-    public static List<XmlTag> acquireByNamespace(Project project, String namespace) {
-
+    public static String acquireMapperPathByMethodName(Project project, String methodName) {
         addXmlCache(project);
 
-        Map<String /* namespace */, List<XmlTag>> cache = projectMapperNamespaceMap.getOrDefault(project, new HashMap<>());
-
-        return cache.getOrDefault(namespace, new ArrayList<>());
+        return projectMethodToMapperFilePath.getOrDefault(project, new HashMap<>()).get(methodName);
     }
 
-    public static List<XmlTag> acquireByMethodName(Project project, String methodQualifiedName) {
+    public static Set<XmlTag> acquireByNamespace(Project project, String namespace) {
 
         addXmlCache(project);
 
-        Map<String /* namespace */, List<XmlTag>> cache = projectMapperMethodMap.getOrDefault(project, new HashMap<>());
+        Map<String /* namespace */, Set<XmlTag>> cache = projectMapperNamespaceMap.getOrDefault(project, new HashMap<>());
 
-        return cache.getOrDefault(methodQualifiedName, new ArrayList<>());
+        return cache.getOrDefault(namespace, new HashSet<>());
+    }
+
+    public static Set<XmlTag> acquireByMethodName(Project project, String methodQualifiedName) {
+
+        addXmlCache(project);
+
+        Map<String /* namespace */, Set<XmlTag>> cache = projectMapperMethodMap.getOrDefault(project, new HashMap<>());
+
+        return cache.getOrDefault(methodQualifiedName, new HashSet<>());
     }
 
     private static void addXmlCache(Project project) {
@@ -124,6 +133,8 @@ public class MybatisXmlContentCache {
 
             String id = subAttribute.getValue();
 
+            addMethodToMapperCache(project, namespace, id, psiFile);
+
             addMethodXmlTagCache(project, namespace, id, subTag);
 
             addNamespaceCache(project, namespace, id);
@@ -132,11 +143,30 @@ public class MybatisXmlContentCache {
 
     }
 
+    private static void addMethodToMapperCache(Project project, String namespace, String id, PsiFile psiFile) {
+        Map<String, String> methodCacheMap = projectMethodToMapperFilePath.getOrDefault(project, new HashMap<>());
+
+        String methodQualifiedName = namespace + "." + id;
+
+        String path = psiFile.getVirtualFile().getPath();
+
+        if (StringUtils.isBlank(path)) {
+            return;
+        }
+
+        path = path.substring(path.indexOf("resources/") + "resources/".length());
+
+        methodCacheMap.put(methodQualifiedName, path);
+
+        projectMethodToMapperFilePath.put(project, methodCacheMap);
+
+    }
+
     private static void addNamespaceXmlTagCache(Project project, String namespace, XmlTag xmlTag) {
 
-        Map<String, List<XmlTag>> namespaceCacheMap = projectMapperNamespaceMap.getOrDefault(project, new HashMap<>());
+        Map<String, Set<XmlTag>> namespaceCacheMap = projectMapperNamespaceMap.getOrDefault(project, new HashMap<>());
 
-        List<XmlTag> tags = namespaceCacheMap.getOrDefault(namespace, new ArrayList<>());
+        Set<XmlTag> tags = namespaceCacheMap.getOrDefault(namespace, new HashSet<>());
         tags.add(xmlTag);
 
         namespaceCacheMap.put(namespace, tags);
@@ -147,11 +177,11 @@ public class MybatisXmlContentCache {
 
     private static void addMethodXmlTagCache(Project project, String namespace, String id, XmlTag xmlTag) {
 
-        Map<String, List<XmlTag>> methodCacheMap = projectMapperMethodMap.getOrDefault(project, new HashMap<>());
+        Map<String, Set<XmlTag>> methodCacheMap = projectMapperMethodMap.getOrDefault(project, new HashMap<>());
 
         String methodQualifiedName = namespace + "." + id;
 
-        List<XmlTag> tags = methodCacheMap.getOrDefault(methodQualifiedName, new ArrayList<>());
+        Set<XmlTag> tags = methodCacheMap.getOrDefault(methodQualifiedName, new HashSet<>());
         tags.add(xmlTag);
 
         methodCacheMap.put(methodQualifiedName, tags);

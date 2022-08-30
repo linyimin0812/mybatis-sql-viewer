@@ -29,11 +29,13 @@ public class Constant {
 
     public static final String DATABASE_URL_TEMPLATE = "jdbc:mysql://%s:%s/%s";
 
-    public static final String PLUGIN_CLASS_LOADER_MY_PARENTS = "myParents";
-    public static final String PLUGIN_CLASS_LOADER_PARENTS = "parents";
-
-    public static final String MYBATIS_LOGGING_SLF4J = "slf4j";
-    public static final String MYBATIS_LOGGING_LOG4J = "log4j";
+    public static final String CONFIGURATION_TEMPLATE = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
+            "<!DOCTYPE configuration PUBLIC \"-//mybatis.org//DTD Config 3.0//EN\" \"http://mybatis.org/dtd/mybatis-3-config.dtd\">\n" +
+            "<configuration>\n" +
+            "   <mappers>\n" +
+            "       <mapper resource=\"${resource}\" />\n" +
+            "   </mappers>\n" +
+            "</configuration>";
 
     public static final String JAR_FILE_END = "!";
 

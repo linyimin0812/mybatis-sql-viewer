@@ -22,6 +22,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static io.github.linyimin.plugin.dom.Constant.CONFIGURATION_TEMPLATE;
+
 /**
  * @author yiminlin
  * @date 2022/02/02 2:09 上午
@@ -43,7 +45,15 @@ public class SqlParamGenerateService {
         List<String> mybatisConfigs = MybatisXmlContentCache.acquireConfigurations(project);
 
         if (org.apache.commons.collections.CollectionUtils.isEmpty(mybatisConfigs)) {
-            return "Oops! The plugin can't find the configuration file.";
+
+            String mapper = MybatisXmlContentCache.acquireMapperPathByMethodName(project, methodQualifiedName);
+            if (StringUtils.isBlank(mapper)) {
+                return "Oops! The plugin can't find the configuration file.";
+            }
+            String configuration = CONFIGURATION_TEMPLATE.replace("${resource}", mapper);
+
+            mybatisConfigs = Collections.singletonList(configuration);
+
         }
 
         MybatisPojoCompile.compile(project);
