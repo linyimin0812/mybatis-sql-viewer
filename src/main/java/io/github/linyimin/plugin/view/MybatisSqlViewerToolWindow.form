@@ -17,7 +17,7 @@
           <title-color color="-16777216"/>
         </border>
         <children>
-          <scrollpane id="935d5">
+          <scrollpane id="935d5" binding="paramsScroll">
             <constraints>
               <tabbedpane title="params"/>
             </constraints>
@@ -33,11 +33,15 @@
               </grid>
             </children>
           </scrollpane>
-          <scrollpane id="84ccf">
+          <scrollpane id="84ccf" binding="sqlScroll">
             <constraints>
               <tabbedpane title="sql"/>
             </constraints>
-            <properties/>
+            <properties>
+              <verifyInputWhenFocusTarget value="false"/>
+              <verticalScrollBarPolicy value="20"/>
+              <wheelScrollingEnabled value="true"/>
+            </properties>
             <border type="none"/>
             <children>
               <grid id="d9725" binding="sql" custom-create="true" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -49,7 +53,7 @@
               </grid>
             </children>
           </scrollpane>
-          <scrollpane id="1709">
+          <scrollpane id="1709" binding="resultScroll">
             <constraints>
               <tabbedpane title="result"/>
             </constraints>
@@ -230,7 +234,7 @@
       </component>
       <component id="c42e" class="javax.swing.JTextField" binding="methodName">
         <constraints>
-          <grid row="2" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="5" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="5" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <editable value="false"/>

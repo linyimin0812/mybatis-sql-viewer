@@ -80,4 +80,35 @@ public class MapperXmlProcessor {
         return JavaUtils.findMethod(element.getProject(), qualifiedName, methodName);
 
     }
+
+    public static String acquireStatementId(PsiElement element) {
+        XmlTag xmlTag = (XmlTag) element;
+
+        if (!Constant.MYBATIS_OPS.contains(xmlTag.getName())) {
+            return "";
+        }
+
+        XmlAttribute attribute = xmlTag.getAttribute("id");
+        if (attribute == null) {
+            return "";
+        }
+
+        String methodName = attribute.getValue();
+
+        PsiElement parent = xmlTag.getParent();
+
+        if (parent == null) {
+            return "";
+        }
+
+        XmlAttribute parentAttribute = ((XmlTagImpl) parent).getAttribute("namespace");
+
+        if (parentAttribute == null) {
+            return "";
+        }
+
+        String qualifiedName = parentAttribute.getValue();
+
+        return String.format("%s.%s", qualifiedName, methodName);
+    }
 }

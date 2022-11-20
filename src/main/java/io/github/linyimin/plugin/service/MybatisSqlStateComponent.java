@@ -1,10 +1,8 @@
 package io.github.linyimin.plugin.service;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
 import org.apache.commons.lang3.StringUtils;

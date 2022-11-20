@@ -97,6 +97,7 @@ public class JavaUtils {
     public static PsiClass findClazz(Project project, String clazzName) {
         GlobalSearchScope scope = GlobalSearchScope.allScope(project);
         JavaPsiFacade instance = JavaPsiFacade.getInstance(project);
+
         return instance.findClass(clazzName, scope);
     }
 

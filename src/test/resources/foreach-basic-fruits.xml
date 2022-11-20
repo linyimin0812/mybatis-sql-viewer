@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fruit">
+    <select id="testForeach">
+        SELECT
+        name,
+        category,
+        price
+        FROM
+        fruits
+        <where>
+            category = 'apple'
+            AND
+            <foreach collection="apples" item="name"  open="(" close=")" separator="OR">
+                <if test="name == 'Jonathan' or name == 'Fuji'">
+                    name = #{name}
+                </if>
+            </foreach>
+        </where>
+    </select>
+</mapper>

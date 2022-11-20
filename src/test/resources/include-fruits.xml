@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fruit">
+    <sql id="sometable">
+        fruits
+    </sql>
+
+    <sql id="somewhere">
+        WHERE
+      category = #{category}
+    </sql>
+
+    <sql id="someinclude">
+        FROM
+        <include refid="${include_target}"/>
+        <include refid="somewhere"/>
+    </sql>
+
+    <select id="testInclude">
+        SELECT
+        name,
+        category,
+        price
+        <include refid="someinclude">
+            <property name="prefix" value="Some"/>
+            <property name="include_target" value="sometable"/>
+        </include>
+    </select>
+</mapper>

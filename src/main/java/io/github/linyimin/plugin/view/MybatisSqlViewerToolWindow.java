@@ -40,6 +40,9 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private JPanel params;
     private JTextArea result;
     private JPanel sql;
+    private JScrollPane sqlScroll;
+    private JScrollPane paramsScroll;
+    private JScrollPane resultScroll;
 
     private final Project myProject;
 
@@ -74,10 +77,14 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         methodName.setText(config.getMethod());
         result.setText(config.getResult());
         ((MyTextField) params).setText(config.getParams());
+
         ((MyTextField) sql).setText(config.getSql());
 
         // 默认每次打开，都展示第一个tab
         tabbedPane.setSelectedIndex(0);
+
+        setScrollUnitIncrement();
+
     }
 
     private void createUIComponents() {
@@ -193,6 +200,18 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, hostText, portText, databaseText);
             url.setText(urlText);
         }
+    }
+
+    private void setScrollUnitIncrement() {
+        int unit = 16;
+        this.sqlScroll.getVerticalScrollBar().setUnitIncrement(unit);
+        this.sqlScroll.getHorizontalScrollBar().setUnitIncrement(unit);
+
+        this.resultScroll.getVerticalScrollBar().setUnitIncrement(unit);
+        this.resultScroll.getHorizontalScrollBar().setUnitIncrement(unit);
+
+        this.paramsScroll.getVerticalScrollBar().setUnitIncrement(unit);
+        this.paramsScroll.getHorizontalScrollBar().setUnitIncrement(unit);
     }
 
     private enum TabbedComponentType {

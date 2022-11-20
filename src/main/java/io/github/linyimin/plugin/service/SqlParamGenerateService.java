@@ -10,19 +10,14 @@ import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import com.siyeh.ig.psiutils.CollectionUtils;
 import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
-import io.github.linyimin.plugin.compile.MybatisPojoCompile;
-import io.github.linyimin.plugin.compile.ProjectLoader;
 import io.github.linyimin.plugin.dom.Constant;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
-import io.github.linyimin.plugin.utils.JavaUtils;
+import io.github.linyimin.plugin.utils.MybatisSqlUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.Method;
 import java.util.*;
-
-import static io.github.linyimin.plugin.dom.Constant.CONFIGURATION_TEMPLATE;
 
 /**
  * @author yiminlin
@@ -36,35 +31,15 @@ public class SqlParamGenerateService {
 
     public String generateSql(Project project, String methodQualifiedName, String params) {
 
-        List<PsiMethod> psiMethods = JavaUtils.findMethod(project, methodQualifiedName);
+        String namespace = methodQualifiedName.substring(0, methodQualifiedName.lastIndexOf("."));
 
-        if (org.apache.commons.collections.CollectionUtils.isEmpty(psiMethods)) {
-            return String.format("Oops! Method %s is not exist.", methodQualifiedName);
+        Optional<String> optional = MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst();
+
+        if (!optional.isPresent()) {
+            return "Oops! The plugin can't find the mapper file.";
         }
 
-        List<String> mybatisConfigs = MybatisXmlContentCache.acquireConfigurations(project);
-
-        if (org.apache.commons.collections.CollectionUtils.isEmpty(mybatisConfigs)) {
-
-            String mapper = MybatisXmlContentCache.acquireMapperPathByMethodName(project, methodQualifiedName);
-            if (StringUtils.isBlank(mapper)) {
-                return "Oops! The plugin can't find the configuration file.";
-            }
-            String configuration = CONFIGURATION_TEMPLATE.replace("${resource}", mapper);
-
-            mybatisConfigs = Collections.singletonList(configuration);
-
-        }
-
-        MybatisPojoCompile.compile(project);
-
-        ProjectLoader loader = MybatisPojoCompile.getClassLoader(project);
-
-        if (Objects.isNull(loader)) {
-            return "Oops! There are something wrong with the plugin. Please try later.";
-        }
-
-        return getSql(project, mybatisConfigs, methodQualifiedName, params);
+        return MybatisSqlUtils.getSql(optional.get(), methodQualifiedName, params);
 
     }
 
@@ -81,9 +56,13 @@ public class SqlParamGenerateService {
 
         }
 
+        String statementId = "";
+
         if (psiElement instanceof XmlToken && psiElement.getParent() instanceof XmlTag) {
             List<PsiMethod> methods = MapperXmlProcessor.processMapperMethod(psiElement.getParent());
             psiMethod = methods.stream().findFirst().orElse(null);
+
+            statementId = MapperXmlProcessor.acquireStatementId(psiElement.getParent());
         }
 
         // 设置缓存, method qualified name and params
@@ -92,6 +71,10 @@ public class SqlParamGenerateService {
 
             String params = generateMethodParam(psiMethod);
             sqlConfig.setParams(params);
+        } else if (statementId != null) {
+            // 找不到对应的接口方法
+            sqlConfig.setMethod(statementId);
+            sqlConfig.setParams("{}");
         }
     }
 
@@ -267,10 +250,6 @@ public class SqlParamGenerateService {
                 psiClass = PsiUtil.resolveClassInType(param.getType());
             }
 
-            if (Objects.isNull(psiClass)) {
-                continue;
-            }
-
             String paramAnnotationValue = getParamAnnotationValue(param);
             String name = StringUtils.isBlank(paramAnnotationValue) ? param.getName() : paramAnnotationValue;
 
@@ -283,7 +262,7 @@ public class SqlParamGenerateService {
     /**
      * 获取Param注解的value
      * @param param {@link PsiParameter}
-     * @return {@link org.apache.ibatis.annotations.Param} value的值
+     * @return {org.apache.ibatis.annotations.Param} value的值
      */
     private String getParamAnnotationValue(PsiParameter param) {
         PsiAnnotation annotation = param.getAnnotation(Constant.PARAM_ANNOTATION);
@@ -339,39 +318,4 @@ public class SqlParamGenerateService {
             this.isParamAnnotation = isParamAnnotation;
         }
     }
-
-    private String getSql(Project project, List<String> mybatisConfigurations, String qualifiedMethod, String params) {
-
-        ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-
-        ProjectLoader projectLoader = MybatisPojoCompile.getClassLoader(project);
-
-        try {
-            Thread.currentThread().setContextClassLoader(projectLoader);
-            Class<?> clazz = projectLoader.loadClass("io.github.linyimin.plugin.utils.MybatisSqlUtils");
-            Object object = clazz.newInstance();
-            Method method = clazz.getDeclaredMethod("getSql", String.class, String.class, String.class);
-
-            int length = mybatisConfigurations.size();
-            for (int i = 0; i < length - 1; i++) {
-                try {
-                    String result = (String) method.invoke(object, mybatisConfigurations.get(i), qualifiedMethod, params);
-                    if (StringUtils.contains(result, "Oops! There are something wrong when generate sql statement.")) {
-                        continue;
-                    }
-                    return result;
-                } catch (Throwable ignored) {
-
-                }
-            }
-
-            return (String) method.invoke(object, mybatisConfigurations.get(length - 1), qualifiedMethod, params);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            Thread.currentThread().setContextClassLoader(currentClassLoader);
-        }
-
-    }
-
 }

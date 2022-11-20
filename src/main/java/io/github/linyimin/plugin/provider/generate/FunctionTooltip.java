@@ -14,7 +14,6 @@ import com.intellij.util.Function;
  **/
 public class FunctionTooltip implements Function<PsiElement, String> {
 
-    private final String MSG = "Generate Sql and params for ";
     PsiElement psiElement;
 
     public FunctionTooltip() {}
@@ -25,6 +24,7 @@ public class FunctionTooltip implements Function<PsiElement, String> {
 
     @Override
     public String fun(PsiElement psiElement) {
+        String MSG = "Generate Sql and params for ";
         if (psiElement instanceof PsiIdentifier && psiElement.getParent() instanceof PsiMethod) {
             PsiMethod psiMethod = (PsiMethod) psiElement.getParent();
             return MSG + psiMethod.getName();
