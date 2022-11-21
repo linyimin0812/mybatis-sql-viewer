@@ -7,7 +7,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.impl.source.xml.XmlTagImpl;
 import com.intellij.psi.xml.XmlAttribute;
 import com.intellij.psi.xml.XmlTag;
-import io.github.linyimin.plugin.dom.Constant;
+import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.utils.JavaUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.util.Collections;

@@ -3,17 +3,14 @@ package io.github.linyimin.plugin.utils;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.compiled.ClsFileImpl;
 import com.intellij.psi.search.GlobalSearchScope;
 import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
-import io.github.linyimin.plugin.dom.Constant;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author yiminlin
@@ -99,92 +96,5 @@ public class JavaUtils {
         JavaPsiFacade instance = JavaPsiFacade.getInstance(project);
 
         return instance.findClass(clazzName, scope);
-    }
-
-    public static List<PsiMethod> findMethod(Project project, String methodQualifiedName) {
-        String className = StringUtils.substring(methodQualifiedName, 0, StringUtils.lastIndexOf(methodQualifiedName, "."));
-        String methodName = StringUtils.substring(methodQualifiedName, StringUtils.lastIndexOf(methodQualifiedName, ".") + 1);
-
-        return findMethod(project, className, methodName);
-    }
-
-    private static Set<PsiClass> getAllDependencies(PsiClass psiClass) {
-        PsiFile psiFile = psiClass.getContainingFile();
-
-        if (psiFile instanceof ClsFileImpl && !psiFile.getContainingFile().getVirtualFile().getPath().contains("jre")) {
-            psiFile = ((ClsFileImpl) psiFile).getDecompiledPsiFile();
-        }
-
-        Set<PsiClass> importPsiClassSet = new HashSet<>();
-
-        psiFile.acceptChildren(new JavaRecursiveElementVisitor() {
-            @Override
-            public void visitImportList(PsiImportList list) {
-                for (PsiImportStatement statement : list.getImportStatements()) {
-                    if (Objects.isNull(statement.getImportReference())) {
-                        continue;
-                    }
-
-                    PsiElement psiElement = statement.getImportReference().resolve();
-                    if (psiElement instanceof PsiClass) {
-                        PsiClass importPsiClass = (PsiClass) psiElement;
-                        importPsiClassSet.add(importPsiClass);
-                    }
-                }
-
-                for (PsiImportStaticStatement statement : list.getImportStaticStatements()) {
-                    if (Objects.isNull(statement.getImportReference())) {
-                        continue;
-                    }
-
-                    PsiElement psiElement = statement.getImportReference().resolve();
-                    if (psiElement instanceof PsiClass) {
-                        PsiClass importPsiClass = (PsiClass) psiElement;
-                        importPsiClassSet.add(importPsiClass);
-                    }
-                }
-            }
-        });
-
-        return importPsiClassSet;
-    }
-
-    public static Set<String> getAllDependenciesRecursive(Project project) {
-        List<String> namespaces = MybatisXmlContentCache.acquireByNamespace(project);
-
-        List<PsiClass> psiClassList = namespaces
-                .stream()
-                .map(namespace -> JavaUtils.findClazz(project, namespace))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        Set<PsiClass> allDependencies = new HashSet<>();
-
-        for (PsiClass psiClass : psiClassList) {
-
-            Set<PsiClass> visited = new HashSet<>();
-
-            Queue<PsiClass> queue = new ArrayDeque<>();
-            queue.add(psiClass);
-
-            while (!queue.isEmpty()) {
-                PsiClass clazz = queue.remove();
-
-                visited.add(clazz);
-
-                Set<PsiClass> dependencies = getAllDependencies(clazz);
-                dependencies.removeAll(visited);
-                queue.addAll(dependencies);
-            }
-
-            visited.remove(psiClass);
-            allDependencies.addAll(visited);
-        }
-
-        return allDependencies.stream()
-                .map(item -> item.getContainingFile().getVirtualFile().getCanonicalPath())
-                .filter(path -> StringUtils.isNotEmpty(path) && path.contains("jar!"))
-                .map(path -> StringUtils.substring(path, 0, path.lastIndexOf(Constant.JAR_FILE_END)))
-                .collect(Collectors.toSet());
     }
 }

@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.wm.ToolWindow;
-import io.github.linyimin.plugin.dom.Constant;
+import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.service.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.service.SqlParamGenerateService;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;

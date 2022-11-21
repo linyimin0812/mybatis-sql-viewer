@@ -7,7 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import com.intellij.psi.xml.XmlTokenType;
-import io.github.linyimin.plugin.dom.Constant;
+import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.utils.IconUtils;
 import org.jetbrains.annotations.NotNull;
 

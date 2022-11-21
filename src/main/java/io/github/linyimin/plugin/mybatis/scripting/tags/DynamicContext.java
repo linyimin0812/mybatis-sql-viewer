@@ -52,6 +52,22 @@ public class DynamicContext {
             bindings.put("array", array);
         }
 
+        if (parameterObject != null && JSONObject.isValidObject(parameterObject.toString())) {
+            JSONObject object = JSONObject.parseObject(parameterObject.toString());
+            if (object.size() != 1) {
+                return;
+            }
+            Collection<Object> values = object.values();
+            for (Object value : values) {
+                if (JSONObject.isValidArray(value.toString())) {
+                    JSONArray array = JSONObject.parseArray(value.toString());
+                    bindings.put("collection", array);
+                    bindings.put("list", array);
+                    bindings.put("array", array);
+                }
+            }
+        }
+
     }
 
     public Map<String, Object> getBindings() {

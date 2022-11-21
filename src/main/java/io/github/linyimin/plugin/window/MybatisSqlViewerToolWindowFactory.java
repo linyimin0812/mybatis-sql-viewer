@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.window;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -26,7 +27,7 @@ public class MybatisSqlViewerToolWindowFactory implements ToolWindowFactory, Dum
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         MybatisSqlViewerToolWindow  mybatisSqlViewerToolWindow = new MybatisSqlViewerToolWindow(toolWindow, project);
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        ContentFactory contentFactory = ApplicationManager.getApplication().getService(ContentFactory.class);
         Content content = contentFactory.createContent(mybatisSqlViewerToolWindow.getContent(), "", false);
         toolWindow.getContentManager().addContent(content);
 

@@ -4,17 +4,15 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.source.PsiClassReferenceType;
-import com.intellij.psi.util.PsiUtil;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
-import com.siyeh.ig.psiutils.CollectionUtils;
 import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
-import io.github.linyimin.plugin.dom.Constant;
+import io.github.linyimin.plugin.constant.Constant;
+import io.github.linyimin.plugin.pojo2json.POJO2JSONParser;
+import io.github.linyimin.plugin.pojo2json.POJO2JSONParserFactory;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.MybatisSqlUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -24,6 +22,8 @@ import java.util.*;
  * @date 2022/02/02 2:09 上午
  **/
 public class SqlParamGenerateService {
+
+    private final POJO2JSONParser parser = POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER;
 
     public void generate(PsiElement psiElement) {
         updateMybatisSqlConfig(psiElement);
@@ -102,131 +102,19 @@ public class SqlParamGenerateService {
 
         Map<String, Object> params = new HashMap<>();
         for (ParamNameType paramNameType : paramNameTypes) {
-
-            PsiClass psiClass = paramNameType.psiClass;
             PsiType type = paramNameType.psiType;
             String name = paramNameType.name;
 
-            Map<String, Object> param = new HashMap<>();
+            Object value = parser.parseFieldValueType(type, 0, new ArrayList<>(), new HashMap<>());
 
-            if (Objects.isNull(psiClass) || isNormalType(psiClass.getQualifiedName())) {
-                String paramType;
-                if (Objects.isNull(psiClass)) {
-                    if (type instanceof PsiArrayType) {
-                        paramType = ((PsiArrayType) type).getComponentType().getCanonicalText();
-                    } else {
-                        paramType = type.getCanonicalText();
-                    }
-                } else {
-                    paramType = psiClass.getQualifiedName();
-                }
-                param.put(name, getPrimitiveDefaultValue(name, paramType));
+            if (value instanceof Map && paramNameTypes.size() == 1) {
+                params.putAll((Map) value);
             } else {
-                Map<String, Object> classParam = getFieldFromClass(psiClass);
-                if (paramNameType.isParamAnnotation || isArray(type)) {
-                    param.put(name, classParam);
-                } else {
-                    param.putAll(classParam);
-                }
+                params.put(name, value);
             }
-
-            // 数组或者列表
-            if (isArray(type)) {
-                param.put(name, Lists.newArrayList(param.get(name)));
-            }
-
-            params.putAll(param);
         }
 
         return JSON.toJSONString(params, true);
-    }
-
-    private boolean isArray(PsiType type) {
-        return type instanceof PsiArrayType || CollectionUtils.isCollectionClassOrInterface(type);
-    }
-
-    private Map<String, Object> getFieldFromClass(PsiClass psiClass) {
-        Map<String, Object> param = new HashMap<>();
-
-        if (Objects.isNull(psiClass)) {
-            return param;
-        }
-
-        for (PsiField field : psiClass.getAllFields()) {
-            PsiType type = field.getType();
-            String fieldName = field.getName();
-            // 1. 基本类型
-            if (type instanceof PsiPrimitiveType || isNormalType(type)) {
-                Object value = getPrimitiveDefaultValue(fieldName, type);
-                param.put(fieldName, value);
-                continue;
-            }
-            // 2. 引用类型
-
-            // 2.1 数组
-            if (type instanceof PsiArrayType) {
-                PsiType deepType = type.getDeepComponentType();
-                List<Object> list = new ArrayList<>();
-                // 1. 基本类型
-                if (deepType instanceof PsiPrimitiveType || isNormalType(deepType)) {
-                    Object value = getPrimitiveDefaultValue(fieldName, deepType);
-                    list.add(value);
-                } else {
-                    PsiClass psiClassInArray = PsiUtil.resolveClassInType(deepType);
-                    if (Objects.nonNull(psiClassInArray) && !StringUtils.equals(psiClassInArray.getQualifiedName(), psiClass.getQualifiedName())) {
-                        Map<String, Object> temp = getFieldFromClass(psiClassInArray);
-                        if (MapUtils.isNotEmpty(temp)) {
-                            list.add(temp);
-                        }
-                    }
-                }
-
-                param.put(fieldName, list);
-
-                continue;
-            }
-
-            // 2.2 列表
-            if (CollectionUtils.isCollectionClassOrInterface(type)) {
-                PsiType iterableType = PsiUtil.extractIterableTypeParameter(type, false);
-                //无泛型指定
-                if (iterableType == null) {
-                    continue;
-                }
-
-                List<Object> list = new ArrayList<>();
-
-                // 基本类型
-                if (iterableType instanceof PsiPrimitiveType || isNormalType(iterableType)) {
-                    Object value = getPrimitiveDefaultValue(fieldName, iterableType);
-                    list.add(value);
-                } else {
-                    PsiClass iterableClass = PsiUtil.resolveClassInClassTypeOnly(iterableType);
-                    if (Objects.nonNull(iterableClass) && !StringUtils.equals(iterableClass.getQualifiedName(), psiClass.getQualifiedName())) {
-                        Map<String, Object> temp = getFieldFromClass(iterableClass);
-                        if (MapUtils.isNotEmpty(temp)) {
-                            list.add(temp);
-                        }
-                    }
-                }
-
-                param.put(fieldName, list);
-                continue;
-
-            }
-
-            // class
-            PsiClass typePsiClass = PsiUtil.resolveClassInType(type);
-            if (Objects.nonNull(typePsiClass) && StringUtils.equals(typePsiClass.getQualifiedName(), psiClass.getQualifiedName())) {
-                param.put(fieldName, new HashMap<>());
-            } else {
-                Map<String, Object> temp = getFieldFromClass(typePsiClass);
-                if (MapUtils.isNotEmpty(temp)) {
-                    param.put(fieldName, temp);
-                }
-            }
-        }
-        return param;
     }
 
     /**
@@ -240,20 +128,10 @@ public class SqlParamGenerateService {
         PsiParameter[] parameters = parameterList.getParameters();
         for (PsiParameter param : parameters) {
 
-            PsiClass psiClass = null;
-            if (CollectionUtils.isCollectionClassOrInterface(param.getType())) {
-                PsiClassReferenceType t = (PsiClassReferenceType) PsiUtil.extractIterableTypeParameter(param.getType(), false);
-                if (t != null) {
-                    psiClass = t.resolve();
-                }
-            } else {
-                psiClass = PsiUtil.resolveClassInType(param.getType());
-            }
-
             String paramAnnotationValue = getParamAnnotationValue(param);
             String name = StringUtils.isBlank(paramAnnotationValue) ? param.getName() : paramAnnotationValue;
 
-            ParamNameType paramNameType = new ParamNameType(name, psiClass, param.getType(), StringUtils.isNotEmpty(paramAnnotationValue));
+            ParamNameType paramNameType = new ParamNameType(name, param.getType());
             result.add(paramNameType);
         }
         return result;
@@ -278,44 +156,14 @@ public class SqlParamGenerateService {
                 .orElse(StringUtils.EMPTY);
     }
 
-    private Object getPrimitiveDefaultValue(String name, PsiType type) {
-        return getPrimitiveDefaultValue(name, type.getCanonicalText());
-    }
-
-    private Object getPrimitiveDefaultValue(String name, String type) {
-
-        if (!Constant.normalTypes.containsKey(type)) {
-            return null;
-        }
-
-        if (StringUtils.equals(String.class.getName(), type)) {
-            String value = StringUtils.substring(UUID.randomUUID().toString(), 0, 8);
-            return name + "_" + value;
-        }
-
-        return Constant.normalTypes.get(type);
-    }
-
-    private boolean isNormalType(PsiType type) {
-        String fieldTypeName = type.getCanonicalText();
-        return Constant.normalTypes.containsKey(fieldTypeName);
-    }
-
-    private boolean isNormalType(String type) {
-        return Constant.normalTypes.containsKey(type);
-    }
 
     static class ParamNameType {
         private final String name;
-        private final PsiClass psiClass;
         private final PsiType psiType;
-        private final boolean isParamAnnotation;
 
-        public ParamNameType(String name, PsiClass psiClass, PsiType psiType, boolean isParamAnnotation) {
+        public ParamNameType(String name, PsiType psiType) {
             this.name = name;
-            this.psiClass = psiClass;
             this.psiType = psiType;
-            this.isParamAnnotation = isParamAnnotation;
         }
     }
 }

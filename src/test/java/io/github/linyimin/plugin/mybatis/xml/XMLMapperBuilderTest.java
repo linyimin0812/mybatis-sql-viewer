@@ -2,7 +2,6 @@ package io.github.linyimin.plugin.mybatis.xml;
 
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 import io.github.linyimin.plugin.utils.LoadXmlUtil;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -26,9 +25,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("basic-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testBasic"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testBasic"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testBasic");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testBasic");
 
         Assertions.assertEquals(expectedSql, sqlSource.getSql(null));
 
@@ -49,9 +48,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("bind-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testBind"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testBind"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testBind");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testBind");
 
         Assertions.assertEquals(expectedSql, sqlSource.getSql("testBind"));
 
@@ -65,9 +64,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("choose-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testChoose"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testChoose"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testChoose");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testChoose");
 
         String expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -135,9 +134,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("foreach-advanced-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testInsertMulti"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testInsertMulti"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testInsertMulti");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testInsertMulti");
 
         String expectedSql = "INSERT INTO\n" +
                 "  fruits (name, category, price)\n" +
@@ -161,9 +160,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("foreach-basic-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testForeach"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testForeach"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testForeach");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testForeach");
 
         String expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -210,9 +209,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("if-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testIf"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testIf"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testIf");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testIf");
 
         String expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -247,9 +246,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("include-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testInclude"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testInclude"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testInclude");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testInclude");
 
         String expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -268,9 +267,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("parameters-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testParameters"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testParameters"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testParameters");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testParameters");
 
         String expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -291,9 +290,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("set-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testSet"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testSet"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testSet");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testSet");
 
         String expectedSql = "UPDATE\n" +
                 "  fruits\n" +
@@ -330,9 +329,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("trim-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testTrim"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testTrim"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testTrim");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testTrim");
 
         String expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -352,9 +351,9 @@ public class XMLMapperBuilderTest {
         XMLMapperBuilder builder = new XMLMapperBuilder(LoadXmlUtil.load("where-fruits.xml"));
         Map<String, SqlSource> sqlSourceMap = builder.parse();
         Assertions.assertNotNull(sqlSourceMap);
-        Assertions.assertTrue(sqlSourceMap.containsKey("testWhere"));
+        Assertions.assertTrue(sqlSourceMap.containsKey("fruit.testWhere"));
 
-        SqlSource sqlSource = sqlSourceMap.get("testWhere");
+        SqlSource sqlSource = sqlSourceMap.get("fruit.testWhere");
 
         String expectedSql = "SELECT\n" +
                 "  name,\n" +

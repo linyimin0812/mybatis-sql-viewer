@@ -39,19 +39,17 @@ public class JsonTextField extends LanguageTextField {
     @Override
     public void setText(@Nullable String text) {
         super.setFileType(JsonFileType.INSTANCE);
-        ReadAction.nonBlocking(() -> {
-            Document document = createDocument(text, JsonLanguage.INSTANCE, myProject, new SimpleDocumentCreator());
-            setDocument(document);
-            PsiFile psiFile = PsiDocumentManager.getInstance(myProject).getPsiFile(document);
-            if (psiFile != null) {
-                WriteCommandAction.runWriteCommandAction(
-                        myProject,
-                        () -> {
-                            CodeStyleManager.getInstance(getProject()).reformat(psiFile);
-                        }
-                );
-            }
-        }).executeSynchronously();
+        Document document = createDocument(text, JsonLanguage.INSTANCE, myProject, new SimpleDocumentCreator());
+        setDocument(document);
+        PsiFile psiFile = PsiDocumentManager.getInstance(myProject).getPsiFile(document);
+        if (psiFile != null) {
+            WriteCommandAction.runWriteCommandAction(
+                    myProject,
+                    () -> {
+                        CodeStyleManager.getInstance(getProject()).reformat(psiFile);
+                    }
+            );
+        }
     }
 
     private void setUpEditor(EditorEx editor) {
