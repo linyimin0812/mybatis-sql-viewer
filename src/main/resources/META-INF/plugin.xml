@@ -47,7 +47,7 @@
         <projectService serviceImplementation="io.github.linyimin.plugin.service.MybatisSqlStateComponent" order="first" />
         <projectService serviceImplementation="io.github.linyimin.plugin.service.SqlParamGenerateService" order="first" />
 
-        <toolWindow id="mybatis-sql-viewer" icon="/mybatis-sql-viewer.svg" doNotActivateOnStart="true" factoryClass="io.github.linyimin.plugin.window.MybatisSqlViewerToolWindowFactory" anchor="right" secondary="false" />
+        <toolWindow id="mybatis-sql-viewer" icon="/mybatis-sql-viewer.svg" doNotActivateOnStart="true" factoryClass="io.github.linyimin.plugin.ui.MybatisSqlViewerToolWindowFactory" anchor="right" secondary="false" />
     </extensions>
 
     <actions>

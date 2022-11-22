@@ -1,8 +1,9 @@
 package io.github.linyimin.plugin.mybatis.scripting.tags;
 
-import com.github.vertical_blank.sqlformatter.SqlFormatter;
-import com.github.vertical_blank.sqlformatter.core.FormatConfig;
-import com.github.vertical_blank.sqlformatter.languages.Dialect;
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.util.JdbcConstants;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 
 import java.util.ArrayList;
@@ -33,9 +34,7 @@ public class DynamicSqlSource implements SqlSource {
 
         String sql = parameterize(context.getSql(), context);
 
-        FormatConfig formatConfig = FormatConfig.builder().uppercase(true).maxColumnLength(100).build();
-
-        return SqlFormatter.of(Dialect.MySql).format(sql, formatConfig);
+        return SQLUtils.format(sql, JdbcConstants.MYSQL);
     }
 
     private String parameterize(String preparedStatement, DynamicContext context) {
@@ -70,7 +69,9 @@ public class DynamicSqlSource implements SqlSource {
             return parameterizeSql;
         }
 
-        if (value.getClass() == String.class || value.getClass() == Character.class || value.getClass() == Date.class) {
+        Class<?> clazz = value.getClass();
+
+        if (clazz == String.class || clazz == Character.class || clazz == Date.class || clazz == JSONObject.class || clazz == JSONArray.class) {
             value = "'" + value +"'";
         }
 

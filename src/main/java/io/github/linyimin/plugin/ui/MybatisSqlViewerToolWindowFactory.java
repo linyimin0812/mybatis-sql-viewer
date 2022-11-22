@@ -1,4 +1,4 @@
-package io.github.linyimin.plugin.window;
+package io.github.linyimin.plugin.ui;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbAware;
@@ -10,7 +10,7 @@ import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import io.github.linyimin.plugin.message.ConfigChangeNotifier;
-import io.github.linyimin.plugin.view.MybatisSqlViewerToolWindow;
+import io.github.linyimin.plugin.ui.MybatisSqlViewerToolWindow;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;

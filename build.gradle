@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'org.linyimin'
-version '1.0.3'
+version '1.0.4'
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/public/' }
@@ -16,8 +16,9 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     implementation 'com.alibaba:fastjson:2.0.19'
     implementation 'mysql:mysql-connector-java:8.0.30'
-    implementation 'com.github.vertical-blank:sql-formatter:2.0.3'
     implementation group: 'ognl', name: 'ognl', version: '3.0.4'
+    implementation group: 'com.alibaba', name: 'druid', version: '1.2.15'
+    implementation group: 'com.fifesoft', name: 'rsyntaxtextarea', version: '3.1.1'
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
@@ -28,6 +29,13 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+        <h4>1.0.4</h4>
+        <ul>
+            <li>SQL statement syntax highlighting and resolving some bugs</li>
+        </ul>
+        <ul>
+            <li>SQL语句语法高亮和解决一些小bug</li>
+        </ul>
         <h4>1.0.3</h4>
         <ul>
             <li>Refactoring, performance optimization, to avoid CPU occupancy</li>

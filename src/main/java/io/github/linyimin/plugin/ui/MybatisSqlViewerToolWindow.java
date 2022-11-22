@@ -1,23 +1,23 @@
-package io.github.linyimin.plugin.view;
+package io.github.linyimin.plugin.ui;
 
-import com.intellij.json.JsonFileType;
-import com.intellij.json.JsonLanguage;
-import com.intellij.openapi.fileTypes.PlainTextFileType;
-import com.intellij.openapi.fileTypes.PlainTextLanguage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.service.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.service.SqlParamGenerateService;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.MybatisSqlUtils;
-import org.jetbrains.annotations.NotNull;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.awt.*;
 import java.sql.SQLException;
 
 
@@ -26,6 +26,7 @@ import java.sql.SQLException;
  * @date 2022/02/01 12:31 下午
  **/
 public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
+
     private JTextField methodName;
     private JTabbedPane tabbedPane;
     private JTextField host;
@@ -37,11 +38,17 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private JButton connectionTestButton;
     private JPanel root;
     private JTextArea connectionInfoTextArea;
-    private JPanel params;
+
     private JTextArea result;
-    private JPanel sql;
-    private JScrollPane sqlScroll;
-    private JScrollPane paramsScroll;
+
+    private final RSyntaxTextArea sqlText;
+    private JPanel sqlPanel;
+    private final RTextScrollPane sqlScroll;
+
+    private JPanel paramsPanel;
+    private final RTextScrollPane paramsScroll;
+    private final RSyntaxTextArea paramsText;
+
     private JScrollPane resultScroll;
 
     private final Project myProject;
@@ -61,9 +68,29 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     }
 
     public MybatisSqlViewerToolWindow(ToolWindow toolWindow, Project project) {
+
         super(true, false);
         this.myProject = project;
+
+        paramsText = CustomTextField.createArea("json");
+        sqlText = CustomTextField.createArea("sql");
+
+        sqlPanel.setLayout(new BorderLayout());
+
+        sqlScroll = new RTextScrollPane(sqlText);
+        sqlScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+        sqlPanel.add(sqlScroll);
+
+        paramsPanel.setLayout(new BorderLayout());
+
+        paramsScroll = new RTextScrollPane(paramsText);
+        paramsScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+        paramsPanel.add(paramsScroll);
+
+        setScrollUnitIncrement();
+
         addComponentListener();
+
     }
 
 
@@ -75,21 +102,16 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         assert config != null;
 
         methodName.setText(config.getMethod());
-        result.setText(config.getResult());
-        ((MyTextField) params).setText(config.getParams());
 
-        ((MyTextField) sql).setText(config.getSql());
+        paramsText.setText(config.getParams());
+
+        sqlText.setText(config.getSql());
+
+        result.setText(config.getResult());
 
         // 默认每次打开，都展示第一个tab
         tabbedPane.setSelectedIndex(0);
 
-        setScrollUnitIncrement();
-
-    }
-
-    private void createUIComponents() {
-        params = new MyTextField(this.myProject, JsonLanguage.INSTANCE, JsonFileType.INSTANCE);
-        sql = new MyTextField(this.myProject, PlainTextLanguage.INSTANCE, PlainTextFileType.INSTANCE);
     }
 
     private void addComponentListener() {
@@ -97,12 +119,26 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         port.getDocument().addDocumentListener(new DatasourceChangeListener());
         database.getDocument().addDocumentListener(new DatasourceChangeListener());
 
-        ((MyTextField) params).addDocumentListener(new com.intellij.openapi.editor.event.DocumentListener() {
+        paramsText.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void documentChanged(com.intellij.openapi.editor.event.@NotNull DocumentEvent event) {
+            public void insertUpdate(DocumentEvent e) {
+                updateParams();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateParams();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateParams();
+            }
+
+            private void updateParams() {
                 MybatisSqlConfiguration config = myProject.getService(MybatisSqlStateComponent.class).getState();
                 assert config != null;
-                config.setParams(((MyTextField) params).getText());
+                config.setParams(paramsText.getText());
             }
         });
 
@@ -128,7 +164,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
             // 点击sql tab时生成sql
             if (selectedIndex == TabbedComponentType.sql.index) {
-                ((MyTextField) sql).setText("Loading...");
+                sqlText.setText("Loading...");
                 generateSql();
             }
 
@@ -151,7 +187,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             String sqlStr = generateService.generateSql(myProject, sqlConfig.getMethod(), sqlConfig.getParams());
             sqlConfig.setSql(sqlStr);
 
-            ((MyTextField) sql).setText(sqlStr);
+            sqlText.setText(sqlStr);
         } catch (Throwable e) {
             Messages.showInfoMessage("generate sql error. err: " + e.getMessage(), Constant.APPLICATION_NAME);
         }
@@ -163,7 +199,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         String passwordText = String.valueOf(password.getPassword());
         String resultText;
         try {
-            resultText = MybatisSqlUtils.executeSql(urlText, user.getText(), passwordText, ((MyTextField) sql).getText());
+            resultText = MybatisSqlUtils.executeSql(urlText, user.getText(), passwordText, sqlText.getText());
         } catch (SQLException e) {
             resultText = "Execute Sql Failed. err: " + e.getMessage();
         }
@@ -200,6 +236,10 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, hostText, portText, databaseText);
             url.setText(urlText);
         }
+    }
+
+    private void scrollPanelConfig() {
+
     }
 
     private void setScrollUnitIncrement() {
