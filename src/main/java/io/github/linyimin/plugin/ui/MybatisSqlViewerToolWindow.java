@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.ui;
 
+import com.google.protobuf.Message;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
@@ -17,6 +18,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
 
@@ -50,6 +52,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private final RSyntaxTextArea paramsText;
 
     private JScrollPane resultScroll;
+    private JTabbedPane table;
+    private JTable tableSchema;
 
     private final Project myProject;
 
@@ -174,7 +178,31 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
                 generateSql();
                 executeSql();
             }
+
+            // 点击table tab时获取table的schema信息
+            if (selectedIndex == TabbedComponentType.table.index) {
+                acquireTableSchema();
+            }
         });
+    }
+
+    private void acquireTableSchema() {
+
+        String sql = "SELECT column_name as 'column name', column_type, column_key, column_comment FROM INFORMATION_SCHEMA.columns where table_schema='hokage' and table_name='hokage_user';";
+        String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, host.getText(), port.getText(), database.getText());
+        String passwordText = String.valueOf(password.getPassword());
+
+        try {
+            DefaultTableModel model = MybatisSqlUtils.acquireTableSchema(urlText, user.getText(), passwordText, sql);
+            if (model == null) {
+                Messages.showInfoMessage("acquire table schema fail", "Table Schema");
+            } else {
+                tableSchema.setModel(model);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void generateSql() {
@@ -261,7 +289,9 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         params(0),
         sql(1),
         result(2),
-        datasource(3);
+        datasource(3),
+
+        table(4);
 
         private final int index;
 

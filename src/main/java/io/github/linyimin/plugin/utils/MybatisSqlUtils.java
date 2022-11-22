@@ -5,11 +5,11 @@ import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 import io.github.linyimin.plugin.mybatis.xml.XMLMapperBuilder;
 import org.apache.commons.io.Charsets;
 
+import javax.swing.table.DefaultTableModel;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * @author yiminlin
@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
  **/
 public class MybatisSqlUtils {
 
-    private static final Pattern PATTERN = Pattern.compile("The expression '(.*)' evaluated to a null value");
     public static String getSql(String mapper, String qualifiedMethod, String params) {
 
         try {
@@ -49,6 +48,55 @@ public class MybatisSqlUtils {
             return "Server can't Connect! err: " + ex.getMessage();
         }
     }
+
+    public static DefaultTableModel acquireTableSchema(String url, String user, String password, String sql) throws SQLException {
+        Connection connection = null;
+        Statement stmt = null;
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = DriverManager.getConnection(url,user,password);
+            stmt = connection.createStatement();
+            stmt.execute(sql);
+            return buildTableModel(stmt.getResultSet());
+
+        } catch(Throwable e) {
+            return null;
+        } finally {
+            if (Objects.nonNull(connection)) {
+                connection.close();
+            }
+
+            if (Objects.nonNull(stmt)) {
+                stmt.close();
+            }
+        }
+    }
+
+    private static DefaultTableModel buildTableModel(ResultSet rs) throws SQLException {
+
+        ResultSetMetaData metaData = rs.getMetaData();
+
+        // names of columns
+        Vector<String> columnNames = new Vector<>();
+        int columnCount = metaData.getColumnCount();
+        for (int column = 1; column <= columnCount; column++) {
+            columnNames.add(metaData.getColumnLabel(column));
+        }
+
+        // data of the table
+        Vector<Vector<Object>> data = new Vector<>();
+        while (rs.next()) {
+            Vector<Object> vector = new Vector<>();
+            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+                vector.add(rs.getObject(columnIndex));
+            }
+            data.add(vector);
+        }
+
+        return new DefaultTableModel(data, columnNames);
+
+    }
+
 
     public static String executeSql(String url, String user, String password, String sql) throws SQLException {
         Connection connection = null;
