@@ -17,13 +17,13 @@ import java.util.Properties;
 public class XMLLanguageDriver implements LanguageDriver {
 
     @Override
-    public SqlSource createSqlSource(XNode script, Class<?> parameterType) {
-        XMLScriptBuilder builder = new XMLScriptBuilder(script, parameterType);
+    public SqlSource createSqlSource(XNode script) {
+        XMLScriptBuilder builder = new XMLScriptBuilder(script);
         return builder.parseScriptNode();
     }
 
     @Override
-    public SqlSource createSqlSource(String script, Class<?> parameterType) {
+    public SqlSource createSqlSource(String script) {
         // issue #3
         if (script.startsWith("<script>")) {
             XPathParser parser = null;
@@ -32,7 +32,7 @@ public class XMLLanguageDriver implements LanguageDriver {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return createSqlSource(parser.evalNode("/script"), parameterType);
+            return createSqlSource(parser.evalNode("/script"));
         } else {
             // issue #127
             script = PropertyParser.parse(script, new Properties());

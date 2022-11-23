@@ -7,6 +7,8 @@ import org.apache.commons.io.Charsets;
 
 import javax.swing.table.DefaultTableModel;
 import java.io.ByteArrayInputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
@@ -30,7 +32,9 @@ public class MybatisSqlUtils {
 
             return sqlSourceMap.get(qualifiedMethod).getSql(params);
         } catch (Throwable t) {
-            return "Oops! There are something wrong when generate sql statement.\n" + t.getMessage();
+            StringWriter sw = new StringWriter();
+            t.printStackTrace(new PrintWriter(sw));
+            return String.format("Oops! There are something wrong when generate sql statement.\n%s", sw);
         }
 
     }

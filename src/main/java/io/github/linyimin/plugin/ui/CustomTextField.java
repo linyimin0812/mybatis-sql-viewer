@@ -1,6 +1,5 @@
 package io.github.linyimin.plugin.ui;
 
-import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.JBColor;
 import io.github.linyimin.plugin.constant.Constant;

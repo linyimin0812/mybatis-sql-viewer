@@ -18,16 +18,10 @@ import java.util.Map;
 public class XMLScriptBuilder {
 
     private final XNode context;
-    private final Class<?> parameterType;
     private final Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
 
     public XMLScriptBuilder(XNode context) {
-        this(context, null);
-    }
-
-    public XMLScriptBuilder(XNode context, Class<?> parameterType) {
         this.context = context;
-        this.parameterType = parameterType;
         initNodeHandlerMap();
     }
 

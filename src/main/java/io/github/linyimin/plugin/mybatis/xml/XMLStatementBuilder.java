@@ -24,7 +24,7 @@ public class XMLStatementBuilder {
         XMLIncludeTransformer includeParser = new XMLIncludeTransformer(sqlFragments);
         includeParser.applyIncludes(context.getNode());
 
-        return new XMLLanguageDriver().createSqlSource(context, null);
+        return new XMLLanguageDriver().createSqlSource(context);
 
     }
 
