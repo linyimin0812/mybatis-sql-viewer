@@ -2,20 +2,25 @@ package io.github.linyimin.plugin.service;
 
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
-import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
+import io.github.linyimin.plugin.ProcessResult;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.pojo2json.POJO2JSONParser;
 import io.github.linyimin.plugin.pojo2json.POJO2JSONParserFactory;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.utils.JavaUtils;
 import io.github.linyimin.plugin.utils.MybatisSqlUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+
+import static io.github.linyimin.plugin.constant.Constant.MYBATIS_SQL_ANNOTATIONS;
 
 /**
  * @author yiminlin
@@ -31,15 +36,15 @@ public class SqlParamGenerateService {
 
     public String generateSql(Project project, String methodQualifiedName, String params) {
 
-        String namespace = methodQualifiedName.substring(0, methodQualifiedName.lastIndexOf("."));
+        ProcessResult<String> processResult = MybatisSqlUtils.getSqlFromAnnotation(project, methodQualifiedName, params);
 
-        Optional<String> optional = MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst();
-
-        if (!optional.isPresent()) {
-            return "Oops! The plugin can't find the mapper file.";
+        if (processResult.isSuccess()) {
+            return processResult.getData();
         }
 
-        return MybatisSqlUtils.getSql(optional.get(), methodQualifiedName, params);
+        processResult = MybatisSqlUtils.getSqlFromXML(project, methodQualifiedName, params);
+
+        return processResult.isSuccess() ? processResult.getData() : processResult.getErrorMsg();
 
     }
 
@@ -114,7 +119,7 @@ public class SqlParamGenerateService {
             }
         }
 
-        return JSON.toJSONString(params, true);
+        return new GsonBuilder().setPrettyPrinting().create().toJson(params);
     }
 
     /**

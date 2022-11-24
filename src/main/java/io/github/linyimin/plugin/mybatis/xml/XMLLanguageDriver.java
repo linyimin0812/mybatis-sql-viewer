@@ -8,7 +8,6 @@ import io.github.linyimin.plugin.mybatis.scripting.LanguageDriver;
 import io.github.linyimin.plugin.mybatis.scripting.tags.DynamicSqlSource;
 import io.github.linyimin.plugin.mybatis.scripting.tags.TextSqlNode;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -26,12 +25,7 @@ public class XMLLanguageDriver implements LanguageDriver {
     public SqlSource createSqlSource(String script) {
         // issue #3
         if (script.startsWith("<script>")) {
-            XPathParser parser = null;
-            try {
-                parser = new XPathParser(script);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            XPathParser parser = new XPathParser(script, false);
             return createSqlSource(parser.evalNode("/script"));
         } else {
             // issue #127

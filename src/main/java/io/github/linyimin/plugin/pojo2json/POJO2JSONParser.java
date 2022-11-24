@@ -193,8 +193,9 @@ public abstract class POJO2JSONParser {
                         return this.getFakeValue(specifyTypes.get(retain.get(0)));
                     } else {
 
-                        if (level > 500) {
-                            throw new ParseException("This class reference level exceeds maximum limit or has nested references!");
+                        if (level > 3) {
+                            return new HashMap<>();
+//                            throw new ParseException("This class reference level exceeds maximum limit or has nested references!");
                         }
 
                         PsiType deepType = psiClassGenerics.get(psiClass.getName());
