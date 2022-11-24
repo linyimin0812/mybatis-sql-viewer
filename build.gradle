@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'org.linyimin'
-version '1.0.4'
+version '1.0.5'
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/public/' }
@@ -30,6 +30,17 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+        <h4>1.0.5</h4>
+        <ul>
+            <li>Support @Insert, @Delete, @Update and @Select annotations</li>
+            <li>Beautify the style of SQL and JSON</li>
+            <li>Fixed the bug where nested classes were parsed into JSON</li>
+        </ul>
+        <ul>
+            <li>支持@Insert, @Delete, @Update, @Select注解生成SQL语句</li>
+            <li>美化SQL和JSON的样式</li>
+            <li>解决嵌套类解析成JSON时抛异常的bug</li>
+        </ul>
         <h4>1.0.4</h4>
         <ul>
             <li>SQL statement syntax highlighting and resolving some bugs</li>
