@@ -1,14 +1,19 @@
 package io.github.linyimin.plugin.mybatis.scripting.tags;
 
-import com.alibaba.druid.sql.SQLUtils;
-import com.alibaba.druid.util.JdbcConstants;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
+import com.github.vertical_blank.sqlformatter.SqlFormatter;
+import com.github.vertical_blank.sqlformatter.core.FormatConfig;
+import com.github.vertical_blank.sqlformatter.languages.Dialect;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +39,12 @@ public class DynamicSqlSource implements SqlSource {
 
         String sql = parameterize(context.getSql(), context);
 
-        return SQLUtils.format(sql, JdbcConstants.MYSQL);
+        FormatConfig config = FormatConfig.builder()
+                .indent("  ")
+                .linesBetweenQueries(1)
+                .build();
+
+        return SqlFormatter.of(Dialect.MySql).format(sql, config);
     }
 
     private String parameterize(String preparedStatement, DynamicContext context) {

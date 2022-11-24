@@ -1,6 +1,8 @@
 package io.github.linyimin.plugin.constant;
 
 import com.google.common.collect.Lists;
+
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -15,6 +17,13 @@ public class Constant {
     );
 
     public static final String PARAM_ANNOTATION = "org.apache.ibatis.annotations.Param";
+
+    public static final List<String> MYBATIS_SQL_ANNOTATIONS = Arrays.asList(
+            "org.apache.ibatis.annotations.Insert",
+            "org.apache.ibatis.annotations.Select",
+            "org.apache.ibatis.annotations.Update",
+            "org.apache.ibatis.annotations.Delete"
+    );
 
     public static final String APPLICATION_NAME = "mybatis-sql-viewer";
 
