@@ -28,69 +28,6 @@ import static io.github.linyimin.plugin.constant.Constant.MYBATIS_SQL_ANNOTATION
  **/
 public class MybatisSqlUtils {
 
-    public static ProcessResult<String> getSqlFromXML(Project project, String qualifiedMethod, String params) {
-        try {
-
-            String namespace = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
-            Optional<String> optional = MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst();
-
-            if (!optional.isPresent()) {
-                return ProcessResult.fail("Oops! The plugin can't find the mapper file.");
-            }
-
-            XMLMapperBuilder builder = new XMLMapperBuilder(new ByteArrayInputStream(optional.get().getBytes(Charsets.toCharset(Charset.defaultCharset()))));
-            Map<String, SqlSource> sqlSourceMap = builder.parse();
-
-            if (!sqlSourceMap.containsKey(qualifiedMethod)) {
-                return ProcessResult.fail(String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod));
-            }
-
-            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params));
-        } catch (Throwable t) {
-            StringWriter sw = new StringWriter();
-            t.printStackTrace(new PrintWriter(sw));
-            return ProcessResult.fail(String.format("Oops! There are something wrong when generate sql statement.\n%s", sw));
-        }
-
-    }
-
-    public static ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params) {
-        // 处理annotation
-        String clazzName = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
-        String methodName = qualifiedMethod.substring(qualifiedMethod.lastIndexOf(".") + 1);
-
-        List<PsiMethod> psiMethods = JavaUtils.findMethod(project, clazzName, methodName);
-
-        if (psiMethods.isEmpty()) {
-            return ProcessResult.fail("annotation is not exist.");
-        }
-
-        PsiAnnotation annotation = Arrays.stream(psiMethods.get(0).getAnnotations())
-                .filter(psiAnnotation -> MYBATIS_SQL_ANNOTATIONS.contains(psiAnnotation.getQualifiedName()))
-                .findFirst().orElse(null);
-
-
-        if (annotation == null) {
-            return ProcessResult.fail("There is no of annotation on the method.");
-        }
-
-        PsiAnnotationMemberValue value = annotation.findAttributeValue("value");
-        if (value == null) {
-            return ProcessResult.success("The annotation does not specify a value for the value field");
-        }
-
-        String content = String.valueOf(JavaPsiFacade.getInstance(project).getConstantEvaluationHelper().computeConstantExpression(value));
-
-
-        if (StringUtils.isBlank(content)) {
-            return ProcessResult.success("The value of annotation is empty.");
-        }
-
-        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(params);
-
-        return ProcessResult.success(sql);
-    }
-
     public static String mysqlConnectTest(String url, String user, String password) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");

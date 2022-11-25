@@ -8,9 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.ui.content.Content;
 import com.intellij.util.messages.MessageBus;
 import io.github.linyimin.plugin.message.ConfigChangeNotifier;
-import io.github.linyimin.plugin.service.MybatisSqlStateComponent;
-import io.github.linyimin.plugin.service.SqlParamGenerateService;
-import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
+import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
+import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 
 import java.awt.event.MouseEvent;
 import java.util.Objects;
@@ -41,12 +41,12 @@ public class SqlGenerateNavigationHandler implements GutterIconNavigationHandler
     }
 
     private void generate(PsiElement element) {
-        SqlParamGenerateService generateService = element.getProject().getService(SqlParamGenerateService.class);
+        SqlParamGenerateComponent generateService = element.getProject().getService(SqlParamGenerateComponent.class);
         generateService.generate(element);
     }
 
     private void resetConfig(Project project) {
-        MybatisSqlConfiguration config = project.getService(MybatisSqlStateComponent.class).getState();
+        MybatisSqlConfiguration config = project.getService(MybatisSqlStateComponent.class).getConfiguration();
         assert config != null;
 
         config.reset();

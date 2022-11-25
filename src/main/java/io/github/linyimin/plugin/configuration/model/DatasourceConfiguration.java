@@ -1,4 +1,4 @@
-package io.github.linyimin.plugin.service.model;
+package io.github.linyimin.plugin.configuration.model;
 
 /**
  * @author yiminlin
@@ -10,6 +10,31 @@ public class DatasourceConfiguration {
     private String user;
     private String password;
     private String database;
+
+    public DatasourceConfiguration host(String host) {
+        this.host = host;
+        return this;
+    }
+
+    public DatasourceConfiguration port(String port) {
+        this.port = port;
+        return this;
+    }
+
+    public DatasourceConfiguration user(String user) {
+        this.user = user;
+        return this;
+    }
+
+    public DatasourceConfiguration password(String password) {
+        this.password = password;
+        return this;
+    }
+
+    public DatasourceConfiguration database(String database) {
+        this.database = database;
+        return this;
+    }
 
     public String getHost() {
         return host;

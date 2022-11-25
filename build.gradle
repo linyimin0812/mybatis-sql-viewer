@@ -30,6 +30,13 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+        <h4>2.0.0</h4>
+        <ul>
+            <li>1. Support DataSource configuration persistency</li>
+        </ul>
+        <ul>
+            <li>1. 支持数据源配置持久化</li>
+        </ul>
         <h4>1.0.5</h4>
         <ul>
             <li>Support @Insert, @Delete, @Update and @Select annotations</li>

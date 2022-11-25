@@ -196,7 +196,7 @@
               </component>
             </children>
           </grid>
-          <tabbedpane id="6ee4a" binding="table">
+          <tabbedpane id="6ee4a">
             <constraints>
               <tabbedpane title="table"/>
             </constraints>
@@ -211,7 +211,7 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <scrollpane id="a1832">
+                  <scrollpane id="a1832" binding="tableSchemaScroll">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                     </constraints>

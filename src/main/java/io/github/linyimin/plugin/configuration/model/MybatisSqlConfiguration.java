@@ -1,4 +1,4 @@
-package io.github.linyimin.plugin.service.model;
+package io.github.linyimin.plugin.configuration.model;
 
 import org.apache.commons.lang3.StringUtils;
 

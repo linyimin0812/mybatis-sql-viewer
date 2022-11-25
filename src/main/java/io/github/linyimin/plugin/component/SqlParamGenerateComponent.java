@@ -1,23 +1,31 @@
-package io.github.linyimin.plugin.service;
+package io.github.linyimin.plugin.component;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import io.github.linyimin.plugin.ProcessResult;
+import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
+import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.constant.Constant;
+import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
+import io.github.linyimin.plugin.mybatis.xml.XMLLanguageDriver;
+import io.github.linyimin.plugin.mybatis.xml.XMLMapperBuilder;
 import io.github.linyimin.plugin.pojo2json.POJO2JSONParser;
 import io.github.linyimin.plugin.pojo2json.POJO2JSONParserFactory;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
-import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.JavaUtils;
-import io.github.linyimin.plugin.utils.MybatisSqlUtils;
+import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import static io.github.linyimin.plugin.constant.Constant.MYBATIS_SQL_ANNOTATIONS;
@@ -26,7 +34,7 @@ import static io.github.linyimin.plugin.constant.Constant.MYBATIS_SQL_ANNOTATION
  * @author yiminlin
  * @date 2022/02/02 2:09 上午
  **/
-public class SqlParamGenerateService {
+public class SqlParamGenerateComponent {
 
     private final POJO2JSONParser parser = POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER;
 
@@ -36,13 +44,13 @@ public class SqlParamGenerateService {
 
     public String generateSql(Project project, String methodQualifiedName, String params) {
 
-        ProcessResult<String> processResult = MybatisSqlUtils.getSqlFromAnnotation(project, methodQualifiedName, params);
+        ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params);
 
         if (processResult.isSuccess()) {
             return processResult.getData();
         }
 
-        processResult = MybatisSqlUtils.getSqlFromXML(project, methodQualifiedName, params);
+        processResult = getSqlFromXml(project, methodQualifiedName, params);
 
         return processResult.isSuccess() ? processResult.getData() : processResult.getErrorMsg();
 
@@ -50,7 +58,7 @@ public class SqlParamGenerateService {
 
     private void updateMybatisSqlConfig(PsiElement psiElement) {
 
-        MybatisSqlConfiguration sqlConfig = psiElement.getProject().getService(MybatisSqlStateComponent.class).getState();
+        MybatisSqlConfiguration sqlConfig = psiElement.getProject().getService(MybatisSqlStateComponent.class).getConfiguration();
         assert sqlConfig != null;
 
         PsiMethod psiMethod = null;
@@ -81,6 +89,69 @@ public class SqlParamGenerateService {
             sqlConfig.setMethod(statementId);
             sqlConfig.setParams("{}");
         }
+    }
+
+    private ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params) {
+        // 处理annotation
+        String clazzName = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
+        String methodName = qualifiedMethod.substring(qualifiedMethod.lastIndexOf(".") + 1);
+
+        List<PsiMethod> psiMethods = JavaUtils.findMethod(project, clazzName, methodName);
+
+        if (psiMethods.isEmpty()) {
+            return ProcessResult.fail("annotation is not exist.");
+        }
+
+        PsiAnnotation annotation = Arrays.stream(psiMethods.get(0).getAnnotations())
+                .filter(psiAnnotation -> MYBATIS_SQL_ANNOTATIONS.contains(psiAnnotation.getQualifiedName()))
+                .findFirst().orElse(null);
+
+
+        if (annotation == null) {
+            return ProcessResult.fail("There is no of annotation on the method.");
+        }
+
+        PsiAnnotationMemberValue value = annotation.findAttributeValue("value");
+        if (value == null) {
+            return ProcessResult.success("The annotation does not specify a value for the value field");
+        }
+
+        String content = String.valueOf(JavaPsiFacade.getInstance(project).getConstantEvaluationHelper().computeConstantExpression(value));
+
+
+        if (StringUtils.isBlank(content)) {
+            return ProcessResult.success("The value of annotation is empty.");
+        }
+
+        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(params);
+
+        return ProcessResult.success(sql);
+    }
+
+    private ProcessResult<String> getSqlFromXml(Project project, String qualifiedMethod, String params) {
+        try {
+
+            String namespace = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
+            Optional<String> optional = MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst();
+
+            if (!optional.isPresent()) {
+                return ProcessResult.fail("Oops! The plugin can't find the mapper file.");
+            }
+
+            XMLMapperBuilder builder = new XMLMapperBuilder(new ByteArrayInputStream(optional.get().getBytes(Charsets.toCharset(Charset.defaultCharset()))));
+            Map<String, SqlSource> sqlSourceMap = builder.parse();
+
+            if (!sqlSourceMap.containsKey(qualifiedMethod)) {
+                return ProcessResult.fail(String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod));
+            }
+
+            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params));
+        } catch (Throwable t) {
+            StringWriter sw = new StringWriter();
+            t.printStackTrace(new PrintWriter(sw));
+            return ProcessResult.fail(String.format("Oops! There are something wrong when generate sql statement.\n%s", sw));
+        }
+
     }
 
     private String generateMethod(PsiMethod method) {

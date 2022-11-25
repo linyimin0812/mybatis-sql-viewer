@@ -44,6 +44,10 @@ public class CustomTextField {
 
         area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
 
+        area.setCodeFoldingEnabled(true);
+        area.setAntiAliasingEnabled(true);
+        area.setAutoscrolls(true);
+
         return area;
     }
 

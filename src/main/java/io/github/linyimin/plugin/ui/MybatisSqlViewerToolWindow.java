@@ -1,15 +1,16 @@
 package io.github.linyimin.plugin.ui;
 
-import com.google.protobuf.Message;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.util.ui.JBUI;
+import io.github.linyimin.plugin.configuration.MybatisDatasourceStateComponent;
+import io.github.linyimin.plugin.configuration.model.DatasourceConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
-import io.github.linyimin.plugin.service.MybatisSqlStateComponent;
-import io.github.linyimin.plugin.service.SqlParamGenerateService;
-import io.github.linyimin.plugin.service.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
+import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
+import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.MybatisSqlUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -52,8 +53,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private final RSyntaxTextArea paramsText;
 
     private JScrollPane resultScroll;
-    private JTabbedPane table;
     private JTable tableSchema;
+    private JScrollPane tableSchemaScroll;
 
     private final Project myProject;
 
@@ -95,6 +96,16 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         addComponentListener();
 
+        MybatisDatasourceStateComponent component = myProject.getComponent(MybatisDatasourceStateComponent.class);
+        host.setText(component.getHost());
+        port.setText(component.getPort());
+        user.setText(component.getUser());
+        password.setText(component.getPassword());
+        database.setText(component.getDatabase());
+
+        String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, component.getHost(), component.getPort(), component.getDatabase());
+        url.setText(urlText);
+
     }
 
 
@@ -102,7 +113,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
      * 刷新tool window配置内容
      */
     public void refresh(Project project) {
-        MybatisSqlConfiguration config = project.getService(MybatisSqlStateComponent.class).getState();
+        MybatisSqlConfiguration config = project.getService(MybatisSqlStateComponent.class).getConfiguration();
         assert config != null;
 
         methodName.setText(config.getMethod());
@@ -140,7 +151,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             }
 
             private void updateParams() {
-                MybatisSqlConfiguration config = myProject.getService(MybatisSqlStateComponent.class).getState();
+                MybatisSqlConfiguration config = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
                 assert config != null;
                 config.setParams(paramsText.getText());
             }
@@ -159,6 +170,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
             String connectionInfo = MybatisSqlUtils.mysqlConnectTest(urlText, userText, passwordText);
             connectionInfoTextArea.setText(connectionInfo);
+
+            updateDatasourceForPersistent();
         });
 
         // 监听tabbedpane点击事件
@@ -186,9 +199,24 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         });
     }
 
+    private void updateDatasourceForPersistent() {
+        MybatisDatasourceStateComponent component = myProject.getComponent(MybatisDatasourceStateComponent.class);
+
+        component.getState()
+                .host(host.getText())
+                .port(port.getText())
+                .user(user.getText())
+                .password(String.valueOf(password.getPassword()))
+                .database(database.getText());
+
+    }
+
     private void acquireTableSchema() {
 
-        String sql = "SELECT column_name as 'column name', column_type, column_key, column_comment FROM INFORMATION_SCHEMA.columns where table_schema='hokage' and table_name='hokage_user';";
+        // 获取表列信息：DESC mybatis.CITY;
+        // 获取表信息(编码)：show table status from `global_ug_usm_ae` like  'houyi_clc_plan';
+
+        String sql = "show table status from `global_ug_usm_ae` like  'houyi_clc_plan';";
         String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, host.getText(), port.getText(), database.getText());
         String passwordText = String.valueOf(password.getPassword());
 
@@ -207,9 +235,9 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
     private void generateSql() {
         try {
-            SqlParamGenerateService generateService = myProject.getService(SqlParamGenerateService.class);
+            SqlParamGenerateComponent generateService = myProject.getService(SqlParamGenerateComponent.class);
 
-            MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getState();
+            MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
             assert sqlConfig != null;
 
             String sqlStr = generateService.generateSql(myProject, sqlConfig.getMethod(), sqlConfig.getParams());
@@ -232,7 +260,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             resultText = "Execute Sql Failed. err: " + e.getMessage();
         }
 
-        MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getState();
+        MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
         assert sqlConfig != null;
         sqlConfig.setResult(resultText);
 

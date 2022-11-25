@@ -1,11 +1,10 @@
-package io.github.linyimin.plugin.service;
+package io.github.linyimin.plugin.configuration;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import io.github.linyimin.plugin.service.model.DatasourceConfiguration;
+import io.github.linyimin.plugin.configuration.model.DatasourceConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +15,7 @@ import java.util.Objects;
  * @author yiminlin
  * @date 2022/02/02 1:29 上午
  **/
-@State(name = "datasource", storages = {@Storage("datasource.xml")})
+@State(name = "datasource", storages = {@Storage("mybatis-sql-config.xml")})
 public class MybatisDatasourceStateComponent implements PersistentStateComponent<DatasourceConfiguration> {
 
     private DatasourceConfiguration config;
@@ -40,7 +39,27 @@ public class MybatisDatasourceStateComponent implements PersistentStateComponent
         XmlSerializerUtil.copyBean(state, Objects.requireNonNull(getState()));
     }
 
-    public static MybatisDatasourceStateComponent getInstance() {
-        return ApplicationManager.getApplication().getService(MybatisDatasourceStateComponent.class);
+    public void setConfig(DatasourceConfiguration config) {
+        this.config = config;
+    }
+
+    public String getHost() {
+        return this.config.getHost();
+    }
+
+    public String getPort() {
+        return this.config.getPort();
+    }
+
+    public String getUser() {
+        return this.config.getUser();
+    }
+
+    public String getPassword() {
+        return this.config.getPassword();
+    }
+
+    public String getDatabase() {
+        return this.config.getDatabase();
     }
 }
