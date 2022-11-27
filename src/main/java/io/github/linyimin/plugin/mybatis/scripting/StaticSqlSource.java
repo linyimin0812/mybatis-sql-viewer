@@ -14,7 +14,7 @@ public class StaticSqlSource implements SqlSource {
     }
 
     @Override
-    public String getSql(Object parameterObject) {
+    public String getSql(Object parameterObject, boolean isTemplate) {
         return "";
     }
 

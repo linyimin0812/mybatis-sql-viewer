@@ -2,18 +2,14 @@ package io.github.linyimin.plugin.mybatis.scripting.tags;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.TypeReference;
 import com.github.vertical_blank.sqlformatter.SqlFormatter;
 import com.github.vertical_blank.sqlformatter.core.FormatConfig;
 import com.github.vertical_blank.sqlformatter.languages.Dialect;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,13 +27,17 @@ public class DynamicSqlSource implements SqlSource {
     }
 
     @Override
-    public String getSql(Object parameterObject) {
+    public String getSql(Object parameterObject, boolean isTemplate) {
 
         DynamicContext context = new DynamicContext(parameterObject);
 
         rootSqlNode.apply(context);
 
-        String sql = parameterize(context.getSql(), context);
+        String sql = context.getSql();
+
+        if (!isTemplate) {
+            sql = parameterize(context.getSql(), context);
+        }
 
         FormatConfig config = FormatConfig.builder()
                 .indent("  ")

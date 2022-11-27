@@ -11,6 +11,7 @@ import io.github.linyimin.plugin.message.ConfigChangeNotifier;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.pojo2json.POJO2JSONParserFactory;
 
 import java.awt.event.MouseEvent;
 import java.util.Objects;
@@ -34,15 +35,12 @@ public class SqlGenerateNavigationHandler implements GutterIconNavigationHandler
         resetConfig(elt.getProject());
 
         if (!mybatisSqlViewerToolWindow.isActive()) {
-            generate(elt);
+
+            SqlParamGenerateComponent.generate(elt, POJO2JSONParserFactory.DEFAULT_POJO_2_JSON_PARSER);
+
             activateWindow(mybatisSqlViewerToolWindow);
             notifyParamChange(elt.getProject());
         }
-    }
-
-    private void generate(PsiElement element) {
-        SqlParamGenerateComponent generateService = element.getProject().getService(SqlParamGenerateComponent.class);
-        generateService.generate(element);
     }
 
     private void resetConfig(Project project) {
@@ -71,7 +69,7 @@ public class SqlGenerateNavigationHandler implements GutterIconNavigationHandler
         MessageBus messageBus = project.getMessageBus();
         messageBus.connect();
         ConfigChangeNotifier notifier = messageBus.syncPublisher(ConfigChangeNotifier.PARAM_CHANGE_TOPIC);
-        notifier.configChanged(project);
+        notifier.configChanged();
     }
 
 }

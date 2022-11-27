@@ -5,5 +5,5 @@ package io.github.linyimin.plugin.mybatis.mapping;
  * @date 2022/11/13 14:59
  **/
 public interface SqlSource {
-    String getSql(Object parameterObject);
+    String getSql(Object parameterObject, boolean isTemplate);
 }

@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.configuration.model;
 
+import com.intellij.psi.PsiElement;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -7,6 +8,8 @@ import org.apache.commons.lang3.StringUtils;
  * @date 2022/02/02 1:35 上午
  **/
 public class MybatisSqlConfiguration {
+
+    private PsiElement psiElement;
 
     private String method;
     private String params;
@@ -45,10 +48,19 @@ public class MybatisSqlConfiguration {
         this.result = result;
     }
 
+    public PsiElement getPsiElement() {
+        return psiElement;
+    }
+
+    public void setPsiElement(PsiElement psiElement) {
+        this.psiElement = psiElement;
+    }
+
     public void reset() {
         method = StringUtils.EMPTY;
         params = StringUtils.EMPTY;
         sql = StringUtils.EMPTY;
         result = StringUtils.EMPTY;
+        psiElement = null;
     }
 }

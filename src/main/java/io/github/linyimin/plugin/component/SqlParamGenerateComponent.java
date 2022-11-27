@@ -2,7 +2,6 @@ package io.github.linyimin.plugin.component;
 
 import com.google.common.collect.Lists;
 import com.google.gson.GsonBuilder;
-import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.xml.XmlTag;
@@ -15,7 +14,6 @@ import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 import io.github.linyimin.plugin.mybatis.xml.XMLLanguageDriver;
 import io.github.linyimin.plugin.mybatis.xml.XMLMapperBuilder;
 import io.github.linyimin.plugin.pojo2json.POJO2JSONParser;
-import io.github.linyimin.plugin.pojo2json.POJO2JSONParserFactory;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.JavaUtils;
@@ -36,30 +34,7 @@ import static io.github.linyimin.plugin.constant.Constant.MYBATIS_SQL_ANNOTATION
  **/
 public class SqlParamGenerateComponent {
 
-    private final POJO2JSONParser parser = POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER;
-
-    public void generate(PsiElement psiElement) {
-        updateMybatisSqlConfig(psiElement);
-    }
-
-    public String generateSql(Project project, String methodQualifiedName, String params) {
-
-        ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params);
-
-        if (processResult.isSuccess()) {
-            return processResult.getData();
-        }
-
-        processResult = getSqlFromXml(project, methodQualifiedName, params);
-
-        return processResult.isSuccess() ? processResult.getData() : processResult.getErrorMsg();
-
-    }
-
-    private void updateMybatisSqlConfig(PsiElement psiElement) {
-
-        MybatisSqlConfiguration sqlConfig = psiElement.getProject().getService(MybatisSqlStateComponent.class).getConfiguration();
-        assert sqlConfig != null;
+    public static void generate(PsiElement psiElement, POJO2JSONParser parser) {
 
         PsiMethod psiMethod = null;
 
@@ -78,20 +53,39 @@ public class SqlParamGenerateComponent {
             statementId = MapperXmlProcessor.acquireStatementId(psiElement.getParent());
         }
 
+        MybatisSqlConfiguration sqlConfig = psiElement.getProject().getService(MybatisSqlStateComponent.class).getConfiguration();
+
+        sqlConfig.setPsiElement(psiElement);
+
         // 设置缓存, method qualified name and params
         if (Objects.nonNull(psiMethod)) {
-            sqlConfig.setMethod(generateMethod(psiMethod));
 
-            String params = generateMethodParam(psiMethod);
-            sqlConfig.setParams(params);
+            sqlConfig.setMethod(acquireMethodName(psiMethod));
+
+            sqlConfig.setParams(generateMethodParam(psiMethod, parser));
         } else if (statementId != null) {
             // 找不到对应的接口方法
             sqlConfig.setMethod(statementId);
             sqlConfig.setParams("{}");
         }
+
     }
 
-    private ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params) {
+    public static String generateSql(Project project, String methodQualifiedName, String params, boolean isTemplate) {
+
+        ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params, isTemplate);
+
+        if (processResult.isSuccess()) {
+            return processResult.getData();
+        }
+
+        processResult = getSqlFromXml(project, methodQualifiedName, params, isTemplate);
+
+        return processResult.isSuccess() ? processResult.getData() : processResult.getErrorMsg();
+
+    }
+
+    private static ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params, boolean isTemplate) {
         // 处理annotation
         String clazzName = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
         String methodName = qualifiedMethod.substring(qualifiedMethod.lastIndexOf(".") + 1);
@@ -123,12 +117,12 @@ public class SqlParamGenerateComponent {
             return ProcessResult.success("The value of annotation is empty.");
         }
 
-        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(params);
+        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(params, isTemplate);
 
         return ProcessResult.success(sql);
     }
 
-    private ProcessResult<String> getSqlFromXml(Project project, String qualifiedMethod, String params) {
+    private static ProcessResult<String> getSqlFromXml(Project project, String qualifiedMethod, String params, boolean isTemplate) {
         try {
 
             String namespace = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
@@ -145,7 +139,7 @@ public class SqlParamGenerateComponent {
                 return ProcessResult.fail(String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod));
             }
 
-            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params));
+            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params, isTemplate));
         } catch (Throwable t) {
             StringWriter sw = new StringWriter();
             t.printStackTrace(new PrintWriter(sw));
@@ -154,7 +148,7 @@ public class SqlParamGenerateComponent {
 
     }
 
-    private String generateMethod(PsiMethod method) {
+    private static String acquireMethodName(PsiMethod method) {
         PsiClass psiClass = method.getContainingClass();
         assert psiClass != null;
 
@@ -164,17 +158,9 @@ public class SqlParamGenerateComponent {
 
     }
 
-    private String generateMethodParam(PsiMethod method) {
-        List<ParamNameType> paramNameTypes = getMethodBodyParamList(method);
-        return parseParamNameTypeList(paramNameTypes);
-    }
+    private static String generateMethodParam(PsiMethod method, POJO2JSONParser parser) {
 
-    /**
-     * 将{@link ParamNameType} 列表转成json字符串
-     * @param paramNameTypes {@link ParamNameType}
-     * @return json字符串
-     */
-    private String parseParamNameTypeList(List<ParamNameType> paramNameTypes) {
+        List<ParamNameType> paramNameTypes = getMethodBodyParamList(method);
 
         Map<String, Object> params = new HashMap<>();
         for (ParamNameType paramNameType : paramNameTypes) {
@@ -198,7 +184,7 @@ public class SqlParamGenerateComponent {
      * @param psiMethod {@link PsiMethod}
      * @return param list {@link ParamNameType}
      */
-    public List<ParamNameType> getMethodBodyParamList(PsiMethod psiMethod) {
+    public static List<ParamNameType> getMethodBodyParamList(PsiMethod psiMethod) {
         List<ParamNameType> result = new ArrayList<>();
         PsiParameterList parameterList = psiMethod.getParameterList();
         PsiParameter[] parameters = parameterList.getParameters();
@@ -218,7 +204,7 @@ public class SqlParamGenerateComponent {
      * @param param {@link PsiParameter}
      * @return {org.apache.ibatis.annotations.Param} value的值
      */
-    private String getParamAnnotationValue(PsiParameter param) {
+    private static String getParamAnnotationValue(PsiParameter param) {
         PsiAnnotation annotation = param.getAnnotation(Constant.PARAM_ANNOTATION);
         if (Objects.isNull(annotation)) {
             return StringUtils.EMPTY;

@@ -14,7 +14,7 @@ public class MybatisSqlStateComponent {
 
     private MybatisSqlConfiguration config;
 
-    public @Nullable MybatisSqlConfiguration getConfiguration() {
+    public MybatisSqlConfiguration getConfiguration() {
 
         if (Objects.isNull(config)) {
             config = new MybatisSqlConfiguration();

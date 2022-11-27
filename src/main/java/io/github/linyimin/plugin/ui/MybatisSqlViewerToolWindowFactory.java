@@ -41,8 +41,8 @@ public class MybatisSqlViewerToolWindowFactory implements ToolWindowFactory, Dum
         MessageBusConnection connect = messageBus.connect();
         connect.subscribe(ConfigChangeNotifier.PARAM_CHANGE_TOPIC, new ConfigChangeNotifier() {
             @Override
-            public void configChanged(Project project1) {
-                windowMap.get(project1).refresh(project1);
+            public void configChanged() {
+                windowMap.get(project).refresh(project);
             }
         });
     }

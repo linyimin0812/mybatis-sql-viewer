@@ -44,8 +44,7 @@
         <codeInsight.lineMarkerProvider id="mybatis.sql.viewer.MapperXmlGenerateSqlLineMakerProvider" language="XML" implementationClass="io.github.linyimin.plugin.provider.generate.MapperXmlGenerateSqlLineMakerProvider" />
 
         <projectService serviceImplementation="io.github.linyimin.plugin.configuration.MybatisSqlStateComponent" order="first" />
-        <projectService serviceImplementation="io.github.linyimin.plugin.component.SqlParamGenerateComponent" order="first" />
-
+        <projectService serviceImplementation="io.github.linyimin.plugin.sql.DatasourceComponent" order="first" />
         <toolWindow id="mybatis-sql-viewer" icon="/mybatis-sql-viewer.svg" doNotActivateOnStart="true" factoryClass="io.github.linyimin.plugin.ui.MybatisSqlViewerToolWindowFactory" anchor="right" secondary="false" />
     </extensions>
 

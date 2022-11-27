@@ -5,15 +5,13 @@ import com.intellij.util.messages.Topic;
 import static io.github.linyimin.plugin.constant.Constant.APPLICATION_NAME;
 
 /**
- * @author yiminlin
- * @date 2022/02/02 2:47 上午
+ * @author banzhe
+ * @date 2022/11/26 21:28
  **/
-public interface ConfigChangeNotifier {
+public class WindowActiveNotifier implements ConfigChangeNotifier {
 
     Topic<ConfigChangeNotifier> PARAM_CHANGE_TOPIC = Topic.create(String.format("%s_window_active", APPLICATION_NAME), ConfigChangeNotifier.class);
-    /**
-     */
-    default void configChanged() {
 
-    }
+
+
 }

@@ -3,7 +3,8 @@ package io.github.linyimin.plugin.ui;
 import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.configuration.MybatisDatasourceStateComponent;
 import io.github.linyimin.plugin.constant.Constant;
-import io.github.linyimin.plugin.utils.MybatisSqlUtils;
+import io.github.linyimin.plugin.sql.DatasourceComponent;
+import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -49,18 +50,11 @@ public class DatasourceDialog extends JDialog {
         // 监听button点击事件
         testConnection.addActionListener((e) -> {
 
-            String hostText = host.getText();
-            String portText = port.getText();
-            String userText = user.getText();
-            String passwordText = String.valueOf(password.getPassword());
-            String databaseText = database.getText();
+            updateDatasourceForPersistent();
 
-            String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, hostText, portText, databaseText);
-
-            String connectionInfo = MybatisSqlUtils.mysqlConnectTest(urlText, userText, passwordText);
+            String connectionInfo = SqlExecutor.testConnected(project);
             testResult.setText(connectionInfo);
 
-            updateDatasourceForPersistent();
         });
 
         // call onCancel() when cross is clicked
@@ -90,12 +84,16 @@ public class DatasourceDialog extends JDialog {
     private void updateDatasourceForPersistent() {
         MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
 
+        DatasourceComponent datasourceComponent = project.getComponent(DatasourceComponent.class);
+
         component.getState()
                 .host(host.getText())
                 .port(port.getText())
                 .user(user.getText())
                 .password(String.valueOf(password.getPassword()))
                 .database(database.getText());
+
+        datasourceComponent.updateDatasource();
 
     }
 
