@@ -31,7 +31,7 @@ public class SqlExecutor {
 
     public static String testConnected(Project project) {
 
-        DatasourceComponent datasourceComponent = project.getComponent(DatasourceComponent.class);
+        DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
         try {
             datasourceComponent.getConnection();
@@ -56,7 +56,7 @@ public class SqlExecutor {
         @Override
         public BaseResult executeSql(Project project, String sql) throws Exception {
 
-            DatasourceComponent datasourceComponent = project.getComponent(DatasourceComponent.class);
+            DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
             try (Connection connection = datasourceComponent.getConnection(); Statement stmt = connection.createStatement()) {
 
@@ -74,7 +74,7 @@ public class SqlExecutor {
         @Override
         public BaseResult executeSql(Project project, String sql) throws Exception {
 
-            DatasourceComponent datasourceComponent = project.getComponent(DatasourceComponent.class);
+            DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
             try (Connection connection = datasourceComponent.getConnection(); Statement stmt = connection.createStatement()) {
                 long cost = executeAndReturnCost(stmt, sql);

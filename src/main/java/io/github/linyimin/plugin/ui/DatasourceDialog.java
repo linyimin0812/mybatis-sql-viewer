@@ -84,7 +84,7 @@ public class DatasourceDialog extends JDialog {
     private void updateDatasourceForPersistent() {
         MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
 
-        DatasourceComponent datasourceComponent = project.getComponent(DatasourceComponent.class);
+        DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
         component.getState()
                 .host(host.getText())
