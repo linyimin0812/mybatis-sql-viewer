@@ -212,7 +212,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         // 获取表列信息：DESC mybatis.CITY;
         // 获取表信息(编码)：show table status from `global_ug_usm_ae` like  'houyi_clc_plan';
 
-        MybatisSqlConfiguration configuration = myProject.getComponent(MybatisSqlStateComponent.class).getConfiguration();
+        MybatisSqlConfiguration configuration = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
         String tableName = SqlParser.getTableNames(configuration.getSql()).get(0);
         String sql = String.format("DESC %s", tableName);
 
