@@ -22,10 +22,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.metal.MetalBorders;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
@@ -56,7 +54,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private RSyntaxTextArea randomParamsText;
     private RSyntaxTextArea fromDbParamsText;
 
-
     private JTable tableSchema;
 
     private JButton datasourceButton;
@@ -66,6 +63,10 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private JPanel statementPanel;
     private RSyntaxTextArea statementText;
     private RTextScrollPane statementScroll;
+
+    private JPanel statementRulePanel;
+    private RSyntaxTextArea statementRuleText;
+    private RTextScrollPane statementRuleScroll;
 
     private JTable executeResultTable;
     private JTable executeHitIndexTable;
@@ -150,7 +151,17 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         statementScroll = new RTextScrollPane(statementText);
         statementScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+
         statementPanel.add(statementScroll);
+
+        statementRuleText = CustomTextField.createArea("sql");
+
+        statementRulePanel.setLayout(new BorderLayout());
+
+        statementRuleScroll = new RTextScrollPane(statementRuleText);
+        statementRuleScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+
+        statementRulePanel.add(statementRuleScroll);
 
     }
 
@@ -186,8 +197,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         methodName.setText(config.getMethod());
 
         randomParamsText.setText(config.getParams());
-
-        statementText.setText(config.getSql());
 
         // 默认每次打开，都展示第一个tab
         totalTabbedPanel.setSelectedIndex(0);
@@ -302,6 +311,15 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         if (selectedIndex == TabbedComponentType.sql.index) {
             sqlTabbedPanel.setSelectedIndex(0);
             generateSql();
+            // TODO: SQL规范校验
+            MybatisSqlConfiguration configuration = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
+            if (configuration.getSql().contains("SELECT")) {
+                statementRulePanel.setVisible(true);
+                statementRuleText.setText("sql 语句规范");
+            } else {
+                statementRulePanel.setVisible(false);
+            }
+
         }
 
         // 点击table tab时获取table的schema信息
