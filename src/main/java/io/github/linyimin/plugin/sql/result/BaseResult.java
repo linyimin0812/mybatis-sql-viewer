@@ -1,6 +1,9 @@
 package io.github.linyimin.plugin.sql.result;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.List;
 
 /**
  * @author yiminlin
@@ -27,6 +30,8 @@ public class BaseResult {
 
     private String sql;
 
+    private List<Pair<String, Long>> totalRows;
+
     public long getCost() {
         return cost;
     }
@@ -41,5 +46,13 @@ public class BaseResult {
 
     public void setSql(String sql) {
         this.sql = sql;
+    }
+
+    public List<Pair<String, Long>> getTotalRows() {
+        return totalRows;
+    }
+
+    public void setTotalRows(List<Pair<String, Long>> totalRows) {
+        this.totalRows = totalRows;
     }
 }

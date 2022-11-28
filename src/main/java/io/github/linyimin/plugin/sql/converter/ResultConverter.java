@@ -4,6 +4,7 @@ import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.sql.result.UpdateResult;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
@@ -56,9 +57,18 @@ public class ResultConverter {
 
         sb.append("[cost]: ").append(result.getCost()).append("(ms)").append("\n");
         if (result instanceof UpdateResult) {
-            sb.append("[Rows Affected]: ").append(((UpdateResult) result).getAffectedCount());
+            sb.append("[Rows Affected]: ").append(((UpdateResult) result).getAffectedCount()).append("\n");
         } else {
-            sb.append("[Rows Return]: ").append(((SelectResult)result).getModel().getRowCount());
+            sb.append("[Return Rows]: ").append(((SelectResult)result).getModel().getRowCount()).append("\n");
+        }
+
+        if (result.getTotalRows().size() == 1) {
+            sb.append("[Total Rows]: ").append(result.getTotalRows().get(0).getValue()).append("\n");
+        } else {
+            for (Pair<String, Long> pair : result.getTotalRows()) {
+                String table = pair.getKey().replaceAll("`", "");
+                sb.append("[Total Rows(").append(table).append(")]: ").append(pair.getValue()).append("\n");
+            }
         }
 
         return sb.toString();

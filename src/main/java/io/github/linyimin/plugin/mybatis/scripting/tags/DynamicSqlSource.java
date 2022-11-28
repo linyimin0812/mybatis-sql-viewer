@@ -27,17 +27,13 @@ public class DynamicSqlSource implements SqlSource {
     }
 
     @Override
-    public String getSql(Object parameterObject, boolean isTemplate) {
+    public String getSql(Object parameterObject) {
 
         DynamicContext context = new DynamicContext(parameterObject);
 
         rootSqlNode.apply(context);
 
-        String sql = context.getSql();
-
-        if (!isTemplate) {
-            sql = parameterize(context.getSql(), context);
-        }
+        String sql = parameterize(context.getSql(), context);
 
         FormatConfig config = FormatConfig.builder()
                 .indent("  ")

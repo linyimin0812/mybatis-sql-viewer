@@ -71,21 +71,21 @@ public class SqlParamGenerateComponent {
 
     }
 
-    public static String generateSql(Project project, String methodQualifiedName, String params, boolean isTemplate) {
+    public static String generateSql(Project project, String methodQualifiedName, String params) {
 
-        ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params, isTemplate);
+        ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params);
 
         if (processResult.isSuccess()) {
             return processResult.getData();
         }
 
-        processResult = getSqlFromXml(project, methodQualifiedName, params, isTemplate);
+        processResult = getSqlFromXml(project, methodQualifiedName, params);
 
         return processResult.isSuccess() ? processResult.getData() : processResult.getErrorMsg();
 
     }
 
-    private static ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params, boolean isTemplate) {
+    private static ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params) {
         // 处理annotation
         String clazzName = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
         String methodName = qualifiedMethod.substring(qualifiedMethod.lastIndexOf(".") + 1);
@@ -117,12 +117,12 @@ public class SqlParamGenerateComponent {
             return ProcessResult.success("The value of annotation is empty.");
         }
 
-        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(params, isTemplate);
+        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(params);
 
         return ProcessResult.success(sql);
     }
 
-    private static ProcessResult<String> getSqlFromXml(Project project, String qualifiedMethod, String params, boolean isTemplate) {
+    private static ProcessResult<String> getSqlFromXml(Project project, String qualifiedMethod, String params) {
         try {
 
             String namespace = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
@@ -139,7 +139,7 @@ public class SqlParamGenerateComponent {
                 return ProcessResult.fail(String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod));
             }
 
-            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params, isTemplate));
+            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params));
         } catch (Throwable t) {
             StringWriter sw = new StringWriter();
             t.printStackTrace(new PrintWriter(sw));

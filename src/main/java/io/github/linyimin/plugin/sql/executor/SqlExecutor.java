@@ -9,13 +9,14 @@ import io.github.linyimin.plugin.sql.parser.SqlType;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.sql.result.UpdateResult;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.table.DefaultTableModel;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -58,13 +59,26 @@ public class SqlExecutor {
 
             DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
-            try (Connection connection = datasourceComponent.getConnection(); Statement stmt = connection.createStatement()) {
 
-                long cost = executeAndReturnCost(stmt, sql);
+            try (Connection connection = datasourceComponent.getConnection()) {
 
-                DefaultTableModel model = ResultConverter.convert2TableModel(stmt.getResultSet());
+                SelectResult result;
 
-                return new SelectResult(sql, cost, model);
+
+                try (Statement stmt = connection.createStatement()) {
+                    long cost = executeAndReturnCost(stmt, sql);
+
+                    DefaultTableModel model = ResultConverter.convert2TableModel(stmt.getResultSet());
+
+                    result = new SelectResult(sql, cost, model);
+                }
+
+                try (Statement stmt = connection.createStatement()) {
+                    result.setTotalRows(acquireTotalRows(stmt, SqlParser.getTableNames(sql)));
+                }
+
+                return result;
+
             }
         }
     }
@@ -76,10 +90,20 @@ public class SqlExecutor {
 
             DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
-            try (Connection connection = datasourceComponent.getConnection(); Statement stmt = connection.createStatement()) {
-                long cost = executeAndReturnCost(stmt, sql);
+            try (Connection connection = datasourceComponent.getConnection(); ) {
 
-                return new UpdateResult(sql, cost, stmt.getUpdateCount());
+                UpdateResult result;
+
+                try (Statement stmt = connection.createStatement()) {
+                    long cost = executeAndReturnCost(stmt, sql);
+                    result = new UpdateResult(sql, cost, stmt.getUpdateCount());
+                }
+
+                try (Statement stmt = connection.createStatement()) {
+                    result.setTotalRows(acquireTotalRows(stmt, SqlParser.getTableNames(sql)));
+                }
+
+                return result;
             }
         }
     }
@@ -93,6 +117,22 @@ public class SqlExecutor {
             statement.execute(sql);
 
             return System.currentTimeMillis() - start;
+        }
+
+        default List<Pair<String /*table*/, Long /* number of record */>> acquireTotalRows(Statement statement, List<String> tables) throws SQLException {
+
+            List<Pair<String, Long>> pairs = new ArrayList<>();
+
+            String sqlTemplate = "SELECT COUNT(1) AS total FROM %s";
+
+            for (String table : tables) {
+                statement.execute(String.format(sqlTemplate, table));
+                ResultSet rs = statement.getResultSet();
+                rs.next();
+                Pair<String, Long> pair = Pair.of(table, statement.getResultSet().getLong("total"));
+                pairs.add(pair);
+            }
+            return pairs;
         }
 
     }

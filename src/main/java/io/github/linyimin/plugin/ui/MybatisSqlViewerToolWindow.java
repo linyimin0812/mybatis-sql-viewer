@@ -18,12 +18,16 @@ import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.metal.MetalBorders;
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -43,7 +47,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
     private JPanel defaultParamPanel;
     private JPanel randomParamPanel;
-    private JPanel fromDbParamPanel;
 
     private RTextScrollPane defaultParamsScroll;
     private RTextScrollPane randomParamsScroll;
@@ -55,7 +58,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
 
     private JTable tableSchema;
-    private JScrollPane tableSchemaScroll;
 
     private JButton datasourceButton;
 
@@ -65,17 +67,13 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private RSyntaxTextArea statementText;
     private RTextScrollPane statementScroll;
 
-    private JPanel templatePanel;
-    private RSyntaxTextArea templateSqlText;
-    private RTextScrollPane templateSqlScroll;
-
-
     private JTable executeResultTable;
     private JTable executeHitIndexTable;
 
     private JPanel executeInfoPanel;
     private JScrollPane executeResultScroll;
     private JScrollPane executeHitIndexScroll;
+    private JTextArea textArea1;
 
     private RTextScrollPane executeInfoTextScroll;
     private RSyntaxTextArea executeInfoText;
@@ -112,13 +110,33 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
     }
 
+    private void createUIComponents() {
+        executeResultTable = new JTable() {
+            //Implement table cell tool tips.
+            public String getToolTipText(@NotNull MouseEvent e) {
+                String tip = null;
+                java.awt.Point p = e.getPoint();
+                int rowIndex = rowAtPoint(p);
+                int colIndex = columnAtPoint(p);
+
+                try {
+                    //comment row, exclude heading
+                    tip = getValueAt(rowIndex, colIndex).toString();
+                } catch (RuntimeException e1) {
+                    //catch null pointer exception if mouse is over an empty line
+                }
+                return tip;
+            }
+        };
+    }
+
     private void initResultPanel() {
+
         executeInfoText = CustomTextField.createArea("json");
         executeInfoText.setRows(3);
 
         executeInfoTextScroll = new RTextScrollPane(executeInfoText);
-        executeInfoTextScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
-        executeInfoTextScroll.setSize(-1, 50);
+        executeInfoTextScroll.setBorder(new ToolWindow.Border());
 
         executeInfoPanel.setLayout(new BorderLayout());
         executeInfoPanel.add(executeInfoTextScroll);
@@ -127,20 +145,12 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private void initSqlPanel() {
 
         statementText = CustomTextField.createArea("sql");
-        templateSqlText = CustomTextField.createArea("sql");
-
-        templateSqlText.setEditable(false);
 
         statementPanel.setLayout(new BorderLayout());
-        templatePanel.setLayout(new BorderLayout());
 
         statementScroll = new RTextScrollPane(statementText);
         statementScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
         statementPanel.add(statementScroll);
-
-        templateSqlScroll = new RTextScrollPane(templateSqlText);
-        templateSqlScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
-        templatePanel.add(templateSqlScroll);
 
     }
 
@@ -151,7 +161,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         defaultParamPanel.setLayout(new BorderLayout());
         randomParamPanel.setLayout(new BorderLayout());
-        fromDbParamPanel.setLayout(new BorderLayout());
 
         defaultParamsScroll = new RTextScrollPane(defaultParamsText);
         defaultParamsScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
@@ -164,7 +173,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         randomParamPanel.add(randomParamsScroll);
         defaultParamPanel.add(defaultParamsScroll);
-        fromDbParamPanel.add(fromDbParamScroll);
     }
 
 
@@ -172,11 +180,12 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
      * 刷新tool window配置内容
      */
     public void refresh(Project project) {
+
         MybatisSqlConfiguration config = project.getService(MybatisSqlStateComponent.class).getConfiguration();
 
         methodName.setText(config.getMethod());
 
-        defaultParamsText.setText(config.getParams());
+        randomParamsText.setText(config.getParams());
 
         statementText.setText(config.getSql());
 
@@ -224,19 +233,16 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         }
     }
 
-    private void generateSql(boolean isTemplate) {
+    private void generateSql() {
         try {
 
             MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
 
-            String sqlStr = SqlParamGenerateComponent.generateSql(myProject, sqlConfig.getMethod(), sqlConfig.getParams(), isTemplate);
+            String sqlStr = SqlParamGenerateComponent.generateSql(myProject, sqlConfig.getMethod(), sqlConfig.getParams());
             sqlConfig.setSql(sqlStr);
 
-            if (isTemplate) {
-                templateSqlText.setText(sqlStr);
-            } else {
-                statementText.setText(sqlStr);
-            }
+            statementText.setText(sqlStr);
+
         } catch (Throwable e) {
             Messages.showInfoMessage("generate sql error. err: " + e.getMessage(), Constant.APPLICATION_NAME);
         }
@@ -287,15 +293,23 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private void totalTabbedPanelListener() {
         int selectedIndex = totalTabbedPanel.getSelectedIndex();
 
+        // 点击param tab时生成对应参数
+        if (selectedIndex == TabbedComponentType.params.index) {
+            paramTabbedPanel.setSelectedIndex(0);
+        }
+
         // 点击sql tab时生成sql
         if (selectedIndex == TabbedComponentType.sql.index) {
-            generateSql(false);
+            sqlTabbedPanel.setSelectedIndex(0);
+            generateSql();
         }
 
         // 点击table tab时获取table的schema信息
         if (selectedIndex == TabbedComponentType.table.index) {
+
             acquireTableSchema();
         }
+
     }
 
     private void paramTabbedPanelListener() {
@@ -315,12 +329,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER);
             randomParamsText.setText(configuration.getParams());
         }
-
-        // 从db中获取参数值
-        if (selectedIndex == ParamComponentType.from_db_param.index) {
-            SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER);
-            fromDbParamsText.setText(configuration.getParams());
-        }
     }
 
     private void sqlTabbedPanelListener() {
@@ -329,16 +337,12 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         // 完整SQL语句
         if (selectedIndex == SqlComponentType.statement.index) {
-            generateSql(false);
+            generateSql();
         }
 
-        // SQL模板
-        if (selectedIndex == SqlComponentType.template.index) {
-            generateSql(true);
-        }
         // 执行SQL
         if (selectedIndex == SqlComponentType.result.getIndex()) {
-            generateSql(false);
+            generateSql();
             executeSql();
         }
     }
@@ -378,9 +382,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         this.statementScroll.getVerticalScrollBar().setUnitIncrement(unit);
         this.statementScroll.getHorizontalScrollBar().setUnitIncrement(unit);
 
-        this.templateSqlScroll.getVerticalScrollBar().setUnitIncrement(unit);
-        this.templateSqlScroll.getHorizontalScrollBar().setUnitIncrement(unit);
-
         this.defaultParamsScroll.getVerticalScrollBar().setUnitIncrement(unit);
         this.defaultParamsScroll.getHorizontalScrollBar().setUnitIncrement(unit);
 
@@ -390,10 +391,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         this.fromDbParamScroll.getVerticalScrollBar().setUnitIncrement(unit);
         this.randomParamsScroll.getHorizontalScrollBar().setUnitIncrement(unit);
 
-    }
-
-    private void createUIComponents() {
-        // TODO: place custom component creation code here
     }
 
     private enum TabbedComponentType {
@@ -416,9 +413,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         /**
          * Tanned类型对应的index
          */
-        default_param(0),
-        random_param(1),
-        from_db_param(2);
+        random_param(0),
+        default_param(1);
 
         private final int index;
 
@@ -433,8 +429,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
          * Tanned类型对应的index
          */
         statement(0),
-        template(1),
-        result(2);
+        result(1);
         private final int index;
 
         SqlComponentType(int index) {
