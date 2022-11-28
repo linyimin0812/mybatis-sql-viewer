@@ -235,16 +235,18 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         for (String table : tables) {
 
             String sql = String.format("DESC %s", table);
-
+            TableTabbedPane tabbedPanel = new TableTabbedPane();
+            tableTabbedPanel.addTab(table, tabbedPanel.getSpecifyTablePanel());
             try {
                 SelectResult result = (SelectResult) SqlExecutor.executeSql(myProject, sql);
-                TableTabbedPane tabbedPanel = new TableTabbedPane();
-                tableTabbedPanel.addTab(table, tabbedPanel.getSpecifyTablePanel());
                 tabbedPanel.getTableSchema().setModel(result.getModel());
                 // TODO: 建表规约
                 tabbedPanel.getTableRuleText().setText("TODO: 建表规约");
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                tabbedPanel.getTableRuleText().setText(sw.toString());
+                break;
             }
         }
     }
