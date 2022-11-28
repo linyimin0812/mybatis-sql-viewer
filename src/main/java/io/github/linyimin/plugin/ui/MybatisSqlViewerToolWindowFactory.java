@@ -26,7 +26,7 @@ public class MybatisSqlViewerToolWindowFactory implements ToolWindowFactory, Dum
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
 
-        MybatisSqlViewerToolWindow  mybatisSqlViewerToolWindow = new MybatisSqlViewerToolWindow(toolWindow, project);
+        MybatisSqlViewerToolWindow  mybatisSqlViewerToolWindow = new MybatisSqlViewerToolWindow(project);
         ContentFactory contentFactory = ApplicationManager.getApplication().getService(ContentFactory.class);
         Content content = contentFactory.createContent(mybatisSqlViewerToolWindow.getContent(), "", false);
         toolWindow.getContentManager().addContent(content);
