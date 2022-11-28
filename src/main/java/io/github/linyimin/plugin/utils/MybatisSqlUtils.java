@@ -1,15 +1,25 @@
 package io.github.linyimin.plugin.utils;
 
 import com.alibaba.fastjson.JSON;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.*;
+import com.intellij.psi.xml.XmlTag;
+import io.github.linyimin.plugin.ProcessResult;
+import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
+import io.github.linyimin.plugin.mybatis.xml.XMLLanguageDriver;
 import io.github.linyimin.plugin.mybatis.xml.XMLMapperBuilder;
 import org.apache.commons.io.Charsets;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.*;
-import java.util.regex.Pattern;
+
+import static io.github.linyimin.plugin.constant.Constant.MYBATIS_SQL_ANNOTATIONS;
 
 /**
  * @author yiminlin
@@ -17,23 +27,68 @@ import java.util.regex.Pattern;
  **/
 public class MybatisSqlUtils {
 
-    private static final Pattern PATTERN = Pattern.compile("The expression '(.*)' evaluated to a null value");
-    public static String getSql(String mapper, String qualifiedMethod, String params) {
+    public static ProcessResult<String> getSqlFromXML(Project project, String qualifiedMethod, String params) {
 
         try {
 
-            XMLMapperBuilder builder = new XMLMapperBuilder(new ByteArrayInputStream(mapper.getBytes(Charsets.toCharset(Charset.defaultCharset()))));
+            String namespace = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
+            Optional<String> optional = MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst();
+
+            if (!optional.isPresent()) {
+                return ProcessResult.fail("Oops! The plugin can't find the mapper file.");
+            }
+
+            XMLMapperBuilder builder = new XMLMapperBuilder(new ByteArrayInputStream(optional.get().getBytes(Charsets.toCharset(Charset.defaultCharset()))));
             Map<String, SqlSource> sqlSourceMap = builder.parse();
 
             if (!sqlSourceMap.containsKey(qualifiedMethod)) {
-                return String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod);
+                return ProcessResult.fail(String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod));
             }
 
-            return sqlSourceMap.get(qualifiedMethod).getSql(params);
+            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params));
         } catch (Throwable t) {
-            return "Oops! There are something wrong when generate sql statement.\n" + t.getMessage();
+            StringWriter sw = new StringWriter();
+            t.printStackTrace(new PrintWriter(sw));
+            return ProcessResult.fail(String.format("Oops! There are something wrong when generate sql statement.\n%s", sw));
         }
 
+    }
+
+    public static ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params) {
+        // 处理annotation
+        String clazzName = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
+        String methodName = qualifiedMethod.substring(qualifiedMethod.lastIndexOf(".") + 1);
+
+        List<PsiMethod> psiMethods = JavaUtils.findMethod(project, clazzName, methodName);
+
+        if (psiMethods.isEmpty()) {
+            return ProcessResult.fail("annotation is not exist.");
+        }
+
+        PsiAnnotation annotation = Arrays.stream(psiMethods.get(0).getAnnotations())
+                .filter(psiAnnotation -> MYBATIS_SQL_ANNOTATIONS.contains(psiAnnotation.getQualifiedName()))
+                .findFirst().orElse(null);
+
+
+        if (annotation == null) {
+            return ProcessResult.fail("There is no of annotation on the method.");
+        }
+
+        PsiAnnotationMemberValue value = annotation.findAttributeValue("value");
+        if (value == null) {
+            return ProcessResult.success("The annotation does not specify a value for the value field");
+        }
+
+        String content = String.valueOf(JavaPsiFacade.getInstance(project).getConstantEvaluationHelper().computeConstantExpression(value));
+
+
+        if (StringUtils.isBlank(content)) {
+            return ProcessResult.success("The value of annotation is empty.");
+        }
+
+        String sql = new XMLLanguageDriver().createSqlSource(content, null).getSql(params);
+
+        return ProcessResult.success(sql);
     }
 
     public static String mysqlConnectTest(String url, String user, String password) {
