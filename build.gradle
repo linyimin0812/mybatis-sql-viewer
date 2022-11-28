@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'org.linyimin'
-version '1.0.5'
+version '1.0.6'
 
 repositories {
     maven { url 'https://maven.aliyun.com/repository/public/' }
@@ -30,6 +30,13 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+        <h4>1.0.6</h4>
+        <ul>
+            <li>Support DataSource configuration persistency</li>
+        </ul>
+        <ul>
+            <li>支持数据源配置持久化</li>
+        </ul>
         <h4>1.0.5</h4>
         <ul>
             <li>Support @Insert, @Delete, @Update and @Select annotations</li>
