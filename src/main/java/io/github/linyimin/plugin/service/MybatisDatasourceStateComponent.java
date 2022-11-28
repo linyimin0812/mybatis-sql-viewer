@@ -16,7 +16,7 @@ import java.util.Objects;
  * @author yiminlin
  * @date 2022/02/02 1:29 上午
  **/
-@State(name = "datasource", storages = {@Storage("datasource.xml")})
+@State(name = "mybatis-sql-view-datasource", storages = {@Storage("mybatis-sql-view-datasource.xml")})
 public class MybatisDatasourceStateComponent implements PersistentStateComponent<DatasourceConfiguration> {
 
     private DatasourceConfiguration config;
