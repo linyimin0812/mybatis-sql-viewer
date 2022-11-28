@@ -109,6 +109,15 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         result.setText(config.getResult());
 
+        DatasourceConfiguration datasourceConfig = project.getService(MybatisDatasourceStateComponent.class).getState();
+        assert datasourceConfig != null;
+
+        host.setText(datasourceConfig.getHost());
+        port.setText(datasourceConfig.getPort());
+        user.setText(datasourceConfig.getUser());
+        password.setText(datasourceConfig.getPassword());
+        database.setText(datasourceConfig.getDatabase());
+
         // 默认每次打开，都展示第一个tab
         tabbedPane.setSelectedIndex(0);
 
@@ -154,6 +163,13 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, hostText, portText, databaseText);
 
             String connectionInfo = MybatisSqlUtils.mysqlConnectTest(urlText, userText, passwordText);
+            DatasourceConfiguration datasourceConfig = myProject.getService(MybatisDatasourceStateComponent.class).getState();
+            assert datasourceConfig != null;
+            datasourceConfig.setHost(hostText);
+            datasourceConfig.setUser(userText);
+            datasourceConfig.setPort(portText);
+            datasourceConfig.setPassword(passwordText);
+            datasourceConfig.setDatabase(databaseText);
             connectionInfoTextArea.setText(connectionInfo);
         });
 
