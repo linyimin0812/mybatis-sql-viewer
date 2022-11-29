@@ -3,7 +3,7 @@ package io.github.linyimin.plugin.ui;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
-import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -133,7 +134,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         executeInfoText.setRows(3);
 
         RTextScrollPane executeInfoTextScroll = new RTextScrollPane(executeInfoText);
-        executeInfoTextScroll.setBorder(new ToolWindow.Border());
+        executeInfoTextScroll.setBorder(new LineBorder(JBColor.GRAY));
 
         executeInfoPanel.setLayout(new BorderLayout());
         executeInfoPanel.add(executeInfoTextScroll);
@@ -242,6 +243,10 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
                 tabbedPanel.getTableSchema().setModel(result.getModel());
                 // TODO: 建表规约
                 tabbedPanel.getTableRuleText().setText("TODO: 建表规约");
+
+                tabbedPanel.setMockConfigTable(result.getModel());
+                tabbedPanel.getMockConfigResultText().setText("TODO: mock configuration result");
+
             } catch (Exception e) {
                 StringWriter sw = new StringWriter();
                 e.printStackTrace(new PrintWriter(sw));

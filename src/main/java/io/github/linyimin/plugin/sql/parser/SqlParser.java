@@ -24,7 +24,7 @@ public class SqlParser {
         SchemaStatVisitor statVisitor = SQLUtils.createSchemaStatVisitor(DbType.mysql);
         statement.accept(statVisitor);
 
-        return statVisitor.getOriginalTables().stream().map(SQLName::getSimpleName).collect(Collectors.toList());
+        return statVisitor.getOriginalTables().stream().map(SQLName::getSimpleName).distinct().collect(Collectors.toList());
     }
 
     public static SqlType getSqlType(String sql) {
