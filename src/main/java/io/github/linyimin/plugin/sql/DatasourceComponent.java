@@ -28,14 +28,24 @@ public class DatasourceComponent {
             dataSource = createDatasource(project);
         }
 
-        return dataSource.getConnection(1000);
+        try {
+            return dataSource.getConnection(1000);
+        } catch (Exception e) {
+            dataSource.close();
+            throw e;
+        }
     }
 
     public void updateDatasource() {
         try {
+            if (dataSource != null) {
+                dataSource.close();
+            }
             dataSource = createDatasource(project);
         } catch (Exception ignored) {
-
+            if (dataSource != null) {
+                dataSource.close();
+            }
         }
 
     }

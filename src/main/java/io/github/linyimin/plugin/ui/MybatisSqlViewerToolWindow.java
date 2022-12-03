@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.github.linyimin.plugin.constant.Constant.*;
 
 /**
  * @author yiminlin
@@ -105,6 +106,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         setScrollUnitIncrement();
 
         addComponentListener();
+
+        setTableRowHeight();
 
     }
 
@@ -183,6 +186,11 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         defaultParamPanel.add(defaultParamsScroll);
     }
 
+    private void setTableRowHeight() {
+        this.executeResultTable.setRowHeight(TABLE_ROW_HEIGHT);
+        this.executeHitIndexTable.setRowHeight(TABLE_ROW_HEIGHT);
+    }
+
 
     /**
      * 刷新tool window配置内容
@@ -227,6 +235,16 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         // 获取表列信息：DESC mybatis.CITY;
         // 获取表信息(编码)：show table status from `global_ug_usm_ae` like  'houyi_clc_plan';
 
+        /**
+         *
+         * return last inserted primary key in table
+         * START TRANSACTION;
+         *   INSERT INTO dog (name, created_by, updated_by) VALUES ('name', 'migration', 'migration');
+         *   SELECT LAST_INSERT_ID();
+         * COMMIT;
+         *
+         */
+
         MybatisSqlConfiguration configuration = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
 
         List<String> tables = SqlParser.getTableNames(configuration.getSql());
@@ -235,16 +253,17 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         for (String table : tables) {
 
-            String sql = String.format("DESC %s", table);
-            TableTabbedPane tabbedPanel = new TableTabbedPane();
+            String metaSql = TABLE_META_SQL_TEMPLATE.replace("${table}", table);
+            String indexSql = TABLE_INDEX_SQL_TEMPLATE.replace("${table}", table);
+            TableTabbedPane tabbedPanel = new TableTabbedPane(myProject, tableTabbedPanel);
             tableTabbedPanel.addTab(table, tabbedPanel.getSpecifyTablePanel());
             try {
-                SelectResult result = (SelectResult) SqlExecutor.executeSql(myProject, sql);
-                tabbedPanel.getTableSchema().setModel(result.getModel());
+                SelectResult metaResult = (SelectResult) SqlExecutor.executeSql(myProject, metaSql, false);
+                SelectResult indexResult = (SelectResult) SqlExecutor.executeSql(myProject, indexSql, false);
                 // TODO: 建表规约
                 tabbedPanel.getTableRuleText().setText("TODO: 建表规约");
 
-                tabbedPanel.setMockConfigTable(result.getModel());
+                tabbedPanel.setTables(metaResult.getModel(), indexResult.getModel());
                 tabbedPanel.getMockConfigResultText().setText("TODO: mock configuration result");
 
             } catch (Exception e) {
@@ -278,7 +297,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         executeHitIndexScroll.setVisible(true);
 
         try {
-            BaseResult executeResult = SqlExecutor.executeSql(myProject, sqlConfig.getSql());
+            BaseResult executeResult = SqlExecutor.executeSql(myProject, sqlConfig.getSql(), true);
             SqlType sqlType = SqlParser.getSqlType(sqlConfig.getSql());
             if (sqlType == SqlType.select) {
                 executeResultScroll.setVisible(true);
@@ -307,7 +326,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         MybatisSqlConfiguration sqlConfig = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
 
         String explainSql = String.format("explain %s", sqlConfig.getSql());
-        SelectResult executeResult = (SelectResult) SqlExecutor.executeSql(myProject, explainSql);
+        SelectResult executeResult = (SelectResult) SqlExecutor.executeSql(myProject, explainSql, false);
 
         executeHitIndexTable.setModel(executeResult.getModel());
 

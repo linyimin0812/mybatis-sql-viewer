@@ -44,18 +44,18 @@ public class SqlExecutor {
         }
     }
 
-    public static BaseResult executeSql(Project project, String sql) throws Exception {
+    public static BaseResult executeSql(Project project, String sql, boolean needTotalRows) throws Exception {
 
         SqlType sqlType = SqlParser.getSqlType(sql);
 
-        return SQL_EXECUTOR_MAP.get(sqlType).executeSql(project, sql);
+        return SQL_EXECUTOR_MAP.get(sqlType).executeSql(project, sql, needTotalRows);
 
     }
 
     private static class SelectExecutor implements Executor {
 
         @Override
-        public BaseResult executeSql(Project project, String sql) throws Exception {
+        public BaseResult executeSql(Project project, String sql, boolean needTotalRows) throws Exception {
 
             DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
@@ -73,6 +73,10 @@ public class SqlExecutor {
                     result = new SelectResult(sql, cost, model);
                 }
 
+                if (!needTotalRows) {
+                    return result;
+                }
+
                 try (Statement stmt = connection.createStatement()) {
                     result.setTotalRows(acquireTotalRows(stmt, SqlParser.getTableNames(sql)));
                 }
@@ -86,7 +90,7 @@ public class SqlExecutor {
     private static class UpdateExecutor implements Executor {
 
         @Override
-        public BaseResult executeSql(Project project, String sql) throws Exception {
+        public BaseResult executeSql(Project project, String sql, boolean needTotalRows) throws Exception {
 
             DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
@@ -99,6 +103,10 @@ public class SqlExecutor {
                     result = new UpdateResult(sql, cost, stmt.getUpdateCount());
                 }
 
+                if (!needTotalRows) {
+                    return result;
+                }
+
                 try (Statement stmt = connection.createStatement()) {
                     result.setTotalRows(acquireTotalRows(stmt, SqlParser.getTableNames(sql)));
                 }
@@ -109,7 +117,7 @@ public class SqlExecutor {
     }
 
     private interface Executor {
-        BaseResult executeSql(Project project, String sql) throws Exception;
+        BaseResult executeSql(Project project, String sql, boolean needTotalRows) throws Exception;
 
         default long executeAndReturnCost(Statement statement, String sql) throws SQLException {
             long start = System.currentTimeMillis();
@@ -134,6 +142,5 @@ public class SqlExecutor {
             }
             return pairs;
         }
-
     }
 }

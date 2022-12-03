@@ -5,11 +5,18 @@ package io.github.linyimin.plugin.configuration.model;
  * @date 2022/02/02 1:31 上午
  **/
 public class DatasourceConfiguration {
+
+    private String name;
     private String host;
     private String port;
     private String user;
     private String password;
     private String database;
+
+    public DatasourceConfiguration name(String name) {
+        this.name = name;
+        return this;
+    }
 
     public DatasourceConfiguration host(String host) {
         this.host = host;
@@ -74,5 +81,13 @@ public class DatasourceConfiguration {
 
     public void setDatabase(String database) {
         this.database = database;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

@@ -11,5 +11,8 @@ public enum MockTypeEnum {
     regex,
     lexicon,
     database,
+    /**
+     * 不模拟，直接使用默认值
+     */
     none
 }

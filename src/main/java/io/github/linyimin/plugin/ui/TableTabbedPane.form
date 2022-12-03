@@ -49,6 +49,19 @@
               </scrollpane>
             </children>
           </grid>
+          <scrollpane id="50f64">
+            <constraints>
+              <tabbedpane title="index"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="d7ae1" class="javax.swing.JTable" binding="indexTable">
+                <constraints/>
+                <properties/>
+              </component>
+            </children>
+          </scrollpane>
           <grid id="5b13f" layout-manager="GridLayoutManager" row-count="2" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
@@ -79,7 +92,7 @@
                 <border type="none"/>
                 <children/>
               </grid>
-              <grid id="84839" layout-manager="GridLayoutManager" row-count="1" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="84839" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="0" anchor="4" fill="2" indent="0" use-parent-layout="false"/>
@@ -87,25 +100,17 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <component id="c5b36" class="javax.swing.JButton" binding="saveConfigButton" default-binding="true">
-                    <constraints>
-                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                    </constraints>
-                    <properties>
-                      <text value="save config"/>
-                    </properties>
-                  </component>
-                  <component id="63928" class="javax.swing.JButton" binding="newLexiconButton" default-binding="true">
+                  <component id="63928" class="javax.swing.JButton" binding="lexiconButton" default-binding="true">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <text value="new lexicon"/>
+                      <text value="lexicon"/>
                     </properties>
                   </component>
                   <component id="5ecb2" class="javax.swing.JButton" binding="previewButton" default-binding="true">
                     <constraints>
-                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="preview"/>
@@ -113,7 +118,7 @@
                   </component>
                   <component id="fc43e" class="javax.swing.JButton" binding="mockButton" default-binding="true">
                     <constraints>
-                      <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="mock"/>

@@ -1,6 +1,7 @@
 package io.github.linyimin.plugin.ui;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComboBox;
 import io.github.linyimin.plugin.configuration.MybatisDatasourceStateComponent;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.DatasourceComponent;
@@ -9,6 +10,7 @@ import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.awt.*;
 import java.awt.event.*;
 
 public class DatasourceDialog extends JDialog {
@@ -22,7 +24,13 @@ public class DatasourceDialog extends JDialog {
     private JTextField database;
     private JTextField url;
     private JTextArea testResult;
+    // 通过addConfiguration button控制显示combo box或text field
+    private JPanel namePanel;
+    private JButton addConfiguration;
     private final Project project;
+
+    private JTextField nameText;
+    private JComboBox<String> nameComboBox;
 
     public DatasourceDialog(Project project) {
 
@@ -32,7 +40,6 @@ public class DatasourceDialog extends JDialog {
         setModal(true);
 
         setLocationRelativeTo(null);
-
         getRootPane().setDefaultButton(saveConfiguration);
 
         initDatasource();
@@ -57,6 +64,11 @@ public class DatasourceDialog extends JDialog {
 
         });
 
+        addConfiguration.addActionListener(e -> {
+            // 隐藏combobox, 显示text field用于创建新的数据源
+            displayNameFieldText();
+        });
+
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -70,23 +82,52 @@ public class DatasourceDialog extends JDialog {
     }
 
     private void initDatasource() {
+
         MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
+
         host.setText(component.getHost());
         port.setText(component.getPort());
         user.setText(component.getUser());
         password.setText(component.getPassword());
         database.setText(component.getDatabase());
 
+        displayNameComboBox();
+
         String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, component.getHost(), component.getPort(), component.getDatabase());
         url.setText(urlText);
+
+        nameComboBox.addActionListener(e -> {
+
+            String current = (String) nameComboBox.getSelectedItem();
+            component.setCurrent(current);
+
+            host.setText(component.getHost());
+            port.setText(component.getPort());
+            user.setText(component.getUser());
+            password.setText(component.getPassword());
+            database.setText(component.getDatabase());
+
+        });
+
     }
 
     private void updateDatasourceForPersistent() {
+
         MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
 
         DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
-        component.getState()
+        String name = "";
+        if (nameText.isVisible()) {
+            name = nameText.getText();
+        } else if (nameComboBox.isVisible()) {
+            name = (String) nameComboBox.getSelectedItem();
+        }
+
+        component.setCurrent(name);
+
+        component.getConfig()
+                .name(name)
                 .host(host.getText())
                 .port(port.getText())
                 .user(user.getText())
@@ -122,5 +163,30 @@ public class DatasourceDialog extends JDialog {
 
             url.setText(urlText);
         }
+    }
+
+    private void displayNameFieldText() {
+        // 隐藏combobox, 显示text field用于创建新的数据源
+        namePanel.setVisible(false);
+        nameComboBox.setVisible(false);
+        namePanel.remove(nameComboBox);
+
+        namePanel.add(nameText);
+        namePanel.setVisible(true);
+        nameText.setVisible(true);
+        nameText.setText("");
+    }
+
+    private void displayNameComboBox() {
+
+        MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
+
+        nameComboBox = new ComboBox<>(component.getAllDatasourceNames().toArray(new String[0]));
+        nameComboBox.setSelectedItem(component.getName());
+        namePanel.setLayout(new BorderLayout());
+        namePanel.add(nameComboBox);
+
+        nameText = new JTextField();
+        nameText.setVisible(false);
     }
 }
