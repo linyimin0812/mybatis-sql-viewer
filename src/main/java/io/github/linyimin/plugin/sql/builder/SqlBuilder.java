@@ -16,37 +16,75 @@ import java.util.stream.Collectors;
  **/
 public class SqlBuilder {
 
-    private static final String INSERT_TEMPLATE = "INSERT INTO %s (%s) values (%s)";
+    private static final String INSERT_TEMPLATE = "INSERT INTO %s (%s) values %s";
 
-    public static String buildInsertSql(Project project, String table, List<Field> fields, int rows) throws Exception {
+    public static List<String> buildInsertSql(Project project, String table, List<Field> fields, int rows, boolean batch) throws Exception {
 
         List<List<Object>> mockData = mockData(project, fields, rows);
 
+        if (!batch) {
+            return encapsulateValueSingle(table, mockData, fields, rows);
+        }
+
+        return encapsulateValueBatch(table, mockData, fields, rows);
+    }
+
+    private static List<String> encapsulateValueBatch(String table, List<List<Object>> mockData, List<Field> fields, int rows) {
+
         String columns = fields.stream().map(Field::getName).collect(Collectors.joining(", "));
 
-        StringBuilder sql = new StringBuilder();
+        List<String> sqls = new ArrayList<>();
+
+        int batch = 100;
+        int index = 0;
+        while (index < rows) {
+            int end = Math.min(index + batch, rows);
+            List<List<Object>> subMockData = mockData.subList(index, end);
+            List<String> values = new ArrayList<>();
+            for (List<Object> rowValues : subMockData) {
+                values.add(encapsulateValue(rowValues));
+            }
+            sqls.add(String.format(INSERT_TEMPLATE, table, columns, String.join(", ", values)));
+
+            index = end;
+        }
+
+        return sqls;
+    }
+
+    private static List<String> encapsulateValueSingle(String table, List<List<Object>> mockData, List<Field> fields, int rows) {
+
+        String columns = fields.stream().map(Field::getName).collect(Collectors.joining(", "));
+
+        List<String> sqls = new ArrayList<>();
 
         for (int i = 0; i < rows; i++) {
             // 批量插入, 默认每次插入100条
-            // TODO: 搞成配置项？
-            StringBuilder values = new StringBuilder();
-
-            List<Object> rowValues = mockData.get(i);
-            for (int index = 0; index < rowValues.size(); index++) {
-                Object value = rowValues.get(index);
-                if (value instanceof Number) {
-                    values.append(value);
-                } else {
-                    values.append("'").append(value).append("'");
-                }
-                if (index + 1 != rowValues.size()) {
-                    values.append(", ");
-                }
-            }
-            sql.append(String.format(INSERT_TEMPLATE, table, columns, values)).append("\n");
+            String values = encapsulateValue(mockData.get(i));
+            sqls.add(String.format(INSERT_TEMPLATE, table, columns, values));
         }
 
-        return sql.toString();
+        return sqls;
+    }
+
+    private static String encapsulateValue(List<Object> rowValues) {
+
+        StringBuilder values = new StringBuilder().append("(");
+        for (int index = 0; index < rowValues.size(); index++) {
+            Object value = rowValues.get(index);
+            if (value instanceof Number) {
+                values.append(value);
+            } else {
+                value = ((String) value).replaceAll("'", "\\\\'");
+                values.append("'").append(value).append("'");
+            }
+            if (index + 1 != rowValues.size()) {
+                values.append(", ");
+            }
+        }
+        values.append(")");
+
+        return values.toString();
     }
 
     public static List<List<Object>> mockData(Project project, List<Field> fields, int rows) throws Exception {

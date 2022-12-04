@@ -6,12 +6,18 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.configuration.LexiconComponent;
+import io.github.linyimin.plugin.configuration.MockDataSaveComponent;
 import io.github.linyimin.plugin.configuration.model.Lexicon;
+import io.github.linyimin.plugin.configuration.model.MockDataPrimaryId4Save;
 import io.github.linyimin.plugin.mock.enums.MockRandomParamTypeEnum;
 import io.github.linyimin.plugin.mock.enums.MockTypeEnum;
 import io.github.linyimin.plugin.mock.schema.Field;
 import io.github.linyimin.plugin.sql.builder.SqlBuilder;
+import io.github.linyimin.plugin.sql.converter.ResultConverter;
+import io.github.linyimin.plugin.sql.executor.SqlExecutor;
+import io.github.linyimin.plugin.sql.result.InsertResult;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -23,7 +29,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
+import static io.github.linyimin.plugin.constant.Constant.INSERT_ROWS;
 import static io.github.linyimin.plugin.constant.Constant.TABLE_ROW_HEIGHT;
 
 /**
@@ -60,6 +69,9 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private final Project project;
     private final JTabbedPane parent;
 
+    private final int CORE_NUM = Runtime.getRuntime().availableProcessors();
+    private final ThreadPoolExecutor EXECUTOR_POOL = new ThreadPoolExecutor(CORE_NUM * 2, CORE_NUM * 2, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+
     public SpecifyTableTabbedPane(Project project, JTabbedPane parent) {
 
         this.project = project;
@@ -77,6 +89,55 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private void addButtonListener() {
         this.previewButton.addActionListener(e -> previewMockData());
         this.lexiconButton.addActionListener(e -> triggerLexicon());
+        this.mockButton.addActionListener(e -> saveMockData());
+    }
+
+    private void saveMockData() {
+
+        try {
+            List<String> sqls = acquireInsertSqls(true);
+
+            MockDataPrimaryId4Save.PrimaryIdInTable primaryIdInTable = new MockDataPrimaryId4Save.PrimaryIdInTable(parent.getTitleAt(parent.getSelectedIndex()), Long.MAX_VALUE, Long.MIN_VALUE);
+
+            List<Future<InsertResult>> tasks = new ArrayList<>();
+
+            for (String sql : sqls) {
+                Future<InsertResult> task = EXECUTOR_POOL.submit(() -> SqlExecutor.saveMockData(project, sql));
+                tasks.add(task);
+            }
+
+            int affectedCount = 0;
+            InsertResult result = null;
+            long totalRows= 0;
+
+            for (Future<InsertResult> future : tasks) {
+
+                result = future.get();
+
+                long minId = Math.min(result.getLastInsertId() - INSERT_ROWS + 1, primaryIdInTable.getMinId());
+                long maxId = Math.max(result.getLastInsertId(), primaryIdInTable.getMaxId());
+
+                primaryIdInTable.setMinId(minId);
+                primaryIdInTable.setMaxId(maxId);
+
+                affectedCount += result.getAffectedCount();
+                totalRows = Math.max(totalRows, result.getTotalRows().get(0).getValue());
+            }
+
+            result.setAffectedCount(affectedCount);
+            Pair<String, Long> pair = Pair.of(result.getTotalRows().get(0).getLeft(), result.getTotalRows().get(0).getRight());
+            result.setTotalRows(Collections.singletonList(pair));
+
+            MockDataSaveComponent component = project.getComponent(MockDataSaveComponent.class);
+            component.addPrimaryIdInTable(primaryIdInTable);
+
+            this.mockConfigResultText.setText(ResultConverter.convert2InsertInfo(result));
+
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            this.mockConfigResultText.setText(String.format("save mock data error.\n%s", sw));
+        }
     }
 
     private void triggerLexicon() {
@@ -106,11 +167,22 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     }
 
     private void previewMockData() {
+        try {
+            List<String> sqls = acquireInsertSqls(false);
+            this.mockConfigResultText.setText(String.join("\n", sqls));
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            this.mockConfigResultText.setText(String.format("generate mock data statement error.\n%s", sw));
+        }
+
+    }
+
+    private List<String> acquireInsertSqls(boolean batch) throws Exception {
 
         String mockNumStr = this.mockNum.getText();
         if (StringUtils.isBlank(mockNumStr) || !StringUtils.isNumeric(mockNumStr)) {
-            this.mockConfigResultText.setText("mock number should be a integer.");
-            return;
+            throw new Exception("mock number should be an integer.");
         }
 
         int rows = Integer.parseInt(mockNumStr);
@@ -118,15 +190,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         List<Field> fields = generateMockConfig();
         String tableName = parent.getTitleAt(parent.getSelectedIndex());
 
-        try {
-            String sql = SqlBuilder.buildInsertSql(project, tableName, fields, rows);
-            this.mockConfigResultText.setText(sql);
-
-        } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            this.mockConfigResultText.setText(String.format("generate sql error.\n%s", sw));
-        }
+        return SqlBuilder.buildInsertSql(project, tableName, fields, rows, batch);
     }
 
     private List<Field> generateMockConfig() {
@@ -146,7 +210,9 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         String config = new GsonBuilder().setPrettyPrinting().create().toJson(configs);
         this.mockConfigResultText.setText(config);
 
-        return JSONObject.parseArray(config, Field.class);
+        List<Field> fields = JSONObject.parseArray(config, Field.class);
+
+        return fields.stream().filter(field -> !StringUtils.equals(MockTypeEnum.none.name(),field.getMockType())).collect(Collectors.toList());
 
     }
 

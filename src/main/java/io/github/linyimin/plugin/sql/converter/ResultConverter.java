@@ -1,6 +1,7 @@
 package io.github.linyimin.plugin.sql.converter;
 
 import io.github.linyimin.plugin.sql.result.BaseResult;
+import io.github.linyimin.plugin.sql.result.InsertResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.sql.result.UpdateResult;
 import org.apache.commons.lang3.StringUtils;
@@ -72,5 +73,12 @@ public class ResultConverter {
         }
 
         return sb.toString();
+    }
+
+    public static String convert2InsertInfo(InsertResult result) {
+
+        return "------[Insertion Succeeded]------\n"
+                + "[Rows Affected]: " + result.getAffectedCount() + "\n"
+                + "[Total Rows]: " + result.getTotalRows().get(0).getValue() + "\n";
     }
 }

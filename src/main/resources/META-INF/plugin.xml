@@ -55,6 +55,9 @@
         <component>
             <implementation-class>io.github.linyimin.plugin.configuration.LexiconComponent</implementation-class>
         </component>
+        <component>
+            <implementation-class>io.github.linyimin.plugin.configuration.MockDataSaveComponent</implementation-class>
+        </component>
     </project-components>
 
     <actions>

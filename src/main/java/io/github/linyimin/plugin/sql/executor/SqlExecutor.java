@@ -7,8 +7,10 @@ import io.github.linyimin.plugin.sql.converter.ResultConverter;
 import io.github.linyimin.plugin.sql.parser.SqlParser;
 import io.github.linyimin.plugin.sql.parser.SqlType;
 import io.github.linyimin.plugin.sql.result.BaseResult;
+import io.github.linyimin.plugin.sql.result.InsertResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.sql.result.UpdateResult;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.table.DefaultTableModel;
@@ -52,6 +54,53 @@ public class SqlExecutor {
 
     }
 
+    public static InsertResult saveMockData(Project project, String sql) throws Exception {
+        return (InsertResult) new InsertExecutor().executeSql(project, sql, true);
+    }
+
+    private static class InsertExecutor implements Executor {
+
+        @Override
+        public BaseResult executeSql(Project project, String sql, boolean needTotalRows) throws Exception {
+            DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
+            InsertResult result = new InsertResult();
+            Connection connection = null;
+            try {
+                connection = datasourceComponent.getConnection();
+                connection.setAutoCommit(false);
+
+                try (Statement statement = connection.createStatement()) {
+                    long cost = executeAndReturnCost(statement, sql);
+                    result.setCost(cost);
+                    result.setAffectedCount(statement.getUpdateCount());
+                }
+
+                List<String> tables = SqlParser.getTableNames(sql);
+
+                try (Statement stmt = connection.createStatement()) {
+                    result.setTotalRows(acquireTotalRows(stmt, tables));
+                }
+
+                try (Statement statement = connection.createStatement()) {
+                    result.setLastInsertId(acquireLastInsertId(statement, tables.get(0)));
+                }
+                connection.commit();
+
+                return result;
+
+            } catch (Exception e) {
+                if (connection != null) {
+                    connection.rollback();
+                }
+                throw e;
+            } finally {
+                if (connection != null) {
+                    connection.close();
+                }
+            }
+        }
+    }
+
     private static class SelectExecutor implements Executor {
 
         @Override
@@ -59,11 +108,9 @@ public class SqlExecutor {
 
             DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
-
             try (Connection connection = datasourceComponent.getConnection()) {
 
                 SelectResult result;
-
 
                 try (Statement stmt = connection.createStatement()) {
                     long cost = executeAndReturnCost(stmt, sql);
@@ -142,5 +189,33 @@ public class SqlExecutor {
             }
             return pairs;
         }
+
+        default long acquireLastInsertId(Statement statement, String table) throws SQLException {
+
+            String maxIdStr = "max_id";
+            String primaryKey = acquirePrimaryKey(statement, table);
+
+            statement.execute(String.format("SELECT MAX(%s) AS %s FROM %s;", primaryKey, maxIdStr, table));
+            ResultSet rs = statement.getResultSet();
+            rs.next();
+            return rs.getLong(maxIdStr);
+        }
+
+        default String acquirePrimaryKey(Statement statement, String table) throws SQLException {
+
+            String sql = String.format("DESC %s;", table);
+            statement.execute(sql);
+            ResultSet rs = statement.getResultSet();
+
+            while (rs.next()) {
+                if (StringUtils.equals(rs.getString("Key"), "PRI")) {
+                    return rs.getString("Field");
+                }
+            }
+
+            return "ID";
+        }
     }
+
+
 }

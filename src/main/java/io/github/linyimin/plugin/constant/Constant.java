@@ -43,4 +43,6 @@ public class Constant {
 
     public static final String TABLE_INDEX_SQL_TEMPLATE = "SHOW INDEX FROM `${table}`;";
 
+    public static int INSERT_ROWS = 1;
+
 }

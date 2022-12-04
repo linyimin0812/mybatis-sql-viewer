@@ -8,6 +8,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +44,6 @@ public class RandomDataGenerator implements DataGenerator {
 
         int length = field.getFieldLength() <= 0 ? 6 : field.getFieldLength();
 
-        // TODO: 添加长度
         String defaultValue = RandomStringUtils.randomAlphanumeric(1, length);
         if (randomType == null) {
             return defaultValue;
@@ -81,14 +82,24 @@ public class RandomDataGenerator implements DataGenerator {
         }
 
         if (randomType == MockRandomParamTypeEnum.date) {
+
+            LocalDateTime now = LocalDateTime.now();
+            String begin = now.minusYears(10).atZone(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+            String end = now.plusYears(10).atZone(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+
             return faker.date()
-                    .between(Timestamp.valueOf("2022-01-01 00:00:00"), Timestamp.valueOf("2023-01-01 00:00:00"))
+                    .between(Timestamp.valueOf(begin), Timestamp.valueOf(end))
                     .toLocalDateTime().format(DATE_TIME_FORMATTER);
         }
 
         if (randomType == MockRandomParamTypeEnum.timestamp) {
+
+            LocalDateTime now = LocalDateTime.now();
+            String begin = now.minusYears(10).atZone(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+            String end = now.plusYears(10).atZone(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+
             return faker.date()
-                    .between(Timestamp.valueOf("2022-01-01 00:00:00"), Timestamp.valueOf("2023-01-01 00:00:00"))
+                    .between(Timestamp.valueOf(begin), Timestamp.valueOf(end))
                     .getTime();
         }
 
