@@ -3,12 +3,12 @@ package io.github.linyimin.plugin.sql.checker.rule;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.BinaryExpression;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.*;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.select.*;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
  **/
 public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
-    private Class<T> type;
+    private final Class<T> type;
 
     public SelectCheckRuleAbstract(Class<T> type) {
         this.type = type;
@@ -35,7 +35,7 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
             Select select = (Select) CCJSqlParserUtil.parse(target);
             PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
 
-            return check(plainSelect);
+            return checkPlainSelect(plainSelect);
 
         } catch (JSQLParserException e) {
             return report;
@@ -47,13 +47,21 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
         return Collections.singletonList(CheckScopeEnum.select);
     }
 
-    private Report check(PlainSelect plainSelect) {
+    protected Report checkPlainSelect(PlainSelect plainSelect) {
 
         List<SelectItem> selectItems = plainSelect.getSelectItems();
 
         for (SelectItem item : selectItems) {
-            Report report = check(item);
+            Report report = checkSelectItem(item);
 
+            if (!report.isPass()) {
+                return report;
+            }
+        }
+
+        FromItem fromItem = plainSelect.getFromItem();
+        if (fromItem != null) {
+            Report report = checkFromItem(fromItem);
             if (!report.isPass()) {
                 return report;
             }
@@ -63,7 +71,7 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
         if (CollectionUtils.isNotEmpty(joins)) {
             for (Join join : joins) {
-                Report report = check(join);
+                Report report = checkJoin(join);
                 if (!report.isPass()) {
                     return report;
                 }
@@ -72,7 +80,7 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
         Expression expression = plainSelect.getWhere();
         if (expression != null) {
-            Report report = check(expression);
+            Report report = checkExpression(expression);
             if (!report.isPass()) {
                 return report;
             }
@@ -80,7 +88,7 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
         expression = plainSelect.getHaving();
         if (expression != null) {
-            Report report = check(expression);
+            Report report = checkExpression(expression);
             if (!report.isPass()) {
                 return report;
             }
@@ -90,7 +98,7 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
     }
 
-    private Report check(SelectItem item) {
+    protected Report checkSelectItem(SelectItem item) {
 
         Report report = new Report().isPass(true);
 
@@ -98,42 +106,38 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
             return report;
         }
 
-        Expression expression = ((SelectExpressionItem) item).getExpression();
-
-
-        if (!this.type.isAssignableFrom(expression.getClass())) {
-            return report;
-        }
-
-        return doCheck((T) expression);
+        return checkExpression(((SelectExpressionItem) item).getExpression());
     }
 
-    private Report check(Join join) {
-
-        Report report = new Report().isPass(true);
+    protected Report checkJoin(Join join) {
 
         FromItem item = join.getRightItem();
 
         if (item instanceof SubSelect) {
             SubSelect subSelect = (SubSelect) item;
-            return check((PlainSelect) subSelect.getSelectBody());
+            return checkPlainSelect((PlainSelect) subSelect.getSelectBody());
         }
 
-        return report;
+        return checkFromItem(item);
+
     }
 
-    private Report check(Expression expression) {
+    protected Report checkFromItem(FromItem item) {
+        return new Report().isPass(true);
+    }
+
+    protected Report checkExpression(Expression expression) {
 
         if (this.type.isAssignableFrom(expression.getClass())) {
             return doCheck((T) expression);
         }
 
         if (expression instanceof BinaryExpression) {
-            Report report = check(((BinaryExpression)expression).getLeftExpression());
+            Report report = checkExpression(((BinaryExpression)expression).getLeftExpression());
             if (!report.isPass()) {
                 return report;
             }
-            report = check(((BinaryExpression)expression).getRightExpression());
+            report = checkExpression(((BinaryExpression)expression).getRightExpression());
             if (!report.isPass()) {
                 return report;
             }
@@ -141,7 +145,71 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
         if (expression instanceof SubSelect) {
             SubSelect subSelect = (SubSelect) expression;
-            return check((PlainSelect) subSelect.getSelectBody());
+            return checkPlainSelect((PlainSelect) subSelect.getSelectBody());
+        }
+
+        if (expression instanceof Function) {
+            Report report = checkFunction((Function) expression);
+            if (!report.isPass()) {
+                return report;
+            }
+        }
+
+        if (expression instanceof CaseExpression) {
+            Report report = checkCaseExpression((CaseExpression) expression);
+            if (!report.isPass()) {
+                return report;
+            }
+        }
+
+        return new Report().isPass(true);
+
+    }
+
+    private Report checkFunction(Function expression) {
+        ExpressionList list = expression.getParameters();
+        List<Expression> expressionList = ObjectUtils.defaultIfNull(list.getExpressions(), Collections.emptyList());
+        for (Expression paramExpression : expressionList) {
+            Report report = checkExpression(paramExpression);
+            if (!report.isPass()) {
+                return report;
+            }
+        }
+
+        return new Report().isPass(true);
+    }
+
+    private Report checkCaseExpression(CaseExpression expression) {
+
+        Expression switchExpression = expression.getSwitchExpression();
+
+        if (switchExpression != null) {
+            Report report = checkExpression(switchExpression);
+            if (!report.isPass()) {
+                return report;
+            }
+        }
+
+        Expression elseExpression = expression.getElseExpression();
+        if (elseExpression != null) {
+            Report report = checkExpression(elseExpression);
+            if (!report.isPass()) {
+                return report;
+            }
+        }
+
+        List<WhenClause> whenClauses = ObjectUtils.defaultIfNull(expression.getWhenClauses(), Collections.emptyList());
+        for (WhenClause whenClause : whenClauses) {
+
+            Report report = checkExpression(whenClause.getWhenExpression());
+            if (!report.isPass()) {
+                return report;
+            }
+
+            report = checkExpression(whenClause.getThenExpression());
+            if (!report.isPass()) {
+                return report;
+            }
         }
 
         return new Report().isPass(true);

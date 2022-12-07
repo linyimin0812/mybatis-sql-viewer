@@ -96,10 +96,10 @@ public class ResultConverter {
 
         StringBuilder sb = new StringBuilder();
         for (Report report : noPassReports) {
-            sb.append("[").append(report.getLevel().name()).append("]\n");
+            sb.append("【").append(report.getLevel().name()).append("】\n");
             sb.append("  ").append(report.getDesc()).append("\n");
             if (StringUtils.isNotBlank(report.getSample())) {
-                sb.append("  [sample]\n").append("    ").append(report.getSample()).append("\n");
+                sb.append("  【sample】\n").append("    ").append(report.getSample()).append("\n");
             }
         }
 
