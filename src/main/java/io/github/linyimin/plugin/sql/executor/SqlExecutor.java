@@ -46,6 +46,26 @@ public class SqlExecutor {
         }
     }
 
+    public static String acquirePrimaryKey(Project project, String table) throws Exception {
+
+        DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
+
+        String sql = String.format("DESC %s;", table);
+
+        try (Connection connection = datasourceComponent.getConnection(); Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+            ResultSet rs = statement.getResultSet();
+
+            while (rs.next()) {
+                if (StringUtils.equals(rs.getString("Key"), "PRI")) {
+                    return rs.getString("Field");
+                }
+            }
+        }
+
+        return "ID";
+    }
+
     public static BaseResult executeSql(Project project, String sql, boolean needTotalRows) throws Exception {
 
         SqlType sqlType = SqlParser.getSqlType(sql);

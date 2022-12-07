@@ -70,4 +70,11 @@ public class MockDataSaveComponent implements PersistentStateComponent<MockDataP
         }
 
     }
+
+    public MockDataPrimaryId4Save.PrimaryIdInTable getPrimaryIdInTable(String table) {
+        return this.data.getList().stream()
+                .filter(primaryIdInTable -> StringUtils.equals(primaryIdInTable.getTable(), table))
+                .findFirst()
+                .orElse(null);
+    }
 }

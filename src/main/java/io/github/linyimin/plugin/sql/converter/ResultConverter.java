@@ -1,9 +1,11 @@
 package io.github.linyimin.plugin.sql.converter;
 
+import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.InsertResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.sql.result.UpdateResult;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -11,7 +13,9 @@ import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 /**
  * @author yiminlin
@@ -80,5 +84,25 @@ public class ResultConverter {
         return "------[Insertion Succeeded]------\n"
                 + "[Rows Affected]: " + result.getAffectedCount() + "\n"
                 + "[Total Rows]: " + result.getTotalRows().get(0).getValue() + "\n";
+    }
+
+    public static String convert2RuleInfo(List<Report> reports) {
+
+        List<Report> noPassReports = reports.stream().filter(report -> !report.isPass()).collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(noPassReports)) {
+            return StringUtils.EMPTY;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (Report report : noPassReports) {
+            sb.append("[").append(report.getLevel().name()).append("]\n");
+            sb.append("  ").append(report.getDesc()).append("\n");
+            if (StringUtils.isNotBlank(report.getSample())) {
+                sb.append("  [sample]\n").append("    ").append(report.getSample()).append("\n");
+            }
+        }
+
+        return sb.toString();
     }
 }

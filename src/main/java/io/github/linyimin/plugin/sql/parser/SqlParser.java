@@ -8,8 +8,15 @@ import com.alibaba.druid.sql.ast.statement.SQLDeleteStatement;
 import com.alibaba.druid.sql.ast.statement.SQLInsertStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUpdateStatement;
 import com.alibaba.druid.sql.visitor.SchemaStatVisitor;
+import io.github.linyimin.plugin.ProcessResult;
+import net.sf.jsqlparser.util.validation.Validation;
+import net.sf.jsqlparser.util.validation.ValidationError;
+import net.sf.jsqlparser.util.validation.ValidationException;
+import net.sf.jsqlparser.util.validation.feature.DatabaseType;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +45,16 @@ public class SqlParser {
 
         return SqlType.select;
 
+    }
+
+    public static ProcessResult<String> validate(String sql) {
+        Validation validation = new Validation(Collections.singletonList(DatabaseType.MYSQL), sql);
+        ValidationException exception = validation.validate().stream().map(ValidationError::getErrors).flatMap(Set::stream).findFirst().orElse(null);
+        if (exception == null) {
+            return ProcessResult.success(null);
+        }
+
+        return ProcessResult.fail(exception.getMessage());
     }
 
 }

@@ -4,16 +4,20 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
+import io.github.linyimin.plugin.ProcessResult;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
+import io.github.linyimin.plugin.sql.checker.CheckerHolder;
+import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.converter.ResultConverter;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.parser.SqlParser;
 import io.github.linyimin.plugin.sql.parser.SqlType;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
+import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +29,9 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.github.linyimin.plugin.constant.Constant.*;
 
@@ -217,16 +224,30 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
     @Override
     public void listen() {
+
         this.sqlTabbedPanel.setSelectedIndex(0);
-            generateSql();
-            // TODO: SQL规范校验
-            MybatisSqlConfiguration configuration = project.getService(MybatisSqlStateComponent.class).getConfiguration();
-            if (configuration.getSql().contains("SELECT")) {
-                statementRulePanel.setVisible(true);
-                statementRuleText.setText("TODO: sql语句规约");
-            } else {
+
+        generateSql();
+        // TODO: SQL规范校验
+        MybatisSqlConfiguration configuration = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+
+        ProcessResult<String> validateResult = SqlParser.validate(configuration.getSql());
+
+        if (!validateResult.isSuccess()) {
+            statementRuleText.setText(validateResult.getErrorMsg());
+        } else {
+            List<Report> reports = CheckerHolder.getCheckers().stream().map(checker -> checker.check(configuration.getSql())).flatMap(Collection::stream).collect(Collectors.toList());
+            String ruleInfo = ResultConverter.convert2RuleInfo(reports);
+
+            if (StringUtils.isBlank(ruleInfo)) {
                 statementRulePanel.setVisible(false);
+            } else {
+
+                statementRulePanel.setVisible(true);
+                statementRuleText.setText(ruleInfo);
             }
+//            statementRuleText.setText("TODO: sql语句规约");
+        }
     }
 
     private enum SqlComponentType {

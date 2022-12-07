@@ -22,6 +22,7 @@ dependencies {
     implementation 'com.github.vertical-blank:sql-formatter:2.0.3'
     implementation 'net.datafaker:datafaker:1.7.0'
     implementation group: 'com.github.mifmif', name: 'generex', version: '1.0.1'
+    implementation group: 'com.github.jsqlparser', name: 'jsqlparser', version: '4.5'
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

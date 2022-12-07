@@ -15,6 +15,7 @@ import io.github.linyimin.plugin.mock.schema.Field;
 import io.github.linyimin.plugin.sql.builder.SqlBuilder;
 import io.github.linyimin.plugin.sql.converter.ResultConverter;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
+import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.InsertResult;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 
 import static io.github.linyimin.plugin.constant.Constant.INSERT_ROWS;
 import static io.github.linyimin.plugin.constant.Constant.TABLE_ROW_HEIGHT;
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 
 /**
  * @author yiminlin
@@ -63,14 +65,14 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private JButton lexiconButton;
     private JButton previewButton;
     private JButton mockButton;
+    private JButton cleanButton;
 
     private JTable indexTable;
 
     private final Project project;
     private final JTabbedPane parent;
 
-    private final int CORE_NUM = Runtime.getRuntime().availableProcessors();
-    private final ThreadPoolExecutor EXECUTOR_POOL = new ThreadPoolExecutor(CORE_NUM * 2, CORE_NUM * 2, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    private final ThreadPoolExecutor EXECUTOR_POOL = new ThreadPoolExecutor(8, 8, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
     public SpecifyTableTabbedPane(Project project, JTabbedPane parent) {
 
@@ -90,12 +92,43 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         this.previewButton.addActionListener(e -> previewMockData());
         this.lexiconButton.addActionListener(e -> triggerLexicon());
         this.mockButton.addActionListener(e -> saveMockData());
+        this.cleanButton.addActionListener(e -> cleanMockData());
+    }
+
+    private void cleanMockData() {
+        MockDataSaveComponent component = project.getComponent(MockDataSaveComponent.class);
+        String table = parent.getTitleAt(parent.getSelectedIndex());
+
+        MockDataPrimaryId4Save.PrimaryIdInTable primaryIdInTable = component.getPrimaryIdInTable(table);
+
+        if (primaryIdInTable == null) {
+            this.mockConfigResultText.setText("There is no mock data to clean.");
+            return;
+        }
+
+        try {
+            String primaryId = SqlExecutor.acquirePrimaryKey(project, table);
+
+            String sql = String.format("DELETE FROM %s WHERE %s BETWEEN %s AND %s;", table, primaryId, primaryIdInTable.getMinId(), primaryIdInTable.getMaxId());
+
+            BaseResult result = SqlExecutor.executeSql(project, sql, true);
+
+            component.remove(table);
+
+            this.mockConfigResultText.setText(ResultConverter.convert2ExecuteInfo(result));
+
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            this.mockConfigResultText.setText(String.format("clean mock data failed.\n%s", sw));
+        }
+
     }
 
     private void saveMockData() {
 
         try {
-            List<String> sqls = acquireInsertSqls(true);
+            List<String> sqls = acquireInsertSqls(false, true);
 
             MockDataPrimaryId4Save.PrimaryIdInTable primaryIdInTable = new MockDataPrimaryId4Save.PrimaryIdInTable(parent.getTitleAt(parent.getSelectedIndex()), Long.MAX_VALUE, Long.MIN_VALUE);
 
@@ -168,7 +201,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     private void previewMockData() {
         try {
-            List<String> sqls = acquireInsertSqls(false);
+            List<String> sqls = acquireInsertSqls(true, false);
             this.mockConfigResultText.setText(String.join("\n", sqls));
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -178,7 +211,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     }
 
-    private List<String> acquireInsertSqls(boolean batch) throws Exception {
+    private List<String> acquireInsertSqls(boolean isPreview, boolean batch) throws Exception {
 
         String mockNumStr = this.mockNum.getText();
         if (StringUtils.isBlank(mockNumStr) || !StringUtils.isNumeric(mockNumStr)) {
@@ -186,6 +219,11 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         }
 
         int rows = Integer.parseInt(mockNumStr);
+
+        if (isPreview) {
+            // 最多预览50条数据，避免等待多长时间
+            rows = Math.min(rows, 50);
+        }
 
         List<Field> fields = generateMockConfig();
         String tableName = parent.getTitleAt(parent.getSelectedIndex());
@@ -236,12 +274,13 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     private void initTableRule() {
 
-        tableRuleText = CustomTextField.createArea("sql");
+        this.tableRuleText = CustomTextField.createArea("sql");
 
-        tableRulePanel.setLayout(new BorderLayout());
+        this.tableRulePanel.setLayout(new BorderLayout());
 
         RTextScrollPane tableRuleScroll = new RTextScrollPane(tableRuleText);
         tableRuleScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+        tableRuleScroll.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         tableRulePanel.add(tableRuleScroll);
     }

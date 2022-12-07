@@ -1,0 +1,4 @@
+io.github.linyimin.plugin.sql.checker.rule.WriteClearlySelectFieldRule
+io.github.linyimin.plugin.sql.checker.rule.TryToAvoidInOperationRule
+io.github.linyimin.plugin.sql.checker.rule.AddAsBeforeTableAliasRule
+io.github.linyimin.plugin.sql.checker.rule.CharCountingMethodRule
