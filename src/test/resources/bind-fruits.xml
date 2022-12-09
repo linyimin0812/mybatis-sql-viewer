@@ -10,6 +10,6 @@
         FROM
         fruits
         WHERE
-        name like #{likeName}
+        name LIKE #{likeName}
     </select>
 </mapper>

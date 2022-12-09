@@ -20,15 +20,16 @@ public class CharCountingMethodRule extends SelectCheckRuleAbstract<Function> {
     @Override
     Report doCheck(Function function) {
 
-        String desc = "因国际化需要，所有的字符存储于表示，均采用utf8字符集，那么字符统计方法需要注意。\n" +
-                "   1）SELECT LENGTH(\"轻松工作\"); 返回为12\n" +
-                "   2）SELECT CHARACTER_LENGTH(\"轻松工作\"); 返回为4";
-
         Report report = new Report().isPass(true);
 
         String name = function.getName();
 
         if (StringUtils.equalsAnyIgnoreCase(name,"CHARACTER_LENGTH", "LENGTH")) {
+
+            String desc = "因国际化需要，所有的字符存储于表示，均采用utf8字符集，那么字符统计方法需要注意。\n" +
+                    "   1）SELECT LENGTH(\"轻松工作\"); 返回为12\n" +
+                    "   2）SELECT CHARACTER_LENGTH(\"轻松工作\"); 返回为4";
+
             return report.isPass(false).desc(desc).level(LevelEnum.for_reference);
         }
 

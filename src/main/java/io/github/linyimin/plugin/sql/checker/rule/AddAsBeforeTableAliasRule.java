@@ -19,15 +19,16 @@ public class AddAsBeforeTableAliasRule extends SelectCheckRuleAbstract<Alias> {
     @Override
     Report doCheck(Alias alias) {
 
-        String desc = "SQL语句中表的别名前加AS，并且以t1、t2、t3的顺序依次命名。\n" +
-                "   1）别名可以是表的简称，或者是依照表在SQL语句中出现的顺序，以t1、t2、t3的命名方式。\n" +
-                "   2）别名前加AS是别名更容易辨别。";
-
-        String sample = "SELECT t1.name FROM table_first AS t1, table_second AS t2 WHERE t1.id=t2.id;";
-
         Report report = new Report().isPass(true);
 
         if (alias != null && !alias.isUseAs()) {
+
+            String desc = "SQL语句中表的别名前加AS，并且以t1、t2、t3的顺序依次命名。\n" +
+                    "   1）别名可以是表的简称，或者是依照表在SQL语句中出现的顺序，以t1、t2、t3的命名方式。\n" +
+                    "   2）别名前加AS是别名更容易辨别。";
+
+            String sample = "SELECT t1.name FROM table_first AS t1, table_second AS t2 WHERE t1.id=t2.id;";
+
             return report.isPass(false).level(LevelEnum.recommended).desc(desc).sample(sample);
         }
 

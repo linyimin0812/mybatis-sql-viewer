@@ -94,11 +94,23 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
             }
         }
 
+        Limit limit = plainSelect.getLimit();
+        if (limit != null) {
+            Report report = checkLimit(limit);
+            if (!report.isPass()) {
+                return report;
+            }
+        }
+
         return new Report().isPass(true);
 
     }
 
     protected Report checkSelectItem(SelectItem item) {
+
+        if (this.type.isAssignableFrom(item.getClass())) {
+            return doCheck((T) item);
+        }
 
         Report report = new Report().isPass(true);
 
@@ -111,18 +123,27 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
     protected Report checkJoin(Join join) {
 
-        FromItem item = join.getRightItem();
-
-        if (item instanceof SubSelect) {
-            SubSelect subSelect = (SubSelect) item;
-            return checkPlainSelect((PlainSelect) subSelect.getSelectBody());
+        if (this.type.isAssignableFrom(join.getClass())) {
+            return doCheck((T) join);
         }
 
-        return checkFromItem(item);
+        return checkFromItem(join.getRightItem());
 
     }
 
     protected Report checkFromItem(FromItem item) {
+
+        if (this.type.isAssignableFrom(item.getClass())) {
+            return doCheck((T) item);
+        }
+
+        if (item instanceof SubSelect) {
+            Report report = checkPlainSelect((PlainSelect) ((SubSelect) item).getSelectBody());
+
+            if (!report.isPass()) {
+                return report;
+            }
+        }
         return new Report().isPass(true);
     }
 
@@ -166,7 +187,7 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
     }
 
-    private Report checkFunction(Function expression) {
+    protected Report checkFunction(Function expression) {
         ExpressionList list = expression.getParameters();
         List<Expression> expressionList = ObjectUtils.defaultIfNull(list.getExpressions(), Collections.emptyList());
         for (Expression paramExpression : expressionList) {
@@ -179,7 +200,7 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
         return new Report().isPass(true);
     }
 
-    private Report checkCaseExpression(CaseExpression expression) {
+    protected Report checkCaseExpression(CaseExpression expression) {
 
         Expression switchExpression = expression.getSwitchExpression();
 
@@ -214,5 +235,14 @@ public abstract class SelectCheckRuleAbstract<T> implements CheckRule {
 
         return new Report().isPass(true);
 
+    }
+
+    protected Report checkLimit(Limit limit) {
+
+        if (this.type.isAssignableFrom(limit.getClass())) {
+            return doCheck((T) limit);
+        }
+
+        return new Report().isPass(true);
     }
 }
