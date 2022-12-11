@@ -2,20 +2,11 @@ package io.github.linyimin.plugin.ui;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
-import com.intellij.ui.components.JBTabbedPane;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
-import io.github.linyimin.plugin.sql.executor.SqlExecutor;
-import io.github.linyimin.plugin.sql.parser.SqlParser;
-import io.github.linyimin.plugin.sql.result.SelectResult;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.List;
-
-import static io.github.linyimin.plugin.constant.Constant.*;
 
 /**
  * @author yiminlin

@@ -36,8 +36,7 @@ public class SqlExecutor {
 
         DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
-        try {
-            datasourceComponent.getConnection();
+        try (Connection ignored = datasourceComponent.getConnection()) {
             return "Server Connected.";
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -68,7 +67,7 @@ public class SqlExecutor {
 
     public static BaseResult executeSql(Project project, String sql, boolean needTotalRows) throws Exception {
 
-        SqlType sqlType = SqlParser.getSqlType(sql);
+        SqlType sqlType = SqlParser.getExecuteSqlType(sql);
 
         return SQL_EXECUTOR_MAP.get(sqlType).executeSql(project, sql, needTotalRows);
 

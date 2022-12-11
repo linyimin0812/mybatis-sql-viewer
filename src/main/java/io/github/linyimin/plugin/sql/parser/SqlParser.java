@@ -6,9 +6,11 @@ import com.alibaba.druid.sql.ast.SQLName;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLDeleteStatement;
 import com.alibaba.druid.sql.ast.statement.SQLInsertStatement;
+import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUpdateStatement;
 import com.alibaba.druid.sql.visitor.SchemaStatVisitor;
 import io.github.linyimin.plugin.ProcessResult;
+import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import net.sf.jsqlparser.util.validation.Validation;
 import net.sf.jsqlparser.util.validation.ValidationError;
 import net.sf.jsqlparser.util.validation.ValidationException;
@@ -36,7 +38,7 @@ public class SqlParser {
                 .map(table -> table.replaceAll("`", "")).distinct().collect(Collectors.toList());
     }
 
-    public static SqlType getSqlType(String sql) {
+    public static SqlType getExecuteSqlType(String sql) {
         SQLStatement statement = SQLUtils.parseSingleMysqlStatement(sql);
 
         if (statement instanceof SQLUpdateStatement || statement instanceof SQLInsertStatement || statement instanceof SQLDeleteStatement) {
@@ -45,6 +47,30 @@ public class SqlParser {
 
         return SqlType.select;
 
+    }
+
+    public static CheckScopeEnum getCheckScope(String sql) {
+        try {
+            SQLStatement statement = SQLUtils.parseSingleMysqlStatement(sql);
+            if (statement instanceof SQLUpdateStatement) {
+                return CheckScopeEnum.update;
+            }
+            if (statement instanceof SQLSelectStatement) {
+                return CheckScopeEnum.select;
+            }
+            if (statement instanceof  SQLDeleteStatement) {
+                return CheckScopeEnum.delete;
+            }
+
+            if (statement instanceof SQLInsertStatement) {
+                return CheckScopeEnum.insert;
+            }
+
+            return CheckScopeEnum.none;
+
+        } catch (Exception e) {
+            return CheckScopeEnum.none;
+        }
     }
 
     public static ProcessResult<String> validate(String sql) {

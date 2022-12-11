@@ -1,16 +1,19 @@
 package io.github.linyimin.plugin.ui;
 
+import com.intellij.openapi.progress.BackgroundTaskQueue;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.ProcessResult;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
-import io.github.linyimin.plugin.constant.Constant;
+import io.github.linyimin.plugin.sql.checker.Checker;
 import io.github.linyimin.plugin.sql.checker.CheckerHolder;
 import io.github.linyimin.plugin.sql.checker.Report;
+import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.converter.ResultConverter;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.parser.SqlParser;
@@ -29,9 +32,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.github.linyimin.plugin.constant.Constant.*;
 
@@ -67,9 +68,12 @@ public class SqlTabbedPane implements TabbedChangeListener {
     private JScrollPane executeResultScroll;
 
     private final Project project;
+    private final BackgroundTaskQueue backgroundTaskQueue;
 
     public SqlTabbedPane(Project project) {
+
         this.project = project;
+        this.backgroundTaskQueue = new BackgroundTaskQueue(project, APPLICATION_NAME);
 
         initSqlPanel();
         initResultPanel();
@@ -151,40 +155,112 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
         // 完整SQL语句
         if (selectedIndex == SqlComponentType.statement.index) {
-            generateSql();
+            updateSql();
         }
 
         // 执行SQL
         if (selectedIndex == SqlComponentType.result.getIndex()) {
-            generateSql();
             executeSql();
         }
     }
 
-    private void generateSql() {
+    private ProcessResult<String> generateSql() {
+
+        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+
         try {
-
-            MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
-
+            statementText.setText("Loading...");
             String sqlStr = SqlParamGenerateComponent.generateSql(project, sqlConfig.getMethod(), sqlConfig.getParams());
             sqlConfig.setSql(sqlStr);
-
-            statementText.setText(sqlStr);
-
+            return ProcessResult.success(sqlStr);
         } catch (Throwable e) {
-            Messages.showInfoMessage("generate sql error. err: " + e.getMessage(), Constant.APPLICATION_NAME);
+            sqlConfig.setSql(StringUtils.EMPTY);
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            return ProcessResult.fail(String.format("generate sql error.\n %s", sw));
+        }
+    }
+
+    private void updateSql() {
+        backgroundTaskQueue.run(new Task.Backgroundable(project, APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                updateSqlBackground();
+            }
+        });
+    }
+
+    private void updateSqlBackground() {
+        statementText.setText("Loading SQL Statement...");
+        statementRuleText.setText("Waiting for the SQL to load...");
+
+        ProcessResult<String> result = generateSql();
+        if (!result.isSuccess()) {
+            statementText.setText(result.getErrorMsg());
+            statementRuleText.setText("Please write SQL statement correctly.");
+            return;
+        }
+
+        String sql = result.getData();
+
+        statementText.setText(sql);
+
+        try {
+            ProcessResult<String> validateResult = SqlParser.validate(result.getData());
+
+            if (!validateResult.isSuccess()) {
+                statementRuleText.setText(validateResult.getErrorMsg());
+            } else {
+                CheckScopeEnum scope = SqlParser.getCheckScope(sql);
+                Checker checker = CheckerHolder.getChecker(scope);
+                if (checker == null) {
+                    statementRuleText.setText("No checker for the statement.");
+                    return;
+                }
+
+                List<Report> reports = checker.check(sql);
+                String ruleInfo = ResultConverter.convert2RuleInfo(reports);
+
+                if (StringUtils.isBlank(ruleInfo)) {
+                    statementRuleText.setText("满足规范要求");
+                } else {
+                    statementRuleText.setText(ruleInfo);
+                }
+            }
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            statementRuleText.setText(String.format("Validate sql statement error.\n%s", sw));
         }
     }
 
     private void executeSql() {
 
-        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+        backgroundTaskQueue.run(new Task.Backgroundable(project, APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                executeSqlBackground();
+            }
+        });
+    }
 
-        executeHitIndexScroll.setVisible(true);
+    private void executeSqlBackground() {
+        String sql = statementText.getText();
+        executeInfoText.setText("Executing statement...");
+
+        if (StringUtils.isBlank(sql)) {
+            ProcessResult<String> result = generateSql();
+            if (!result.isSuccess()) {
+                executeInfoText.setText(result.getErrorMsg());
+            } else {
+                sql = result.getData();
+                statementText.setText(sql);
+            }
+        }
 
         try {
-            BaseResult executeResult = SqlExecutor.executeSql(project, sqlConfig.getSql(), true);
-            SqlType sqlType = SqlParser.getSqlType(sqlConfig.getSql());
+            BaseResult executeResult = SqlExecutor.executeSql(project, sql, true);
+            SqlType sqlType = SqlParser.getExecuteSqlType(sql);
             if (sqlType == SqlType.select) {
                 executeResultScroll.setVisible(true);
 
@@ -204,7 +280,6 @@ public class SqlTabbedPane implements TabbedChangeListener {
             executeHitIndexScroll.setVisible(false);
             executeResultScroll.setVisible(false);
         }
-
     }
 
     private void acquireExecuteIndex() throws Exception {
@@ -224,30 +299,8 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
     @Override
     public void listen() {
-
         this.sqlTabbedPanel.setSelectedIndex(0);
-
-        generateSql();
-        // TODO: SQL规范校验
-        MybatisSqlConfiguration configuration = project.getService(MybatisSqlStateComponent.class).getConfiguration();
-
-        ProcessResult<String> validateResult = SqlParser.validate(configuration.getSql());
-
-        if (!validateResult.isSuccess()) {
-            statementRuleText.setText(validateResult.getErrorMsg());
-        } else {
-            List<Report> reports = CheckerHolder.getCheckers().stream().map(checker -> checker.check(configuration.getSql())).flatMap(Collection::stream).collect(Collectors.toList());
-            String ruleInfo = ResultConverter.convert2RuleInfo(reports);
-
-            if (StringUtils.isBlank(ruleInfo)) {
-                statementRulePanel.setVisible(false);
-            } else {
-
-                statementRulePanel.setVisible(true);
-                statementRuleText.setText(ruleInfo);
-            }
-//            statementRuleText.setText("TODO: sql语句规约");
-        }
+        updateSql();
     }
 
     private enum SqlComponentType {

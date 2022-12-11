@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @date 2022/02/02 1:29 上午
  **/
 @State(name = "datasource", storages = {@Storage("mybatis-sql-config.xml")})
-public class MybatisDatasourceStateComponent implements PersistentStateComponent<DatasourceConfig4Save> {
+public class DatasourceConfigComponent implements PersistentStateComponent<DatasourceConfig4Save> {
 
     private DatasourceConfig4Save config;
 

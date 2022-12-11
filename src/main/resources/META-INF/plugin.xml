@@ -51,15 +51,18 @@
 
     <project-components>
         <component>
-            <implementation-class>io.github.linyimin.plugin.configuration.MybatisDatasourceStateComponent</implementation-class>
+            <implementation-class>io.github.linyimin.plugin.configuration.MockDataSaveComponent</implementation-class>
+        </component>
+    </project-components>
+
+    <application-components>
+        <component>
+            <implementation-class>io.github.linyimin.plugin.configuration.DatasourceConfigComponent</implementation-class>
         </component>
         <component>
             <implementation-class>io.github.linyimin.plugin.configuration.LexiconComponent</implementation-class>
         </component>
-        <component>
-            <implementation-class>io.github.linyimin.plugin.configuration.MockDataSaveComponent</implementation-class>
-        </component>
-    </project-components>
+    </application-components>
 
     <actions>
         <!-- Add your actions here -->

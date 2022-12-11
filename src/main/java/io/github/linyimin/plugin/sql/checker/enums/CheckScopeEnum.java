@@ -11,6 +11,10 @@ public enum CheckScopeEnum {
     delete,
 
     table,
+    field,
+    field_composition,
 
-    mapper_xml
+    mapper_xml,
+
+    none
 }

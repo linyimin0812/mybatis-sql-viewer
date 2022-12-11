@@ -1,11 +1,16 @@
 package io.github.linyimin.plugin.ui;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.progress.BackgroundTaskQueue;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
-import io.github.linyimin.plugin.configuration.MybatisDatasourceStateComponent;
+import io.github.linyimin.plugin.configuration.DatasourceConfigComponent;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.DatasourceComponent;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -27,14 +32,18 @@ public class DatasourceDialog extends JDialog {
     // 通过addConfiguration button控制显示combo box或text field
     private JPanel namePanel;
     private JButton addConfiguration;
-    private final Project project;
 
     private JTextField nameText;
     private JComboBox<String> nameComboBox;
 
+    private final Project project;
+    private final BackgroundTaskQueue backgroundTaskQueue;
+
     public DatasourceDialog(Project project) {
 
         this.project = project;
+
+        backgroundTaskQueue = new BackgroundTaskQueue(project, Constant.APPLICATION_NAME);
 
         setContentPane(contentPane);
         setModal(true);
@@ -49,19 +58,33 @@ public class DatasourceDialog extends JDialog {
         database.getDocument().addDocumentListener(new DatasourceChangeListener());
 
         saveConfiguration.addActionListener((e) -> {
-            updateDatasourceForPersistent();
 
-            testResult.setText("Save success.");
+            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    updateDatasourceForPersistent();
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        testResult.setText("Save success.");
+                    });
+                }
+            });
         });
 
         // 监听button点击事件
         testConnection.addActionListener((e) -> {
 
-            updateDatasourceForPersistent();
+            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
 
-            String connectionInfo = SqlExecutor.testConnected(project);
-            testResult.setText(connectionInfo);
+                    updateDatasourceForPersistent();
+                    String connectionInfo = SqlExecutor.testConnected(project);
 
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        testResult.setText(connectionInfo);
+                    });
+                }
+            });
         });
 
         addConfiguration.addActionListener(e -> {
@@ -83,7 +106,7 @@ public class DatasourceDialog extends JDialog {
 
     private void initDatasource() {
 
-        MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
+        DatasourceConfigComponent component = ApplicationManager.getApplication().getComponent(DatasourceConfigComponent.class);
 
         host.setText(component.getHost());
         port.setText(component.getPort());
@@ -113,7 +136,7 @@ public class DatasourceDialog extends JDialog {
 
     private void updateDatasourceForPersistent() {
 
-        MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
+        DatasourceConfigComponent component = ApplicationManager.getApplication().getComponent(DatasourceConfigComponent.class);
 
         DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
@@ -179,7 +202,7 @@ public class DatasourceDialog extends JDialog {
 
     private void displayNameComboBox() {
 
-        MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
+        DatasourceConfigComponent component = ApplicationManager.getApplication().getComponent(DatasourceConfigComponent.class);
 
         nameComboBox = new ComboBox<>(component.getAllDatasourceNames().toArray(new String[0]));
         nameComboBox.setSelectedItem(component.getName());

@@ -2,8 +2,9 @@ package io.github.linyimin.plugin.sql;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import io.github.linyimin.plugin.configuration.MybatisDatasourceStateComponent;
+import io.github.linyimin.plugin.configuration.DatasourceConfigComponent;
 import io.github.linyimin.plugin.constant.Constant;
 
 import java.sql.Connection;
@@ -24,7 +25,7 @@ public class DatasourceComponent {
     private DruidDataSource dataSource;
 
     public Connection getConnection() throws Exception {
-        if (dataSource == null) {
+        if (dataSource == null || dataSource.isClosed()) {
             dataSource = createDatasource(project);
         }
 
@@ -38,7 +39,7 @@ public class DatasourceComponent {
 
     public void updateDatasource() {
         try {
-            if (dataSource != null) {
+            if (dataSource != null && !dataSource.isClosed()) {
                 dataSource.close();
             }
             dataSource = createDatasource(project);
@@ -47,12 +48,11 @@ public class DatasourceComponent {
                 dataSource.close();
             }
         }
-
     }
 
     private DruidDataSource createDatasource(Project project) throws Exception {
 
-        MybatisDatasourceStateComponent component = project.getComponent(MybatisDatasourceStateComponent.class);
+        DatasourceConfigComponent component = ApplicationManager.getApplication().getComponent(DatasourceConfigComponent.class);
 
         Properties properties = new Properties();
 

@@ -9,3 +9,12 @@ io.github.linyimin.plugin.sql.checker.rule.AvoidSumFunctionNPERule
 io.github.linyimin.plugin.sql.checker.rule.CountDistinctRule
 io.github.linyimin.plugin.sql.checker.rule.CountWithFieldRule
 io.github.linyimin.plugin.sql.checker.rule.PaginationScenarioRule
+io.github.linyimin.plugin.sql.checker.rule.CorrelationTableLimitRule
+io.github.linyimin.plugin.sql.checker.rule.TablePluralNameCheckRule
+io.github.linyimin.plugin.sql.checker.rule.TableNameAndFieldNameCheckRule
+io.github.linyimin.plugin.sql.checker.rule.DisableReservedWordRule
+io.github.linyimin.plugin.sql.checker.rule.TableFieldCompositionRule
+io.github.linyimin.plugin.sql.checker.rule.VarcharLengthLimitRule
+io.github.linyimin.plugin.sql.checker.rule.BooleanFieldNameRule
+io.github.linyimin.plugin.sql.checker.rule.UpdateUpdateTimeFieldWhenUpdateRecordRule
+io.github.linyimin.plugin.sql.checker.rule.BigAndCompleteUpdateMethodRule
