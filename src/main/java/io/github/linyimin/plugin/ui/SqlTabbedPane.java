@@ -28,6 +28,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
@@ -125,6 +127,26 @@ public class SqlTabbedPane implements TabbedChangeListener {
         statementScroll = new RTextScrollPane(statementText);
         statementScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
 
+        statementText.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                if (StringUtils.equals(statementText.getText(), SQL_STATEMENT_LOADING_PROMPT)) {
+                    return;
+                }
+                MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+                sqlConfig.setSql(statementText.getText());
+                validateSql(statementText.getText());
+            }
+        });
+
         statementPanel.add(statementScroll);
 
         statementRuleText = CustomTextField.createArea("sql");
@@ -191,7 +213,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
     }
 
     private void updateSqlBackground() {
-        statementText.setText("Loading SQL Statement...");
+        statementText.setText(SQL_STATEMENT_LOADING_PROMPT);
         statementRuleText.setText("Waiting for the SQL to load...");
 
         ProcessResult<String> result = generateSql();
@@ -200,13 +222,13 @@ public class SqlTabbedPane implements TabbedChangeListener {
             statementRuleText.setText("Please write SQL statement correctly.");
             return;
         }
+        statementText.setText(result.getData());
+        validateSql(result.getData());
+    }
 
-        String sql = result.getData();
-
-        statementText.setText(sql);
-
+    private void validateSql(String sql) {
         try {
-            ProcessResult<String> validateResult = SqlParser.validate(result.getData());
+            ProcessResult<String> validateResult = SqlParser.validate(sql);
 
             if (!validateResult.isSuccess()) {
                 statementRuleText.setText(validateResult.getErrorMsg());

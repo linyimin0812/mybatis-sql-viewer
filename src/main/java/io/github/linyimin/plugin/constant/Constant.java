@@ -45,4 +45,6 @@ public class Constant {
 
     public static int INSERT_ROWS = 1;
 
+    public static String SQL_STATEMENT_LOADING_PROMPT = "Loading SQL Statement...";
+
 }

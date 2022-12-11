@@ -2,7 +2,9 @@ package io.github.linyimin.plugin.component;
 
 import com.google.common.collect.Lists;
 import com.google.gson.GsonBuilder;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.*;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
@@ -96,10 +98,14 @@ public class SqlParamGenerateComponent {
             return ProcessResult.fail("annotation is not exist.");
         }
 
-        PsiAnnotation annotation = Arrays.stream(psiMethods.get(0).getAnnotations())
-                .filter(psiAnnotation -> MYBATIS_SQL_ANNOTATIONS.contains(psiAnnotation.getQualifiedName()))
-                .findFirst().orElse(null);
-
+        PsiAnnotation annotation = ApplicationManager.getApplication().runReadAction(new Computable<PsiAnnotation>() {
+            @Override
+            public PsiAnnotation compute() {
+                PsiAnnotation[] annotations = psiMethods.get(0).getAnnotations();
+                return Arrays.stream(annotations).filter(psiAnnotation -> MYBATIS_SQL_ANNOTATIONS.contains(psiAnnotation.getQualifiedName()))
+                        .findFirst().orElse(null);
+            }
+        });
 
         if (annotation == null) {
             return ProcessResult.fail("There is no of annotation on the method.");
@@ -126,7 +132,9 @@ public class SqlParamGenerateComponent {
         try {
 
             String namespace = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
-            Optional<String> optional = MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst();
+
+            Optional<String> optional = ApplicationManager.getApplication()
+                    .runReadAction((Computable<Optional<String>>) () -> MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst());
 
             if (!optional.isPresent()) {
                 return ProcessResult.fail("Oops! The plugin can't find the mapper file.");

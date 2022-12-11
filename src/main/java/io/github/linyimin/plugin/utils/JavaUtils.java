@@ -1,7 +1,9 @@
 package io.github.linyimin.plugin.utils;
 
 import com.google.common.collect.Lists;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
@@ -81,7 +83,9 @@ public class JavaUtils {
         if (Objects.isNull(psiClass)) {
             return Collections.emptyList();
         }
-        PsiMethod[] methods = psiClass.findMethodsByName(methodName, true);
+
+        PsiMethod[] methods = ApplicationManager.getApplication().runReadAction((Computable<PsiMethod[]>) () -> psiClass.findMethodsByName(methodName, true));
+
         return ArrayUtils.isEmpty(methods) ? Collections.emptyList() : Lists.newArrayList(methods);
     }
 
@@ -95,6 +99,6 @@ public class JavaUtils {
         GlobalSearchScope scope = GlobalSearchScope.allScope(project);
         JavaPsiFacade instance = JavaPsiFacade.getInstance(project);
 
-        return instance.findClass(clazzName, scope);
+        return ApplicationManager.getApplication().runReadAction((Computable<PsiClass>) () -> instance.findClass(clazzName, scope));
     }
 }
