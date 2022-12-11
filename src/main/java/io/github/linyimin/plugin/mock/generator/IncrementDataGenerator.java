@@ -4,18 +4,13 @@ import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.schema.Field;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author banzhe
  * @date 2022/11/30 16:05
  **/
 public class IncrementDataGenerator implements DataGenerator {
     @Override
-    public List<Long> generate(Project project, Field field, int rows) {
-
-        List<Long> list = new ArrayList<>();
+    public Long generate(Project project, Field field) {
 
         String mockParam = field.getMockParam();
 
@@ -25,10 +20,8 @@ public class IncrementDataGenerator implements DataGenerator {
 
         long initValue = Long.parseLong(mockParam);
 
-        for (int i = 0; i < rows; i++) {
-            list.add(initValue++);
-        }
+        field.setMockParam(String.valueOf(initValue++));
 
-        return list;
+        return initValue;
     }
 }

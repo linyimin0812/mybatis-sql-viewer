@@ -82,6 +82,7 @@ public class ResultConverter {
     public static String convert2InsertInfo(InsertResult result) {
 
         return "------[Insertion Succeeded]------\n"
+                + "[Cost]: " + result.getCost() + "(ms)\n"
                 + "[Rows Affected]: " + result.getAffectedCount() + "\n"
                 + "[Total Rows]: " + result.getTotalRows().get(0).getValue() + "\n";
     }

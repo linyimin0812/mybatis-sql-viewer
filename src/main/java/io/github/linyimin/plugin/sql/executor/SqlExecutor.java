@@ -73,8 +73,8 @@ public class SqlExecutor {
 
     }
 
-    public static InsertResult saveMockData(Project project, String sql) throws Exception {
-        return (InsertResult) new InsertExecutor().executeSql(project, sql, true);
+    public static InsertResult saveMockData(Project project, String sql, boolean needTotalRows) throws Exception {
+        return (InsertResult) new InsertExecutor().executeSql(project, sql, needTotalRows);
     }
 
     private static class InsertExecutor implements Executor {
@@ -84,7 +84,9 @@ public class SqlExecutor {
             DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
             InsertResult result = new InsertResult();
             Connection connection = null;
+
             try {
+
                 connection = datasourceComponent.getConnection();
                 connection.setAutoCommit(false);
 
@@ -96,13 +98,16 @@ public class SqlExecutor {
 
                 List<String> tables = SqlParser.getTableNames(sql);
 
-                try (Statement stmt = connection.createStatement()) {
-                    result.setTotalRows(acquireTotalRows(stmt, tables));
+                if (needTotalRows) {
+                    try (Statement stmt = connection.createStatement()) {
+                        result.setTotalRows(acquireTotalRows(stmt, tables));
+                    }
                 }
 
                 try (Statement statement = connection.createStatement()) {
                     result.setLastInsertId(acquireLastInsertId(statement, tables.get(0)));
                 }
+
                 connection.commit();
 
                 return result;

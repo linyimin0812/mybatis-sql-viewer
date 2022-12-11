@@ -18,38 +18,33 @@ public class SqlBuilder {
 
     private static final String INSERT_TEMPLATE = "INSERT INTO %s (%s) values %s";
 
-    public static List<String> buildInsertSql(Project project, String table, List<Field> fields, int rows, boolean batch) throws Exception {
+    public static String buildInsertSql(Project project, String table, List<Field> fields) throws Exception {
 
-        List<List<Object>> mockData = mockData(project, fields, rows);
-
-        if (!batch) {
-            return encapsulateValueSingle(table, mockData, fields, rows);
-        }
-
-        return encapsulateValueBatch(table, mockData, fields, rows);
-    }
-
-    private static List<String> encapsulateValueBatch(String table, List<List<Object>> mockData, List<Field> fields, int rows) {
+        List<Object> mockData = mockData(project, fields);
 
         String columns = fields.stream().map(Field::getName).collect(Collectors.joining(", "));
 
-        List<String> sqls = new ArrayList<>();
+        String values = encapsulateValue(mockData);
 
-        int batch = 100;
-        int index = 0;
-        while (index < rows) {
-            int end = Math.min(index + batch, rows);
-            List<List<Object>> subMockData = mockData.subList(index, end);
-            List<String> values = new ArrayList<>();
-            for (List<Object> rowValues : subMockData) {
-                values.add(encapsulateValue(rowValues));
-            }
-            sqls.add(String.format(INSERT_TEMPLATE, table, columns, String.join(", ", values)));
+        return String.format(INSERT_TEMPLATE, table, columns, values);
 
-            index = end;
+    }
+
+
+    public static String buildInsertSqlBatch(Project project, String table, List<Field> fields, int rows) throws Exception {
+
+        String columns = fields.stream().map(Field::getName).collect(Collectors.joining(", "));
+
+        List<List<Object>> subMockData = new ArrayList<>();
+        for (int i = 0; i < rows; i++) {
+            subMockData.add(mockData(project, fields));
+        }
+        List<String> values = new ArrayList<>();
+        for (List<Object> rowValues : subMockData) {
+            values.add(encapsulateValue(rowValues));
         }
 
-        return sqls;
+        return String.format(INSERT_TEMPLATE, table, columns, String.join(", ", values));
     }
 
     private static List<String> encapsulateValueSingle(String table, List<List<Object>> mockData, List<Field> fields, int rows) {
@@ -87,23 +82,18 @@ public class SqlBuilder {
         return values.toString();
     }
 
-    public static List<List<Object>> mockData(Project project, List<Field> fields, int rows) throws Exception {
+    public static List<Object> mockData(Project project, List<Field> fields) throws Exception {
 
-        List<List<Object>> mockData = new ArrayList<>(rows);
+        List<Object> mockData = new ArrayList<>(fields.size());
 
-        for (int i = 0; i < rows; i++) {
-            mockData.add(new ArrayList<>());
-        }
 
         for (Field field : fields) {
 
             MockTypeEnum type = MockTypeEnum.valueOf(field.getMockType());
             DataGenerator generator = DataGeneratorFactory.getGenerator(type);
-            List<String> fieldData = generator.generate(project, field, rows);
+            Object fieldData = generator.generate(project, field);
 
-            for (int j = 0; j < rows; j++) {
-                mockData.get(j).add(fieldData.get(j));
-            }
+            mockData.add(fieldData);
         }
 
         return mockData;

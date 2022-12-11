@@ -10,5 +10,5 @@ import java.util.List;
  * @date 2022/11/30 11:06
  **/
 public interface DataGenerator<T> {
-    List<T> generate(Project project, Field field, int rows) throws Exception;
+    T generate(Project project, Field field) throws Exception;
 }

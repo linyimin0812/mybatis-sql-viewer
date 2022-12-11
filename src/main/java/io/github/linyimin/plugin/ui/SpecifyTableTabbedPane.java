@@ -2,6 +2,9 @@ package io.github.linyimin.plugin.ui;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.GsonBuilder;
+import com.intellij.openapi.progress.BackgroundTaskQueue;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.util.ui.JBUI;
@@ -9,6 +12,7 @@ import io.github.linyimin.plugin.configuration.LexiconComponent;
 import io.github.linyimin.plugin.configuration.MockDataSaveComponent;
 import io.github.linyimin.plugin.configuration.model.Lexicon;
 import io.github.linyimin.plugin.configuration.model.MockDataPrimaryId4Save;
+import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.mock.enums.MockRandomParamTypeEnum;
 import io.github.linyimin.plugin.mock.enums.MockTypeEnum;
 import io.github.linyimin.plugin.mock.schema.Field;
@@ -18,9 +22,9 @@ import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.InsertResult;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -30,7 +34,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static io.github.linyimin.plugin.constant.Constant.INSERT_ROWS;
@@ -72,12 +75,13 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private final Project project;
     private final JTabbedPane parent;
 
-    private final ThreadPoolExecutor EXECUTOR_POOL = new ThreadPoolExecutor(8, 8, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    private final BackgroundTaskQueue backgroundTaskQueue;
 
     public SpecifyTableTabbedPane(Project project, JTabbedPane parent) {
 
         this.project = project;
         this.parent = parent;
+        this.backgroundTaskQueue = new BackgroundTaskQueue(project, Constant.APPLICATION_NAME);
 
         initTableRule();
 
@@ -89,13 +93,33 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     }
 
     private void addButtonListener() {
+        
         this.previewButton.addActionListener(e -> previewMockData());
         this.lexiconButton.addActionListener(e -> triggerLexicon());
-        this.mockButton.addActionListener(e -> saveMockData());
-        this.cleanButton.addActionListener(e -> cleanMockData());
+
+        this.mockButton.addActionListener(e -> {
+            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    saveMockData();
+                }
+            });
+        });
+
+        this.cleanButton.addActionListener(e -> {
+            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    cleanMockData();
+                }
+            });
+        });
     }
 
     private void cleanMockData() {
+
+        this.mockConfigResultText.setText("Cleaning mock data...");
+
         MockDataSaveComponent component = project.getComponent(MockDataSaveComponent.class);
         String table = parent.getTitleAt(parent.getSelectedIndex());
 
@@ -127,42 +151,49 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     private void saveMockData() {
 
+        this.mockConfigResultText.setText("Saving mock data...");
+
         try {
-            List<String> sqls = acquireInsertSqls(false, true);
+
+            int rows = acquireMockNum(false);
+
+            int index = 0;
+
+            InsertResult result = new InsertResult();
+            int totalAffectedCount = 0;
 
             MockDataPrimaryId4Save.PrimaryIdInTable primaryIdInTable = new MockDataPrimaryId4Save.PrimaryIdInTable(parent.getTitleAt(parent.getSelectedIndex()), Long.MAX_VALUE, Long.MIN_VALUE);
 
-            List<Future<InsertResult>> tasks = new ArrayList<>();
+            long start = System.currentTimeMillis();
 
-            for (String sql : sqls) {
-                Future<InsertResult> task = EXECUTOR_POOL.submit(() -> SqlExecutor.saveMockData(project, sql));
-                tasks.add(task);
+            while (index < rows) {
+
+                int end = Math.min(index + INSERT_ROWS, rows);
+
+                int insertRows = end - index;
+
+                String sql = acquireBatchInsertSql(insertRows);
+
+                index += INSERT_ROWS;
+
+                boolean needTotalRows = index >= rows;
+
+                result = SqlExecutor.saveMockData(project, sql, needTotalRows);
+
+                if (index == INSERT_ROWS) {
+                    primaryIdInTable.setMinId(result.getLastInsertId() - insertRows + 1);
+                }
+
+                totalAffectedCount += result.getAffectedCount();
+
             }
-
-            int affectedCount = 0;
-            InsertResult result = null;
-            long totalRows= 0;
-
-            for (Future<InsertResult> future : tasks) {
-
-                result = future.get();
-
-                long minId = Math.min(result.getLastInsertId() - INSERT_ROWS + 1, primaryIdInTable.getMinId());
-                long maxId = Math.max(result.getLastInsertId(), primaryIdInTable.getMaxId());
-
-                primaryIdInTable.setMinId(minId);
-                primaryIdInTable.setMaxId(maxId);
-
-                affectedCount += result.getAffectedCount();
-                totalRows = Math.max(totalRows, result.getTotalRows().get(0).getValue());
-            }
-
-            result.setAffectedCount(affectedCount);
-            Pair<String, Long> pair = Pair.of(result.getTotalRows().get(0).getLeft(), result.getTotalRows().get(0).getRight());
-            result.setTotalRows(Collections.singletonList(pair));
 
             MockDataSaveComponent component = project.getComponent(MockDataSaveComponent.class);
+            primaryIdInTable.setMaxId(result.getLastInsertId());
             component.addPrimaryIdInTable(primaryIdInTable);
+
+            result.setAffectedCount(totalAffectedCount);
+            result.setCost(System.currentTimeMillis() - start);
 
             this.mockConfigResultText.setText(ResultConverter.convert2InsertInfo(result));
 
@@ -201,8 +232,14 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     private void previewMockData() {
         try {
-            List<String> sqls = acquireInsertSqls(true, false);
+            int rows = acquireMockNum(true);
+            List<String> sqls = new ArrayList<>(rows);
+            for (int i = 0; i < rows; i++) {
+                sqls.add(acquireInsertSql());
+            }
+
             this.mockConfigResultText.setText(String.join("\n", sqls));
+
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
@@ -211,24 +248,30 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     }
 
-    private List<String> acquireInsertSqls(boolean isPreview, boolean batch) throws Exception {
-
-        String mockNumStr = this.mockNum.getText();
-        if (StringUtils.isBlank(mockNumStr) || !StringUtils.isNumeric(mockNumStr)) {
-            throw new Exception("mock number should be an integer.");
-        }
-
-        int rows = Integer.parseInt(mockNumStr);
-
-        if (isPreview) {
-            // 最多预览50条数据，避免等待多长时间
-            rows = Math.min(rows, 50);
-        }
+    private String acquireInsertSql() throws Exception {
 
         List<Field> fields = generateMockConfig();
         String tableName = parent.getTitleAt(parent.getSelectedIndex());
 
-        return SqlBuilder.buildInsertSql(project, tableName, fields, rows, batch);
+        return SqlBuilder.buildInsertSql(project, tableName, fields);
+    }
+
+    private String acquireBatchInsertSql(int rows) throws Exception {
+        List<Field> fields = generateMockConfig();
+        String tableName = parent.getTitleAt(parent.getSelectedIndex());
+        return SqlBuilder.buildInsertSqlBatch(project, tableName, fields, rows);
+    }
+
+    private int acquireMockNum(boolean isPreview) {
+
+        String mockNumStr = this.mockNum.getText();
+        if (StringUtils.isBlank(mockNumStr) || !StringUtils.isNumeric(mockNumStr)) {
+            mockNumStr = "100";
+        }
+
+        int rows = Integer.parseInt(mockNumStr);
+
+        return isPreview ? Math.min(rows, 50) : rows;
     }
 
     private List<Field> generateMockConfig() {
@@ -246,7 +289,6 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
             configs.add(config);
         }
         String config = new GsonBuilder().setPrettyPrinting().create().toJson(configs);
-        this.mockConfigResultText.setText(config);
 
         List<Field> fields = JSONObject.parseArray(config, Field.class);
 

@@ -11,8 +11,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -26,14 +24,9 @@ public class RandomDataGenerator implements DataGenerator {
     private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public List<Object> generate(Project project, Field field, int rows) {
+    public Object generate(Project project, Field field) {
 
-        List<Object> list = new ArrayList<>(rows);
-        for (int i = 0; i < rows; i++) {
-            list.add(getRandomValue(field));
-        }
-
-        return list;
+        return getRandomValue(field);
     }
 
     private Object getRandomValue(Field field) {

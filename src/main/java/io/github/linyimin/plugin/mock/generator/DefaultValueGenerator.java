@@ -4,9 +4,6 @@ import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.schema.Field;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author banzhe
  * @date 2022/11/30 15:49
@@ -14,9 +11,7 @@ import java.util.List;
 public class DefaultValueGenerator implements DataGenerator {
 
     @Override
-    public List<Object> generate(Project project, Field field, int rows) {
-
-        List<Object> list = new ArrayList<>(rows);
+    public Object generate(Project project, Field field) {
 
         String defaultValue = field.getDefaultValue();
 
@@ -28,21 +23,15 @@ public class DefaultValueGenerator implements DataGenerator {
 
             long initValue = Long.parseLong(defaultValue);
 
-            for (int i = 0; i < rows; i++) {
-                list.add(initValue);
-            }
+            field.setDefaultValue(String.valueOf(initValue++));
 
-            return list;
+            return initValue;
         }
 
         if (StringUtils.isBlank(defaultValue)) {
             defaultValue = "";
         }
 
-        for (int i = 0; i < rows; i++) {
-            list.add(defaultValue);
-        }
-
-        return list;
+        return defaultValue;
     }
 }

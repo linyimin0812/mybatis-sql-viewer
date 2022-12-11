@@ -61,12 +61,12 @@ public class MockDataSaveComponent implements PersistentStateComponent<MockDataP
             return;
         }
 
-        if (exist.getMinId() < primaryIdInTable.getMinId()) {
-            primaryIdInTable.setMinId(exist.getMinId());
+        if (exist.getMinId() > primaryIdInTable.getMinId()) {
+            exist.setMinId(primaryIdInTable.getMinId());
         }
 
-        if (exist.getMaxId() > primaryIdInTable.getMaxId()) {
-            primaryIdInTable.setMaxId(exist.getMaxId());
+        if (exist.getMaxId() < primaryIdInTable.getMaxId()) {
+            exist.setMaxId(primaryIdInTable.getMaxId());
         }
 
     }

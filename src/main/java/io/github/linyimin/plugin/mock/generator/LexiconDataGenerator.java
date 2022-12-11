@@ -7,7 +7,6 @@ import io.github.linyimin.plugin.mock.schema.Field;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,35 +15,25 @@ import java.util.List;
  **/
 public class LexiconDataGenerator implements DataGenerator {
     @Override
-    public List<Object> generate(Project project, Field field, int rows) {
-
-        List<Object> list = new ArrayList<>(rows);
+    public Object generate(Project project, Field field) {
 
         List<Lexicon> lexicons = project.getComponent(LexiconComponent.class).getConfig().getLexicons();
 
         String name = field.getMockParam();
 
-        if (StringUtils.isBlank(name)) {
-            return list;
-        }
-
         Lexicon lexicon = lexicons.stream().filter(temp -> StringUtils.equals(name, temp.getName())).findFirst().orElse(null);
 
         if (lexicon == null) {
-            return list;
+            return StringUtils.EMPTY;
         }
 
-        for (int i = 0; i < rows; i++) {
-            String[] contents = StringUtils.split(lexicon.getContent(), ",");
-            int index = RandomUtils.nextInt(0, contents.length);
+        String[] contents = StringUtils.split(lexicon.getContent(), ",");
+        int index = RandomUtils.nextInt(0, contents.length);
 
-            if (field.isNumber()) {
-                list.add(Long.parseLong(contents[index]));
-            } else {
-                list.add(contents[index]);
-            }
+        if (field.isNumber()) {
+            return Long.parseLong(contents[index]);
+        } else {
+            return contents[index];
         }
-
-        return list;
     }
 }
