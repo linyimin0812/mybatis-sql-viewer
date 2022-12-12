@@ -48,6 +48,12 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
     private JTabbedPane sqlTabbedPanel;
 
+    private JPanel statementTabbedPane;
+    private JPanel statementContentPane;
+
+    private JPanel resultTabbedPane;
+    private JPanel resultContentPane;
+
     // sql语句
     private JPanel statementPanel;
     private RSyntaxTextArea statementText;
@@ -69,6 +75,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
     private JTable executeResultTable;
     private JScrollPane executeResultScroll;
 
+    private final InfoPane infoPane;
     private final Project project;
     private final BackgroundTaskQueue backgroundTaskQueue;
 
@@ -76,6 +83,8 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
         this.project = project;
         this.backgroundTaskQueue = new BackgroundTaskQueue(project, APPLICATION_NAME);
+
+        this.infoPane = new InfoPane();
 
         initSqlPanel();
         initResultPanel();
@@ -121,12 +130,6 @@ public class SqlTabbedPane implements TabbedChangeListener {
     private void initSqlPanel() {
 
         statementText = CustomTextField.createArea("sql");
-
-        statementPanel.setLayout(new BorderLayout());
-
-        statementScroll = new RTextScrollPane(statementText);
-        statementScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
-
         statementText.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -147,6 +150,11 @@ public class SqlTabbedPane implements TabbedChangeListener {
             }
         });
 
+        statementPanel.setLayout(new BorderLayout());
+
+        statementScroll = new RTextScrollPane(statementText);
+        statementScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+
         statementPanel.add(statementScroll);
 
         statementRuleText = CustomTextField.createArea("sql");
@@ -157,6 +165,14 @@ public class SqlTabbedPane implements TabbedChangeListener {
         statementRuleScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
 
         statementRulePanel.add(statementRuleScroll);
+
+        this.statementTabbedPane.setLayout(new BorderLayout());
+        this.statementTabbedPane.remove(statementContentPane);
+        this.statementTabbedPane.add(this.infoPane.getInfoPane());
+
+        this.resultTabbedPane.setLayout(new BorderLayout());
+        this.resultTabbedPane.remove(resultContentPane);
+        this.resultTabbedPane.add(this.infoPane.getInfoPane());
 
     }
 
@@ -191,7 +207,6 @@ public class SqlTabbedPane implements TabbedChangeListener {
         MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
 
         try {
-            statementText.setText("Loading...");
             String sqlStr = SqlParamGenerateComponent.generateSql(project, sqlConfig.getMethod(), sqlConfig.getParams());
             sqlConfig.setSql(sqlStr);
             return ProcessResult.success(sqlStr);
@@ -213,15 +228,21 @@ public class SqlTabbedPane implements TabbedChangeListener {
     }
 
     private void updateSqlBackground() {
-        statementText.setText(SQL_STATEMENT_LOADING_PROMPT);
-        statementRuleText.setText("Waiting for the SQL to load...");
+
+        this.statementTabbedPane.remove(statementContentPane);
+        this.statementTabbedPane.add(this.infoPane.getInfoPane());
+
+        infoPane.setText(SQL_STATEMENT_LOADING_PROMPT);
 
         ProcessResult<String> result = generateSql();
         if (!result.isSuccess()) {
-            statementText.setText(result.getErrorMsg());
-            statementRuleText.setText("Please write SQL statement correctly.");
+            infoPane.setText(result.getErrorMsg());
             return;
         }
+
+        this.statementTabbedPane.remove(infoPane.getInfoPane());
+        this.statementTabbedPane.add(statementContentPane);
+
         statementText.setText(result.getData());
         validateSql(result.getData());
     }
@@ -267,17 +288,21 @@ public class SqlTabbedPane implements TabbedChangeListener {
     }
 
     private void executeSqlBackground() {
+
+        this.resultTabbedPane.remove(this.resultContentPane);
+        this.resultTabbedPane.add(this.infoPane.getInfoPane());
+        this.infoPane.setText("Executing statement...");
+
         String sql = statementText.getText();
-        executeInfoText.setText("Executing statement...");
 
         if (StringUtils.isBlank(sql)) {
             ProcessResult<String> result = generateSql();
             if (!result.isSuccess()) {
-                executeInfoText.setText(result.getErrorMsg());
-            } else {
-                sql = result.getData();
-                statementText.setText(sql);
+                this.infoPane.setText(result.getErrorMsg());
+                return;
             }
+            sql = result.getData();
+            statementText.setText(sql);
         }
 
         try {
@@ -293,14 +318,15 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
             executeInfoText.setText(ResultConverter.convert2ExecuteInfo(executeResult));
 
+            this.resultTabbedPane.remove(this.infoPane.getInfoPane());
+            this.resultTabbedPane.add(this.resultContentPane);
+
             acquireExecuteIndex();
 
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            executeInfoText.setText(String.format("Execute Sql Failed.\n%s", sw));
-            executeHitIndexScroll.setVisible(false);
-            executeResultScroll.setVisible(false);
+            this.infoPane.setText(String.format("Execute Sql Failed.\n%s", sw));
         }
     }
 
