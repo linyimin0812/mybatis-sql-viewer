@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.ui;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.BackgroundTaskQueue;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
@@ -229,10 +230,12 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
     private void updateSqlBackground() {
 
-        this.statementTabbedPane.remove(statementContentPane);
-        this.statementTabbedPane.add(this.infoPane.getInfoPane());
+        ApplicationManager.getApplication().invokeLater(() -> {
+            this.statementTabbedPane.remove(statementContentPane);
+            this.statementTabbedPane.add(this.infoPane.getInfoPane());
 
-        infoPane.setText(SQL_STATEMENT_LOADING_PROMPT);
+            infoPane.setText(SQL_STATEMENT_LOADING_PROMPT);
+        });
 
         ProcessResult<String> result = generateSql();
         if (!result.isSuccess()) {
@@ -240,10 +243,12 @@ public class SqlTabbedPane implements TabbedChangeListener {
             return;
         }
 
-        this.statementTabbedPane.remove(infoPane.getInfoPane());
-        this.statementTabbedPane.add(statementContentPane);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            this.statementTabbedPane.remove(infoPane.getInfoPane());
+            this.statementTabbedPane.add(statementContentPane);
 
-        statementText.setText(result.getData());
+            statementText.setText(result.getData());
+        });
         validateSql(result.getData());
     }
 
@@ -289,9 +294,11 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
     private void executeSqlBackground() {
 
-        this.resultTabbedPane.remove(this.resultContentPane);
-        this.resultTabbedPane.add(this.infoPane.getInfoPane());
-        this.infoPane.setText("Executing statement...");
+        ApplicationManager.getApplication().invokeLater(() -> {
+            this.resultTabbedPane.remove(this.resultContentPane);
+            this.resultTabbedPane.add(this.infoPane.getInfoPane());
+            this.infoPane.setText("Executing statement...");
+        });
 
         String sql = statementText.getText();
 
@@ -318,8 +325,10 @@ public class SqlTabbedPane implements TabbedChangeListener {
 
             executeInfoText.setText(ResultConverter.convert2ExecuteInfo(executeResult));
 
-            this.resultTabbedPane.remove(this.infoPane.getInfoPane());
-            this.resultTabbedPane.add(this.resultContentPane);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                this.resultTabbedPane.remove(this.infoPane.getInfoPane());
+                this.resultTabbedPane.add(this.resultContentPane);
+            });
 
             acquireExecuteIndex();
 

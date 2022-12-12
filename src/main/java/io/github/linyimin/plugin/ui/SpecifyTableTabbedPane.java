@@ -2,6 +2,7 @@ package io.github.linyimin.plugin.ui;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.GsonBuilder;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.BackgroundTaskQueue;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
@@ -21,6 +22,7 @@ import io.github.linyimin.plugin.sql.converter.ResultConverter;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.InsertResult;
+import io.github.linyimin.plugin.sql.result.SelectResult;
 import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -36,8 +38,7 @@ import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.github.linyimin.plugin.constant.Constant.INSERT_ROWS;
-import static io.github.linyimin.plugin.constant.Constant.TABLE_ROW_HEIGHT;
+import static io.github.linyimin.plugin.constant.Constant.*;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
 
 /**
@@ -49,11 +50,21 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     public static final String MOCK_TYPE_COLUMN_NAME = "Mock Type";
     public static final String MOCK_VALUE_COLUMN_NAME = "Mock Value";
 
-    private JTabbedPane tabbedPane;
     private JPanel specifyTablePanel;
-    private JPanel tableSchemaPanel;
-    private JScrollPane tableSchemaScroll;
+    private JTabbedPane tabbedPane;
+
+    private JPanel schemaTabbedPane;
+    private JPanel schemaContentPane;
+
+
+    private JPanel indexTabbedPane;
+    private JPanel indexContentPane;
+
+    private JPanel mockTabbedPane;
+    private JPanel mockContentPane;
+
     private JTable tableSchema;
+    private JScrollPane tableSchemaScroll;
 
     private RSyntaxTextArea tableRuleText;
     private JPanel tableRulePanel;
@@ -72,6 +83,10 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     private JTable indexTable;
 
+    private final InfoPane schemaInfoPane;
+    private final InfoPane indexInfoPane;
+    private final InfoPane mockInfoPane;
+
     private final Project project;
     private final JTabbedPane parent;
 
@@ -83,7 +98,13 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         this.parent = parent;
         this.backgroundTaskQueue = new BackgroundTaskQueue(project, Constant.APPLICATION_NAME);
 
-        initTableRule();
+        this.schemaInfoPane = new InfoPane();
+        this.indexInfoPane = new InfoPane();
+        this.mockInfoPane = new InfoPane();
+
+        initTableSchemaPane();
+
+        initTableIndexPane();
 
         initMockPanel();
 
@@ -91,6 +112,12 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         addButtonListener();
         addButtonMouseCursorAdapter();
+    }
+
+    private void initTableIndexPane() {
+        this.indexTabbedPane.setLayout(new BorderLayout());
+        this.indexTabbedPane.remove(this.indexContentPane);
+        this.indexTabbedPane.add(this.indexInfoPane.getInfoPane());
     }
 
     private void addButtonMouseCursorAdapter() {
@@ -314,6 +341,11 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         mockConfigScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
 
         mockConfigResultPanel.add(mockConfigScroll);
+
+        this.mockTabbedPane.setLayout(new BorderLayout());
+        this.mockTabbedPane.remove(this.mockContentPane);
+        this.mockTabbedPane.add(this.mockInfoPane.getInfoPane());
+
     }
 
     private void setTableRowHeight() {
@@ -322,7 +354,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         this.indexTable.setRowHeight(TABLE_ROW_HEIGHT);
     }
 
-    private void initTableRule() {
+    private void initTableSchemaPane() {
 
         this.tableRuleText = CustomTextField.createArea("sql");
 
@@ -333,6 +365,11 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         tableRuleScroll.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         tableRulePanel.add(tableRuleScroll);
+
+        this.schemaTabbedPane.setLayout(new BorderLayout());
+        this.schemaTabbedPane.remove(this.schemaContentPane);
+        this.schemaTabbedPane.add(this.schemaInfoPane.getInfoPane());
+
     }
 
     public JTabbedPane getTabbedPane() {
@@ -341,10 +378,6 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     public JPanel getSpecifyTablePanel() {
         return specifyTablePanel;
-    }
-
-    public JPanel getTableSchemaPanel() {
-        return tableSchemaPanel;
     }
 
     public JPanel getTableRulePanel() {
@@ -371,7 +404,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         return mockConfigTable;
     }
 
-    public void setTables(DefaultTableModel metaModel, DefaultTableModel indexModel) {
+    private void setTables(DefaultTableModel metaModel, DefaultTableModel indexModel) {
 
         this.tableSchema.setModel(metaModel);
 
@@ -498,4 +531,61 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     public void listen() {
 
     }
+
+    public void acquireTableSchema(String table) {
+
+        this.resetInfoPane();
+
+        String metaSql = TABLE_META_SQL_TEMPLATE.replace("${table}", table);
+        String indexSql = TABLE_INDEX_SQL_TEMPLATE.replace("${table}", table);
+
+        try {
+
+            SelectResult metaResult = (SelectResult) SqlExecutor.executeSql(project, metaSql, false);
+            SelectResult indexResult = (SelectResult) SqlExecutor.executeSql(project, indexSql, false);
+            // TODO: 建表规约
+            this.getTableRuleText().setText("TODO: 建表规约");
+
+            this.setTables(metaResult.getModel(), indexResult.getModel());
+            this.getMockConfigResultText().setText("TODO: mock configuration result");
+
+            this.resetContentPane();
+
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            this.schemaInfoPane.setText(sw.toString());
+            this.indexInfoPane.setText(sw.toString());
+            this.mockInfoPane.setText(sw.toString());
+        }
+    }
+
+    private void resetInfoPane() {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            this.schemaTabbedPane.remove(this.schemaContentPane);
+            this.schemaTabbedPane.add(this.schemaInfoPane.getInfoPane());
+
+            this.indexTabbedPane.remove(this.indexContentPane);
+            this.indexTabbedPane.add(this.indexInfoPane.getInfoPane());
+
+            this.mockTabbedPane.remove(this.mockContentPane);
+            this.mockTabbedPane.add(this.mockInfoPane.getInfoPane());
+
+            this.schemaInfoPane.setText("Loading table schema...");
+        });
+    }
+
+    private void resetContentPane() {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            this.schemaTabbedPane.remove(this.schemaInfoPane.getInfoPane());
+            this.schemaTabbedPane.add(this.schemaContentPane);
+
+            this.indexTabbedPane.remove(this.indexInfoPane.getInfoPane());
+            this.indexTabbedPane.add(this.indexContentPane);
+
+            this.mockTabbedPane.remove(this.mockInfoPane.getInfoPane());
+            this.mockTabbedPane.add(this.mockContentPane);
+        });
+    }
+
 }

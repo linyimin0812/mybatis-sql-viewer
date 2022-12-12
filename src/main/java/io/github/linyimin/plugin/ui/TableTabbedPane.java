@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.ui;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.BackgroundTaskQueue;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
@@ -69,38 +70,23 @@ public class TableTabbedPane implements TabbedChangeListener {
 
                 List<String> tables = SqlParser.getTableNames(configuration.getSql());
 
-                tableTabbedPanel.removeAll();
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    tableTabbedPanel.removeAll();
+                });
+
+
 
                 for (String table : tables) {
-                    acquireTableSchema(table);
+                    SpecifyTableTabbedPane tabbedPanel = new SpecifyTableTabbedPane(project, tableTabbedPanel);
+
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        tableTabbedPanel.addTab(table, tabbedPanel.getSpecifyTablePanel());
+                    });
+
+                    tabbedPanel.acquireTableSchema(table);
                 }
             }
         });
-    }
-
-    private void acquireTableSchema(String table) {
-        String metaSql = TABLE_META_SQL_TEMPLATE.replace("${table}", table);
-        String indexSql = TABLE_INDEX_SQL_TEMPLATE.replace("${table}", table);
-
-        SpecifyTableTabbedPane tabbedPanel = new SpecifyTableTabbedPane(project, tableTabbedPanel);
-        tableTabbedPanel.addTab(table, tabbedPanel.getSpecifyTablePanel());
-
-        tabbedPanel.getTableRuleText().setText("Loading table schema...");
-
-        try {
-            SelectResult metaResult = (SelectResult) SqlExecutor.executeSql(project, metaSql, false);
-            SelectResult indexResult = (SelectResult) SqlExecutor.executeSql(project, indexSql, false);
-            // TODO: 建表规约
-            tabbedPanel.getTableRuleText().setText("TODO: 建表规约");
-
-            tabbedPanel.setTables(metaResult.getModel(), indexResult.getModel());
-            tabbedPanel.getMockConfigResultText().setText("TODO: mock configuration result");
-
-        } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            tabbedPanel.getTableRuleText().setText(sw.toString());
-        }
     }
 
     private InfoPane createInfoPane() {
