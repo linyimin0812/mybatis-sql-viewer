@@ -2,11 +2,18 @@ package io.github.linyimin.plugin.ui;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
+import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.constant.Constant;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.net.URI;
 
 /**
  * @author yiminlin
@@ -19,6 +26,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private JPanel root;
 
     private JButton datasourceButton;
+    private JButton jumpButton;
+    private JLabel sourceLink;
 
     private final ParamTabbedPane paramTabbedPane;
     private final SqlTabbedPane sqlTabbedPane;
@@ -51,8 +60,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         this.totalTabbedPanel.addTab("table", this.tableTabbedPane.getTableTabbedPanel());
 
         methodName.setBorder(new EmptyBorder(JBUI.emptyInsets()));
-
         datasourceButton.setFocusPainted(false);
+        initSourceLinkLabel();
 
         addComponentListener();
 
@@ -85,6 +94,10 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             dialog.setVisible(true);
         });
 
+        datasourceButton.addMouseListener(new MouseCursorAdapter(this.datasourceButton));
+
+        jumpButton.addMouseListener(new MouseCursorAdapter(this.jumpButton));
+
         // 监听tabbedpane点击事件
         totalTabbedPanel.addChangeListener(e -> totalTabbedPanelListener());
 
@@ -112,6 +125,20 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
     }
 
+    private void initSourceLinkLabel() {
+        this.sourceLink.setForeground(JBColor.BLUE);
+        this.sourceLink.addMouseListener(new MouseCursorAdapter(this.sourceLink) {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    Desktop.getDesktop().browse(URI.create(Constant.SOURCE_CODE));
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+    }
+
     private enum TabbedComponentType {
         /**
          * Tanned类型对应的index
@@ -127,6 +154,4 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         }
 
     }
-
-
 }

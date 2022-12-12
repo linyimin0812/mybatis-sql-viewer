@@ -27,7 +27,7 @@ public class Constant {
 
     public static final String APPLICATION_NAME = "mybatis-sql-viewer";
 
-    public static final String DATABASE_URL_TEMPLATE = "jdbc:mysql://%s:%s/%s?rewriteBatchedStatements=true";
+    public static final String DATABASE_URL_TEMPLATE = "jdbc:mysql://%s:%s/%s";
 
     public static final int TABLE_ROW_HEIGHT = 20;
 
@@ -46,5 +46,7 @@ public class Constant {
     public static int INSERT_ROWS = 10000;
 
     public static String SQL_STATEMENT_LOADING_PROMPT = "Loading SQL Statement...";
+
+    public static final String SOURCE_CODE = "https://github.com/linyimin-bupt/mybatis-sql-viewer";
 
 }

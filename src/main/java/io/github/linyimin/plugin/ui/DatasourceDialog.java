@@ -57,6 +57,28 @@ public class DatasourceDialog extends JDialog {
         port.getDocument().addDocumentListener(new DatasourceChangeListener());
         database.getDocument().addDocumentListener(new DatasourceChangeListener());
 
+        addButtonActionListener();
+        addButtonMouseCursorAdapter();
+
+        // call onCancel() when cross is clicked
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                dispose();
+            }
+        });
+
+        // call onCancel() on ESCAPE
+        contentPane.registerKeyboardAction(e -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    }
+
+    private void addButtonMouseCursorAdapter() {
+        this.saveConfiguration.addMouseListener(new MouseCursorAdapter(this.saveConfiguration));
+        this.testConnection.addMouseListener(new MouseCursorAdapter(this.testConnection));
+        this.addConfiguration.addMouseListener(new MouseCursorAdapter(this.addConfiguration));
+    }
+
+    private void addButtonActionListener() {
         saveConfiguration.addActionListener((e) -> {
 
             backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
@@ -91,17 +113,6 @@ public class DatasourceDialog extends JDialog {
             // 隐藏combobox, 显示text field用于创建新的数据源
             displayNameFieldText();
         });
-
-        // call onCancel() when cross is clicked
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                dispose();
-            }
-        });
-
-        // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(e -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
     private void initDatasource() {

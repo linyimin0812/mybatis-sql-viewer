@@ -90,10 +90,18 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         setTableRowHeight();
 
         addButtonListener();
+        addButtonMouseCursorAdapter();
+    }
+
+    private void addButtonMouseCursorAdapter() {
+        this.lexiconButton.addMouseListener(new MouseCursorAdapter(this.lexiconButton));
+        this.previewButton.addMouseListener(new MouseCursorAdapter(this.previewButton));
+        this.mockButton.addMouseListener(new MouseCursorAdapter(this.mockButton));
+        this.cleanButton.addMouseListener(new MouseCursorAdapter(this.cleanButton));
     }
 
     private void addButtonListener() {
-        
+
         this.previewButton.addActionListener(e -> previewMockData());
         this.lexiconButton.addActionListener(e -> triggerLexicon());
 
