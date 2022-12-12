@@ -11,15 +11,15 @@ import java.util.Arrays;
 public enum MockRandomParamTypeEnum {
     string,
     name,
+    date,
+    timestamp,
+    integer,
+    decimal,
     city,
     url,
     email,
     ip,
-    integer,
-    decimal,
     university,
-    date,
-    timestamp,
     phone;
 
     public static MockRandomParamTypeEnum resolve(String type) {

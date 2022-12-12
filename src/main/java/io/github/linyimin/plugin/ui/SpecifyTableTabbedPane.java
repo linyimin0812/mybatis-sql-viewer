@@ -462,6 +462,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         typeComboBox.setSelectedIndex(0);
 
+        TableCellRenderer
         typeColumn.setCellEditor(new DefaultCellEditor(typeComboBox));
 
         TableColumn valueColumn = columnModel.getColumn(columnModel.getColumnIndex(MOCK_VALUE_COLUMN_NAME));
