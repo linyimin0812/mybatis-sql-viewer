@@ -166,7 +166,9 @@
                     <maximum-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <text value="100"/>
+                </properties>
               </component>
               <component id="2cffb" class="javax.swing.JButton" binding="cleanButton" default-binding="true">
                 <constraints>

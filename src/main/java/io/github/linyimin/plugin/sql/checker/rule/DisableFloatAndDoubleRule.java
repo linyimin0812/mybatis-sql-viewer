@@ -18,7 +18,7 @@ public class DisableFloatAndDoubleRule implements CheckRule {
     public Report check(String target) {
         Field field = JSONObject.parseObject(target, Field.class);
 
-        if (StringUtils.containsIgnoreCase(field.getType(), "float") || StringUtils.equalsIgnoreCase(field.getType(), "double")) {
+        if (StringUtils.containsIgnoreCase(field.getActualType(), "float") || StringUtils.equalsIgnoreCase(field.getActualType(), "double")) {
 
             String desc = "小数类型为decimal，禁止使用float和double。\n" +
                     "   在存储的时候，float和double都存在精度损失的问题，很可能在比较值的时候，得不到正确的结果。如果存储的数据范围超过decimal的范围，建议将数据拆成整数和小数并分开存储。";

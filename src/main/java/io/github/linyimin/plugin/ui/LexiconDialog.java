@@ -1,6 +1,6 @@
 package io.github.linyimin.plugin.ui;
 
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.application.ApplicationManager;
 import io.github.linyimin.plugin.configuration.LexiconComponent;
 import io.github.linyimin.plugin.configuration.model.Lexicon;
 import org.apache.commons.lang3.StringUtils;
@@ -22,11 +22,7 @@ public class LexiconDialog extends JDialog {
     private JButton addButton;
     private JTable lexiconTable;
 
-    private final Project project;
-
-    public LexiconDialog(Project project) {
-
-        this.project = project;
+    public LexiconDialog() {
 
         setLocationRelativeTo(null);
 
@@ -85,7 +81,7 @@ public class LexiconDialog extends JDialog {
             lexicons.add(lexicon);
         }
 
-        LexiconComponent component = project.getComponent(LexiconComponent.class);
+        LexiconComponent component = ApplicationManager.getApplication().getComponent(LexiconComponent.class);
         component.setConfig(lexicons);
 
     }

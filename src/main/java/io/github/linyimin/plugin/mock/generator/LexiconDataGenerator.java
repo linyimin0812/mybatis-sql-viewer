@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.mock.generator;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.configuration.LexiconComponent;
 import io.github.linyimin.plugin.configuration.model.Lexicon;
@@ -17,7 +18,7 @@ public class LexiconDataGenerator implements DataGenerator {
     @Override
     public Object generate(Project project, Field field) {
 
-        List<Lexicon> lexicons = project.getComponent(LexiconComponent.class).getConfig().getLexicons();
+        List<Lexicon> lexicons = ApplicationManager.getApplication().getComponent(LexiconComponent.class).getConfig().getLexicons();
 
         String name = field.getMockParam();
 
@@ -30,7 +31,7 @@ public class LexiconDataGenerator implements DataGenerator {
         String[] contents = StringUtils.split(lexicon.getContent(), ",");
         int index = RandomUtils.nextInt(0, contents.length);
 
-        if (field.isNumber()) {
+        if (Field.isNumber(field.getActualType())) {
             return Long.parseLong(contents[index]);
         } else {
             return contents[index];

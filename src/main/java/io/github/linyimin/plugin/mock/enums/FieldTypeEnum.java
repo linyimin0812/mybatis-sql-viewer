@@ -10,39 +10,44 @@ import java.util.Arrays;
  **/
 public enum FieldTypeEnum {
 
-    TINYINT(1),
-    SMALLINT(2),
-    MEDIUMINT(3),
-    INT(4),
-    BIGINT(8),
-    FLOAT(4),
-    DOUBLE(8),
-    DECIMAL(-1),
-    DATE(3),
-    TIME(3),
-    YEAR(1),
-    DATETIME(8),
-    TIMESTAMP(4),
-    CHAR(-1),
-    VARCHAR(-1),
-    TINYTEXT(-1),
-    MEDIUMTEXT(-1),
-    LONGTEXT(-1),
-    TINYBLOB(-1),
-    MEDIUMBLOB(-1),
-    BLOB(-1),
-    LONGBLOB(-1),
-    BINARY(-1),
-    VARBINARY(-1);
+    TINYINT(1, MockRandomParamTypeEnum.integer),
+    SMALLINT(2, MockRandomParamTypeEnum.integer),
+    MEDIUMINT(3, MockRandomParamTypeEnum.integer),
+    INT(4, MockRandomParamTypeEnum.integer),
+    BIGINT(8, MockRandomParamTypeEnum.integer),
+    FLOAT(4, MockRandomParamTypeEnum.decimal),
+    DOUBLE(8, MockRandomParamTypeEnum.decimal),
+    DECIMAL(-1, MockRandomParamTypeEnum.decimal),
+    DATE(3, MockRandomParamTypeEnum.date),
+    TIME(3, MockRandomParamTypeEnum.time),
+    YEAR(1, MockRandomParamTypeEnum.year),
+    DATETIME(8, MockRandomParamTypeEnum.datetime),
+    TIMESTAMP(4, MockRandomParamTypeEnum.timestamp),
+    CHAR(-1, MockRandomParamTypeEnum.string),
+    VARCHAR(-1, MockRandomParamTypeEnum.string),
+    TINYTEXT(-1, MockRandomParamTypeEnum.string),
+    MEDIUMTEXT(-1, MockRandomParamTypeEnum.string),
+    LONGTEXT(-1, MockRandomParamTypeEnum.string),
+    TINYBLOB(-1, MockRandomParamTypeEnum.string),
+    MEDIUMBLOB(-1, MockRandomParamTypeEnum.string),
+    BLOB(-1, MockRandomParamTypeEnum.string),
+    LONGBLOB(-1, MockRandomParamTypeEnum.string),
+    BINARY(-1, MockRandomParamTypeEnum.string),
+    VARBINARY(-1, MockRandomParamTypeEnum.string);
 
-    private int length;
+    private final int length;
+    private final MockRandomParamTypeEnum mockType;
 
-    FieldTypeEnum(int length) {
+    FieldTypeEnum(int length, MockRandomParamTypeEnum mockType) {
         this.length = length;
+        this.mockType = mockType;
     }
 
     public int getLength() {
         return this.length;
+    }
+    public MockRandomParamTypeEnum getMockType() {
+        return this.mockType;
     }
 
     public static FieldTypeEnum resolve(String type) {
@@ -51,8 +56,14 @@ public enum FieldTypeEnum {
             return FieldTypeEnum.VARCHAR;
         }
 
-        return Arrays.stream(FieldTypeEnum.values()).filter(fieldType -> StringUtils.upperCase(type)
-                .contains(fieldType.name()))
+        if (StringUtils.containsIgnoreCase(type, "unsigned")) {
+            type = StringUtils.split(type, " ")[0];
+        }
+
+        String finalType = type;
+
+        return Arrays.stream(FieldTypeEnum.values())
+                .filter(fieldType -> StringUtils.upperCase(finalType).equals(fieldType.name()))
                 .findFirst()
                 .orElse(VARCHAR);
     }

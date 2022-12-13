@@ -91,11 +91,13 @@ public class TableTabbedPane implements TabbedChangeListener {
 
     private InfoPane createInfoPane() {
 
-        tableTabbedPanel.removeAll();
-
         InfoPane infoPane = new InfoPane();
-        tableTabbedPanel.addTab("info", infoPane.getInfoPane());
-        infoPane.setText("Retrieving table schema...");
+
+        ApplicationManager.getApplication().invokeLater(() -> {
+            tableTabbedPanel.removeAll();
+            tableTabbedPanel.addTab("info", infoPane.getInfoPane());
+            infoPane.setText("Retrieving table schema...");
+        });
 
         return infoPane;
     }

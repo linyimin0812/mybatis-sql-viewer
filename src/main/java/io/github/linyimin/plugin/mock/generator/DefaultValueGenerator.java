@@ -15,7 +15,7 @@ public class DefaultValueGenerator implements DataGenerator {
 
         String defaultValue = field.getDefaultValue();
 
-        if (field.isNumber()) {
+        if (Field.isNumber(field.getActualType())) {
 
             if (StringUtils.isBlank(defaultValue)) {
                 defaultValue = "0";

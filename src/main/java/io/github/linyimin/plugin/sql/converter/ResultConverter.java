@@ -43,7 +43,8 @@ public class ResultConverter {
                 vector.add(rs.getObject(columnIndex));
             }
             data.add(vector);
-            if (++count > 100) {
+            // TODO: 配置项？最大返回记录数
+            if (++count >= 100) {
                 break;
             }
         }

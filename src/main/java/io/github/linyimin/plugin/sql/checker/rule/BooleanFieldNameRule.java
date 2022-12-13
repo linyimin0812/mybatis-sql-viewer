@@ -24,7 +24,7 @@ public class BooleanFieldNameRule implements CheckRule {
 
         Field field = JSONObject.parseObject(target, Field.class);
 
-        if (START_WITH_IS_PREFIX.matcher(field.getName()).find() && !StringUtils.equalsIgnoreCase(field.getType(), "unsigned tinyint")) {
+        if (START_WITH_IS_PREFIX.matcher(field.getName()).find() && !StringUtils.equalsIgnoreCase(field.getActualType(), "unsigned tinyint")) {
 
             String desc = "表达是与否概念的字段，必须使用is_xxx的命名方式，数据类型是unsigned tinyint(1表示是，0表示否)。\n" +
                     "   任何字段如何为非负数，必须是unsigned。\n" +

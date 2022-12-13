@@ -22,6 +22,7 @@ public class RandomDataGenerator implements DataGenerator {
     private final Faker[] FAKERS = new Faker[] {new Faker(new Locale("zh-CN")), new Faker()};
 
     private final static DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public Object generate(Project project, Field field) {
@@ -74,15 +75,20 @@ public class RandomDataGenerator implements DataGenerator {
             return faker.university().name();
         }
 
+        if (randomType == MockRandomParamTypeEnum.datetime) {
+            return generateDateTime(faker, DATE_TIME_FORMATTER);
+        }
+
         if (randomType == MockRandomParamTypeEnum.date) {
+            return generateDateTime(faker, DATE_FORMATTER);
+        }
 
-            LocalDateTime now = LocalDateTime.now();
-            String begin = now.minusYears(10).atZone(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
-            String end = now.plusYears(10).atZone(ZoneId.systemDefault()).format(DATE_TIME_FORMATTER);
+        if (randomType == MockRandomParamTypeEnum.year) {
+            return generateDateTime(faker, DateTimeFormatter.ofPattern("yyyy"));
+        }
 
-            return faker.date()
-                    .between(Timestamp.valueOf(begin), Timestamp.valueOf(end))
-                    .toLocalDateTime().format(DATE_TIME_FORMATTER);
+        if (randomType == MockRandomParamTypeEnum.time) {
+            return generateDateTime(faker, DateTimeFormatter.ofPattern("HH:mm:ss"));
         }
 
         if (randomType == MockRandomParamTypeEnum.timestamp) {
@@ -102,5 +108,15 @@ public class RandomDataGenerator implements DataGenerator {
 
         return defaultValue;
 
+    }
+
+    private String generateDateTime(Faker faker, DateTimeFormatter formatter) {
+        LocalDateTime now = LocalDateTime.now();
+        String begin = now.minusYears(10).atZone(ZoneId.systemDefault()).format(formatter);
+        String end = now.plusYears(10).atZone(ZoneId.systemDefault()).format(formatter);
+
+        return faker.date()
+                .between(Timestamp.valueOf(begin), Timestamp.valueOf(end))
+                .toLocalDateTime().format(formatter);
     }
 }

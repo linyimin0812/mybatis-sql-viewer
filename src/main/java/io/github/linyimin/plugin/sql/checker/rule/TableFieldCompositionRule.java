@@ -37,7 +37,7 @@ public class TableFieldCompositionRule implements CheckRule {
             }
 
             Field field = fieldMap.get("create_time");
-            if (!StringUtils.contains(field.getType(), "datetime")) {
+            if (!StringUtils.contains(field.getActualType(), "datetime")) {
                 return new Report().isPass(false).level(LevelEnum.mandatory).desc(desc);
             }
 
@@ -46,7 +46,7 @@ public class TableFieldCompositionRule implements CheckRule {
             }
 
             field = fieldMap.get("update_time");
-            if (!StringUtils.contains(field.getType(), "datetime")) {
+            if (!StringUtils.contains(field.getActualType(), "datetime")) {
                 return new Report().isPass(false).level(LevelEnum.mandatory).desc(desc);
             }
 

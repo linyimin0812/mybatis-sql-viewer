@@ -14,7 +14,7 @@ public class FixedDataGenerator implements DataGenerator {
 
         String mockParam = field.getMockParam();
 
-        if (field.isNumber()) {
+        if (Field.isNumber(field.getActualType())) {
 
             if (StringUtils.isBlank(mockParam)) {
                 mockParam = "0";

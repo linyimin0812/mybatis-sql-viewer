@@ -14,6 +14,7 @@ import io.github.linyimin.plugin.configuration.MockDataSaveComponent;
 import io.github.linyimin.plugin.configuration.model.Lexicon;
 import io.github.linyimin.plugin.configuration.model.MockDataPrimaryId4Save;
 import io.github.linyimin.plugin.constant.Constant;
+import io.github.linyimin.plugin.mock.enums.FieldTypeEnum;
 import io.github.linyimin.plugin.mock.enums.MockRandomParamTypeEnum;
 import io.github.linyimin.plugin.mock.enums.MockTypeEnum;
 import io.github.linyimin.plugin.mock.schema.Field;
@@ -87,6 +88,8 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private final InfoPane indexInfoPane;
     private final InfoPane mockInfoPane;
 
+    private ComboBox<String> mockTypes;
+
     private final Project project;
     private final JTabbedPane parent;
 
@@ -110,8 +113,19 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         setTableRowHeight();
 
+        initMockTypeCombobox();
+
         addButtonListener();
         addButtonMouseCursorAdapter();
+    }
+
+    private void initMockTypeCombobox() {
+        this.mockTypes = new ComboBox<>();
+        for (MockTypeEnum type : MockTypeEnum.values()) {
+            this.mockTypes.addItem(type.name());
+        }
+
+        this.mockTypes.setSelectedItem(MockTypeEnum.random.name());
     }
 
     private void initTableIndexPane() {
@@ -240,10 +254,10 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     }
 
     private void triggerLexicon() {
-        LexiconDialog dialog = new LexiconDialog(project);
+        LexiconDialog dialog = new LexiconDialog();
         dialog.setTitle("My Lexicon");
 
-        LexiconComponent lexiconComponent = project.getComponent(LexiconComponent.class);
+        LexiconComponent lexiconComponent = ApplicationManager.getApplication().getComponent(LexiconComponent.class);
         List<Lexicon> lexicons = lexiconComponent.getConfig().getLexicons();
 
         Vector<Vector<String>> dataVector = new Vector<>();
@@ -441,13 +455,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     private void addMockColumns(DefaultTableModel model) {
 
-        Vector<String> mockTypes = new Vector<>();
-        for (int i = 0; i < model.getRowCount(); i++) {
-            mockTypes.add(MockTypeEnum.random.name());
-        }
-
-        model.addColumn(MOCK_TYPE_COLUMN_NAME, mockTypes);
-        model.addColumn(MOCK_VALUE_COLUMN_NAME, new Vector<>());
+        initMockColumnValues(model);
 
         this.mockConfigTable.setModel(model);
 
@@ -455,27 +463,41 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         TableColumn typeColumn = columnModel.getColumn(columnModel.getColumnIndex(MOCK_TYPE_COLUMN_NAME));
 
-        ComboBox<String> typeComboBox = new ComboBox<>();
-        for (MockTypeEnum type : MockTypeEnum.values()) {
-            typeComboBox.addItem(type.name());
-        }
-
-        typeComboBox.setSelectedIndex(0);
-
-        TableCellRenderer
-        typeColumn.setCellEditor(new DefaultCellEditor(typeComboBox));
+        typeColumn.setCellEditor(new DefaultCellEditor(this.mockTypes));
 
         TableColumn valueColumn = columnModel.getColumn(columnModel.getColumnIndex(MOCK_VALUE_COLUMN_NAME));
 
-        valueColumn.setCellEditor(new DefaultCellEditor(new ComboBox<>()));
+        valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
 
-        typeComboBox.addActionListener(e -> mockTypeSelectionListener(typeComboBox, valueColumn));
+        this.mockTypes.addActionListener(e -> mockTypeSelectionListener(this.mockTypes, valueColumn));
 
+    }
+
+    private void initMockColumnValues(DefaultTableModel model) {
+
+        Vector<String> mockTypes = new Vector<>();
+        Vector<String> mockParamTypes = new Vector<>();
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String key = (String) model.getValueAt(i, 4);
+            if (StringUtils.endsWithIgnoreCase(key, "PRI")) {
+                mockTypes.add(MockTypeEnum.none.name());
+                mockParamTypes.add(StringUtils.EMPTY);
+            } else {
+
+                mockTypes.add(MockTypeEnum.random.name());
+
+                String type = Field.parseType((String) model.getValueAt(i, 1));
+                mockParamTypes.add(FieldTypeEnum.resolve(type).getMockType().name());
+            }
+        }
+
+        model.addColumn(MOCK_TYPE_COLUMN_NAME, mockTypes);
+        model.addColumn(MOCK_VALUE_COLUMN_NAME, mockParamTypes);
     }
 
     private void mockTypeSelectionListener(ComboBox<String> typeCombobox, TableColumn valueColumn) {
 
-        // TODO: 根据field类型自动填充mock类型
         String type = (String) typeCombobox.getSelectedItem();
 
         String toolTipText = "";
@@ -491,6 +513,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         if (StringUtils.equals(type, MockTypeEnum.increment.name())) {
             toolTipText = "initial value";
+
             valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
         }
 
@@ -506,7 +529,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         if (StringUtils.equals(type, MockTypeEnum.lexicon.name())) {
             toolTipText = "lexicon";
-            List<Lexicon> lexicons = project.getComponent(LexiconComponent.class).getConfig().getLexicons();
+            List<Lexicon> lexicons = ApplicationManager.getApplication().getComponent(LexiconComponent.class).getConfig().getLexicons();
             ComboBox<String> comboBox = new ComboBox<>();
             for (Lexicon lexicon : lexicons) {
                 comboBox.addItem(lexicon.getName());
@@ -548,7 +571,10 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
             this.getTableRuleText().setText("TODO: 建表规约");
 
             this.setTables(metaResult.getModel(), indexResult.getModel());
-            this.getMockConfigResultText().setText("TODO: mock configuration result");
+            this.getMockConfigResultText().setText("1. 「Lexicon」创建词库\n" +
+                    "2. 「Preview」根据配置生成50条insert预览语句\n" +
+                    "3. 「Mock」往数据库中插入mock数据\n" +
+                    "4. 「Clean」清空数据库中Mock的数据");
 
             this.resetContentPane();
 

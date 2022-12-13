@@ -20,7 +20,7 @@ public class VarcharLengthLimitRule implements CheckRule {
 
         Field field = JSONObject.parseObject(target, Field.class);
 
-        if (StringUtils.containsIgnoreCase(field.getType(), "varchar") && field.getFieldLength() > 5000) {
+        if (StringUtils.containsIgnoreCase(field.getActualType(), "varchar") && field.getFieldLength() > 5000) {
 
             String desc = "varchar是可变长字符串，不预先分配存储空间，长度不要超过5000，如果存储长度大于此值，定义字段类型为text，独立出来一张表，用主键来对应，避免影响其它字段索引效率。";
 

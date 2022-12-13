@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  **/
 public class Field {
 
-    private final Pattern FIELD_LENGTH_PATTERN = Pattern.compile("[a-zA-Z\\d]+\\((\\d+)\\)");
+    private static final Pattern FIELD_LENGTH_PATTERN = Pattern.compile("[a-zA-Z\\d\\s]+\\((\\d+)\\)");
 
     @JSONField(name = "Name")
     private String name;
@@ -70,6 +70,10 @@ public class Field {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getActualType() {
+        return parseType(type);
     }
 
     public String getType() {
@@ -145,9 +149,7 @@ public class Field {
         return FieldTypeEnum.resolve(this.type).getLength();
     }
 
-    public boolean isNumber() {
-
-        FieldTypeEnum fieldType = FieldTypeEnum.resolve(this.type);
+    public static boolean isNumber(String type) {
 
         List<FieldTypeEnum> numbers = Arrays.asList(
                 FieldTypeEnum.TINYINT,
@@ -160,7 +162,18 @@ public class Field {
                 FieldTypeEnum.DECIMAL
         );
 
+        FieldTypeEnum fieldType = FieldTypeEnum.resolve(parseType(type));
+
         return numbers.contains(fieldType);
 
+    }
+
+    public static String parseType(String type) {
+        Matcher matcher = FIELD_LENGTH_PATTERN.matcher(type);
+        if (matcher.find()) {
+            return type.substring(0, type.lastIndexOf("("));
+        }
+
+        return type;
     }
 }
