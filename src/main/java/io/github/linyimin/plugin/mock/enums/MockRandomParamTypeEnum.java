@@ -9,21 +9,32 @@ import java.util.Arrays;
  * @date 2022/11/29 22:47
  **/
 public enum MockRandomParamTypeEnum {
-    string,
-    name,
-    datetime,
-    integer,
-    decimal,
-    date,
-    timestamp,
-    time,
-    year,
-    city,
-    url,
-    email,
-    ip,
-    university,
-    phone;
+    string("string"),
+    name("string"),
+    datetime("datetime"),
+    integer("integer"),
+    decimal("decimal"),
+    date("date"),
+    timestamp("timestamp"),
+    time("time"),
+    year("year"),
+    city("string"),
+    url("string"),
+    email("string"),
+    ip("string"),
+    university("string"),
+    phone("string");
+
+    private final String value;
+
+    public String getValue() {
+        return this.value;
+    }
+
+
+    MockRandomParamTypeEnum(String value) {
+        this.value = value;
+    }
 
     public static MockRandomParamTypeEnum resolve(String type) {
         if (StringUtils.isBlank(type)) {

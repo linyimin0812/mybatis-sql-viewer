@@ -9,6 +9,7 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.util.ui.JBUI;
+import io.github.linyimin.plugin.ProcessResult;
 import io.github.linyimin.plugin.configuration.LexiconComponent;
 import io.github.linyimin.plugin.configuration.MockDataSaveComponent;
 import io.github.linyimin.plugin.configuration.model.Lexicon;
@@ -202,13 +203,21 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         this.mockConfigResultText.setText("Saving mock data...");
 
+        List<Field> fields = generateMockConfig();
+
+        ProcessResult<String> result = checkMockConfig(fields);
+        if (!result.isSuccess()) {
+            this.mockConfigResultText.setText(result.getErrorMsg());
+            return;
+        }
+
         try {
 
             int rows = acquireMockNum(false);
 
             int index = 0;
 
-            InsertResult result = new InsertResult();
+            InsertResult insertResult = new InsertResult();
             int totalAffectedCount = 0;
 
             MockDataPrimaryId4Save.PrimaryIdInTable primaryIdInTable = new MockDataPrimaryId4Save.PrimaryIdInTable(parent.getTitleAt(parent.getSelectedIndex()), Long.MAX_VALUE, Long.MIN_VALUE);
@@ -221,30 +230,30 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
                 int insertRows = end - index;
 
-                String sql = acquireBatchInsertSql(insertRows);
+                String sql = acquireBatchInsertSql(fields, insertRows);
 
                 index += INSERT_ROWS;
 
                 boolean needTotalRows = index >= rows;
 
-                result = SqlExecutor.saveMockData(project, sql, needTotalRows);
+                insertResult = SqlExecutor.saveMockData(project, sql, needTotalRows);
 
                 if (index == INSERT_ROWS) {
-                    primaryIdInTable.setMinId(result.getLastInsertId() - insertRows + 1);
+                    primaryIdInTable.setMinId(insertResult.getLastInsertId() - insertRows + 1);
                 }
 
-                totalAffectedCount += result.getAffectedCount();
+                totalAffectedCount += insertResult.getAffectedCount();
 
             }
 
             MockDataSaveComponent component = project.getComponent(MockDataSaveComponent.class);
-            primaryIdInTable.setMaxId(result.getLastInsertId());
+            primaryIdInTable.setMaxId(insertResult.getLastInsertId());
             component.addPrimaryIdInTable(primaryIdInTable);
 
-            result.setAffectedCount(totalAffectedCount);
-            result.setCost(System.currentTimeMillis() - start);
+            insertResult.setAffectedCount(totalAffectedCount);
+            insertResult.setCost(System.currentTimeMillis() - start);
 
-            this.mockConfigResultText.setText(ResultConverter.convert2InsertInfo(result));
+            this.mockConfigResultText.setText(ResultConverter.convert2InsertInfo(insertResult));
 
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
@@ -280,11 +289,19 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     }
 
     private void previewMockData() {
+
+        List<Field> fields = generateMockConfig();
+        ProcessResult<String> checkResult = checkMockConfig(fields);
+        if (!checkResult.isSuccess()) {
+            this.mockConfigResultText.setText(checkResult.getErrorMsg());
+            return;
+        }
+
         try {
             int rows = acquireMockNum(true);
             List<String> sqls = new ArrayList<>(rows);
             for (int i = 0; i < rows; i++) {
-                sqls.add(acquireInsertSql());
+                sqls.add(acquireInsertSql(fields));
             }
 
             this.mockConfigResultText.setText(String.join("\n", sqls));
@@ -297,17 +314,33 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     }
 
-    private String acquireInsertSql() throws Exception {
+    private String acquireInsertSql(List<Field> fields) throws Exception {
 
-        List<Field> fields = generateMockConfig();
         String tableName = parent.getTitleAt(parent.getSelectedIndex());
 
         return SqlBuilder.buildInsertSql(project, tableName, fields);
     }
 
-    private String acquireBatchInsertSql(int rows) throws Exception {
-        List<Field> fields = generateMockConfig();
+    private ProcessResult<String> checkMockConfig(List<Field> fields) {
+
+        for (Field field : fields) {
+            if (!StringUtils.equals(field.getMockType(), MockTypeEnum.random.name())) {
+                continue;
+            }
+
+            String type = FieldTypeEnum.resolve(Field.parseType(field.getType())).getMockType().getValue();
+            MockRandomParamTypeEnum mockParamType = MockRandomParamTypeEnum.resolve(field.getMockParam());
+            if (!StringUtils.equals(mockParamType.getValue(), type)) {
+                return ProcessResult.fail(String.format("The column %s type is %s, but configured as %s", field.getName(), field.getType(), field.getMockParam()));
+            }
+        }
+
+        return ProcessResult.success(null);
+    }
+
+    private String acquireBatchInsertSql(List<Field> fields, int rows) throws Exception {
         String tableName = parent.getTitleAt(parent.getSelectedIndex());
+
         return SqlBuilder.buildInsertSqlBatch(project, tableName, fields, rows);
     }
 
