@@ -4,7 +4,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.configuration.LexiconComponent;
 import io.github.linyimin.plugin.configuration.model.Lexicon;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,7 +16,7 @@ import java.util.List;
  **/
 public class LexiconDataGenerator implements DataGenerator {
     @Override
-    public Object generate(Project project, Field field) {
+    public Object generate(Project project, TableField field) {
 
         List<Lexicon> lexicons = ApplicationManager.getApplication().getComponent(LexiconComponent.class).getConfig().getLexicons();
 
@@ -31,7 +31,7 @@ public class LexiconDataGenerator implements DataGenerator {
         String[] contents = StringUtils.split(lexicon.getContent(), ",");
         int index = RandomUtils.nextInt(0, contents.length);
 
-        if (Field.isNumber(field.getActualType())) {
+        if (TableField.isNumber(field.getActualType())) {
             return Long.parseLong(contents[index]);
         } else {
             return contents[index];

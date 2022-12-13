@@ -1,7 +1,6 @@
 package io.github.linyimin.plugin.ui;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.gson.GsonBuilder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.BackgroundTaskQueue;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -18,8 +17,14 @@ import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.mock.enums.FieldTypeEnum;
 import io.github.linyimin.plugin.mock.enums.MockRandomParamTypeEnum;
 import io.github.linyimin.plugin.mock.enums.MockTypeEnum;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.IndexField;
+import io.github.linyimin.plugin.mock.schema.Model2Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.builder.SqlBuilder;
+import io.github.linyimin.plugin.sql.checker.Checker;
+import io.github.linyimin.plugin.sql.checker.CheckerHolder;
+import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
+import io.github.linyimin.plugin.sql.checker.rule.CheckField;
 import io.github.linyimin.plugin.sql.converter.ResultConverter;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.result.BaseResult;
@@ -84,6 +89,8 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private JButton cleanButton;
 
     private JTable indexTable;
+    private JPanel indexRulePane;
+    private RSyntaxTextArea indexRuleText;
 
     private final InfoPane schemaInfoPane;
     private final InfoPane indexInfoPane;
@@ -133,6 +140,17 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         this.indexTabbedPane.setLayout(new BorderLayout());
         this.indexTabbedPane.remove(this.indexContentPane);
         this.indexTabbedPane.add(this.indexInfoPane.getInfoPane());
+
+        this.indexRuleText = CustomTextField.createArea("sql");
+
+        this.indexRulePane.setLayout(new BorderLayout());
+
+        RTextScrollPane indexRuleScroll = new RTextScrollPane(this.indexRuleText);
+        indexRuleScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+        indexRuleScroll.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        indexRulePane.add(indexRuleScroll);
+
     }
 
     private void addButtonMouseCursorAdapter() {
@@ -147,23 +165,19 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         this.previewButton.addActionListener(e -> previewMockData());
         this.lexiconButton.addActionListener(e -> triggerLexicon());
 
-        this.mockButton.addActionListener(e -> {
-            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    saveMockData();
-                }
-            });
-        });
+        this.mockButton.addActionListener(e -> backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                saveMockData();
+            }
+        }));
 
-        this.cleanButton.addActionListener(e -> {
-            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    cleanMockData();
-                }
-            });
-        });
+        this.cleanButton.addActionListener(e -> backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                cleanMockData();
+            }
+        }));
     }
 
     private void cleanMockData() {
@@ -203,7 +217,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         this.mockConfigResultText.setText("Saving mock data...");
 
-        List<Field> fields = generateMockConfig();
+        List<TableField> fields = generateMockConfig();
 
         ProcessResult<String> result = checkMockConfig(fields);
         if (!result.isSuccess()) {
@@ -290,7 +304,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     private void previewMockData() {
 
-        List<Field> fields = generateMockConfig();
+        List<TableField> fields = generateMockConfig();
         ProcessResult<String> checkResult = checkMockConfig(fields);
         if (!checkResult.isSuccess()) {
             this.mockConfigResultText.setText(checkResult.getErrorMsg());
@@ -314,21 +328,21 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     }
 
-    private String acquireInsertSql(List<Field> fields) throws Exception {
+    private String acquireInsertSql(List<TableField> fields) throws Exception {
 
         String tableName = parent.getTitleAt(parent.getSelectedIndex());
 
         return SqlBuilder.buildInsertSql(project, tableName, fields);
     }
 
-    private ProcessResult<String> checkMockConfig(List<Field> fields) {
+    private ProcessResult<String> checkMockConfig(List<TableField> fields) {
 
-        for (Field field : fields) {
+        for (TableField field : fields) {
             if (!StringUtils.equals(field.getMockType(), MockTypeEnum.random.name())) {
                 continue;
             }
 
-            String type = FieldTypeEnum.resolve(Field.parseType(field.getType())).getMockType().getValue();
+            String type = FieldTypeEnum.resolve(TableField.parseType(field.getType())).getMockType().getValue();
             MockRandomParamTypeEnum mockParamType = MockRandomParamTypeEnum.resolve(field.getMockParam());
             if (!StringUtils.equals(mockParamType.getValue(), type)) {
                 return ProcessResult.fail(String.format("The column %s type is %s, but configured as %s", field.getName(), field.getType(), field.getMockParam()));
@@ -338,7 +352,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         return ProcessResult.success(null);
     }
 
-    private String acquireBatchInsertSql(List<Field> fields, int rows) throws Exception {
+    private String acquireBatchInsertSql(List<TableField> fields, int rows) throws Exception {
         String tableName = parent.getTitleAt(parent.getSelectedIndex());
 
         return SqlBuilder.buildInsertSqlBatch(project, tableName, fields, rows);
@@ -356,23 +370,11 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         return isPreview ? Math.min(rows, 50) : rows;
     }
 
-    private List<Field> generateMockConfig() {
+    private List<TableField> generateMockConfig() {
 
         DefaultTableModel model = (DefaultTableModel) this.mockConfigTable.getModel();
-        Vector<Map<String, String>> configs = new Vector<>();
-        Vector dataVector = model.getDataVector();
-        for (Object values : dataVector) {
-            Map<String, String> config = new HashMap<>();
-            Vector vector = (Vector) values;
-            for (int i = 0; i < model.getColumnCount(); i++) {
-                String value =  vector.get(i) == null ? StringUtils.EMPTY : (String) vector.get(i);
-                config.put(model.getColumnName(i), value);
-            }
-            configs.add(config);
-        }
-        String config = new GsonBuilder().setPrettyPrinting().create().toJson(configs);
 
-        List<Field> fields = JSONObject.parseArray(config, Field.class);
+        List<TableField> fields = Model2Field.parse(TableField.class, model);
 
         return fields.stream().filter(field -> !StringUtils.equals(MockTypeEnum.none.name(),field.getMockType())).collect(Collectors.toList());
 
@@ -419,58 +421,45 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
     }
 
-    public JTabbedPane getTabbedPane() {
-        return tabbedPane;
-    }
-
     public JPanel getSpecifyTablePanel() {
         return specifyTablePanel;
     }
 
-    public JPanel getTableRulePanel() {
-        return tableRulePanel;
-    }
-
-    public JScrollPane getTableSchemaScroll() {
-        return tableSchemaScroll;
-    }
-
-    public JTable getTableSchema() {
-        return tableSchema;
-    }
-
-    public RSyntaxTextArea getTableRuleText() {
-        return tableRuleText;
-    }
-
-    public JScrollPane getMockConfigScroll() {
-        return mockConfigScroll;
-    }
-
-    public JTable getMockConfigTable() {
-        return mockConfigTable;
-    }
-
     private void setTables(DefaultTableModel metaModel, DefaultTableModel indexModel) {
 
+        checkTableRule(metaModel);
         this.tableSchema.setModel(metaModel);
 
         DefaultTableModel mockTable = copyModel(metaModel);
         addMockColumns(mockTable);
+        this.mockConfigTable.setModel(mockTable);
+        this.mockConfigResultText.setText("1. 「Lexicon」创建词库\n" +
+                "2. 「Preview」根据配置生成50条insert预览语句\n" +
+                "3. 「Mock」往数据库中插入mock数据\n" +
+                "4. 「Clean」清空数据库中Mock的数据");
 
         this.indexTable.setModel(indexModel);
+        checkIndexRule(metaModel, indexModel);
     }
 
-    public JPanel getMockConfigResultPanel() {
-        return mockConfigResultPanel;
+    private void checkTableRule(DefaultTableModel model) {
+        // TODO: 建表规约
+        this.tableRuleText.setText("TODO: 建表规约");
     }
 
-    public JTextField getMockNum() {
-        return mockNum;
-    }
+    private void checkIndexRule(DefaultTableModel tableModel, DefaultTableModel indexModel) {
+        this.indexRuleText.setText("TODO: 索引规约");
+        Checker checker = CheckerHolder.getChecker(CheckScopeEnum.index);
+        if (checker == null) {
+            this.indexRuleText.setText("No checker for index checker");
+            return;
+        }
+        List<TableField> tableFields = Model2Field.parse(TableField.class, tableModel);
+        List<IndexField> indexFields = Model2Field.parse(IndexField.class, indexModel);
 
-    public RSyntaxTextArea getMockConfigResultText() {
-        return mockConfigResultText;
+        CheckField checkField = new CheckField(tableFields, indexFields);
+        String report = ResultConverter.convert2RuleInfo(checker.check(JSONObject.toJSONString(checkField)));
+        this.indexRuleText.setText(StringUtils.isBlank(report) ? "索引规范符合要求" : report);
     }
 
     private DefaultTableModel copyModel(DefaultTableModel model) {
@@ -489,9 +478,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private void addMockColumns(DefaultTableModel model) {
 
         initMockColumnValues(model);
-
         this.mockConfigTable.setModel(model);
-
         TableColumnModel columnModel = this.mockConfigTable.getColumnModel();
 
         TableColumn typeColumn = columnModel.getColumn(columnModel.getColumnIndex(MOCK_TYPE_COLUMN_NAME));
@@ -520,7 +507,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
                 mockTypes.add(MockTypeEnum.random.name());
 
-                String type = Field.parseType((String) model.getValueAt(i, 1));
+                String type = TableField.parseType((String) model.getValueAt(i, 1));
                 mockParamTypes.add(FieldTypeEnum.resolve(type).getMockType().name());
             }
         }
@@ -600,14 +587,8 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
             SelectResult metaResult = (SelectResult) SqlExecutor.executeSql(project, metaSql, false);
             SelectResult indexResult = (SelectResult) SqlExecutor.executeSql(project, indexSql, false);
-            // TODO: 建表规约
-            this.getTableRuleText().setText("TODO: 建表规约");
 
             this.setTables(metaResult.getModel(), indexResult.getModel());
-            this.getMockConfigResultText().setText("1. 「Lexicon」创建词库\n" +
-                    "2. 「Preview」根据配置生成50条insert预览语句\n" +
-                    "3. 「Mock」往数据库中插入mock数据\n" +
-                    "4. 「Clean」清空数据库中Mock的数据");
 
             this.resetContentPane();
 

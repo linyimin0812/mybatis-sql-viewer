@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
  * @author banzhe
  * @date 2022/12/07 15:16
  **/
-class FieldWithTableAliasRuleTest {
+class TableFieldWithTableAliasRuleTest {
 
     private final FieldWithTableAliasRule checkRule = new FieldWithTableAliasRule();
 

@@ -1,5 +1,7 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
+import com.alibaba.druid.sql.SQLUtils;
+import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.visitor.SchemaStatVisitor;
 import com.alibaba.druid.stat.TableStat;
 import io.github.linyimin.plugin.sql.checker.Report;
@@ -36,5 +38,14 @@ public class CorrelationTableLimitRule implements CheckRule {
     @Override
     public List<CheckScopeEnum> scopes() {
         return Collections.singletonList(CheckScopeEnum.select);
+    }
+
+    private SchemaStatVisitor parseSql(String sql) {
+
+        SQLStatement statement = SQLUtils.parseSingleMysqlStatement(sql);
+        SchemaStatVisitor visitor = new SchemaStatVisitor();
+        statement.accept(visitor);
+
+        return visitor;
     }
 }

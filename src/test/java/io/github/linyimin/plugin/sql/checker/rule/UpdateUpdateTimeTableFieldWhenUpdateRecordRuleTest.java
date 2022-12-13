@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author banzhe
  * @date 2022/12/10 20:51
  **/
-class UpdateUpdateTimeFieldWhenUpdateRecordRuleTest {
+class UpdateUpdateTimeTableFieldWhenUpdateRecordRuleTest {
 
     private final UpdateUpdateTimeFieldWhenUpdateRecordRule checkRule = new UpdateUpdateTimeFieldWhenUpdateRecordRule();
 

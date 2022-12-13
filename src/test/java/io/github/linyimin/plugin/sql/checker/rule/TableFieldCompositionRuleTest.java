@@ -1,12 +1,7 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
-import com.alibaba.fastjson.JSON;
-import io.github.linyimin.plugin.mock.schema.Field;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author banzhe

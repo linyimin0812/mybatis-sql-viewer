@@ -1,1 +1,7 @@
 io.github.linyimin.plugin.sql.checker.SelectChecker
+io.github.linyimin.plugin.sql.checker.IndexChecker
+io.github.linyimin.plugin.sql.checker.DeleteChecker
+io.github.linyimin.plugin.sql.checker.FieldChecker
+io.github.linyimin.plugin.sql.checker.FieldCompositionChecker
+io.github.linyimin.plugin.sql.checker.TableChecker
+io.github.linyimin.plugin.sql.checker.UpdateChecker

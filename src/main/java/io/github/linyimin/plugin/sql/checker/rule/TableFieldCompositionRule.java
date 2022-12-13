@@ -2,7 +2,7 @@ package io.github.linyimin.plugin.sql.checker.rule;
 
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
@@ -23,9 +23,9 @@ public class TableFieldCompositionRule implements CheckRule {
     @Override
     public Report check(String target) {
         try {
-            List<Field> fields = ObjectUtils.defaultIfNull(JSONObject.parseArray(target, Field.class), Collections.emptyList());
+            List<TableField> fields = ObjectUtils.defaultIfNull(JSONObject.parseArray(target, TableField.class), Collections.emptyList());
 
-            Map<String, Field> fieldMap = fields.stream().collect(Collectors.toMap(Field::getName, Function.identity(), (o1, o2) -> o1));
+            Map<String, TableField> fieldMap = fields.stream().collect(Collectors.toMap(TableField::getName, Function.identity(), (o1, o2) -> o1));
 
             String desc = "";
             if (!fieldMap.containsKey("id")) {
@@ -36,7 +36,7 @@ public class TableFieldCompositionRule implements CheckRule {
                 return new Report().isPass(false).level(LevelEnum.mandatory).desc(desc);
             }
 
-            Field field = fieldMap.get("create_time");
+            TableField field = fieldMap.get("create_time");
             if (!StringUtils.contains(field.getActualType(), "datetime")) {
                 return new Report().isPass(false).level(LevelEnum.mandatory).desc(desc);
             }

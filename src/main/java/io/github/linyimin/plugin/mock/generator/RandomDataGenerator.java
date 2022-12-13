@@ -2,7 +2,7 @@ package io.github.linyimin.plugin.mock.generator;
 
 import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.enums.MockRandomParamTypeEnum;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import net.datafaker.Faker;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
@@ -25,12 +25,12 @@ public class RandomDataGenerator implements DataGenerator {
     private final static DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
-    public Object generate(Project project, Field field) {
+    public Object generate(Project project, TableField field) {
 
         return getRandomValue(field);
     }
 
-    private Object getRandomValue(Field field) {
+    private Object getRandomValue(TableField field) {
 
         Faker faker = FAKERS[RandomUtils.nextInt(0, 2)];
 

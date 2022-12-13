@@ -269,11 +269,13 @@ public class SqlTabbedPane implements TabbedChangeListener {
                 List<Report> reports = checker.check(sql);
                 String ruleInfo = ResultConverter.convert2RuleInfo(reports);
 
-                if (StringUtils.isBlank(ruleInfo)) {
-                    statementRuleText.setText("满足规范要求");
-                } else {
-                    statementRuleText.setText(ruleInfo);
-                }
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    if (StringUtils.isBlank(ruleInfo)) {
+                        statementRuleText.setText("满足规范要求");
+                    } else {
+                        statementRuleText.setText(ruleInfo);
+                    }
+                });
             }
         } catch (Exception e) {
             StringWriter sw = new StringWriter();

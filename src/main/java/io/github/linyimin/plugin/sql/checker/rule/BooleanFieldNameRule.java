@@ -1,7 +1,7 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
 import com.alibaba.fastjson.JSONObject;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
@@ -22,7 +22,7 @@ public class BooleanFieldNameRule implements CheckRule {
     @Override
     public Report check(String target) {
 
-        Field field = JSONObject.parseObject(target, Field.class);
+        TableField field = JSONObject.parseObject(target, TableField.class);
 
         if (START_WITH_IS_PREFIX.matcher(field.getName()).find() && !StringUtils.equalsIgnoreCase(field.getActualType(), "unsigned tinyint")) {
 

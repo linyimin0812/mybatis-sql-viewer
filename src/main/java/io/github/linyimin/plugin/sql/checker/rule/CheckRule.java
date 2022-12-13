@@ -21,13 +21,4 @@ public interface CheckRule {
 
     List<CheckScopeEnum> scopes();
 
-    default SchemaStatVisitor parseSql(String sql) {
-
-        SQLStatement statement = SQLUtils.parseSingleMysqlStatement(sql);
-        SchemaStatVisitor visitor = new SchemaStatVisitor();
-        statement.accept(visitor);
-
-        return visitor;
-    }
-
 }

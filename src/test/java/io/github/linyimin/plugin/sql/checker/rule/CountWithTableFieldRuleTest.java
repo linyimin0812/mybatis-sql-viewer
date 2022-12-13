@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
  * @author banzhe
  * @date 2022/12/07 20:55
  **/
-class CountWithFieldRuleTest {
+class CountWithTableFieldRuleTest {
 
     private final CountWithFieldRule checkRule = new CountWithFieldRule();
 

@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.enums.MockTypeEnum;
 import io.github.linyimin.plugin.mock.generator.DataGenerator;
 import io.github.linyimin.plugin.mock.generator.DataGeneratorFactory;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +18,11 @@ public class SqlBuilder {
 
     private static final String INSERT_TEMPLATE = "INSERT INTO %s (%s) values %s";
 
-    public static String buildInsertSql(Project project, String table, List<Field> fields) throws Exception {
+    public static String buildInsertSql(Project project, String table, List<TableField> fields) throws Exception {
 
         List<Object> mockData = mockData(project, fields);
 
-        String columns = fields.stream().map(Field::getName).collect(Collectors.joining(", "));
+        String columns = fields.stream().map(TableField::getName).collect(Collectors.joining(", "));
 
         String values = encapsulateValue(mockData);
 
@@ -31,9 +31,9 @@ public class SqlBuilder {
     }
 
 
-    public static String buildInsertSqlBatch(Project project, String table, List<Field> fields, int rows) throws Exception {
+    public static String buildInsertSqlBatch(Project project, String table, List<TableField> fields, int rows) throws Exception {
 
-        String columns = fields.stream().map(Field::getName).collect(Collectors.joining(", "));
+        String columns = fields.stream().map(TableField::getName).collect(Collectors.joining(", "));
 
         List<List<Object>> subMockData = new ArrayList<>();
         for (int i = 0; i < rows; i++) {
@@ -47,9 +47,9 @@ public class SqlBuilder {
         return String.format(INSERT_TEMPLATE, table, columns, String.join(", ", values));
     }
 
-    private static List<String> encapsulateValueSingle(String table, List<List<Object>> mockData, List<Field> fields, int rows) {
+    private static List<String> encapsulateValueSingle(String table, List<List<Object>> mockData, List<TableField> fields, int rows) {
 
-        String columns = fields.stream().map(Field::getName).collect(Collectors.joining(", "));
+        String columns = fields.stream().map(TableField::getName).collect(Collectors.joining(", "));
 
         List<String> sqls = new ArrayList<>();
 
@@ -82,12 +82,12 @@ public class SqlBuilder {
         return values.toString();
     }
 
-    public static List<Object> mockData(Project project, List<Field> fields) throws Exception {
+    public static List<Object> mockData(Project project, List<TableField> fields) throws Exception {
 
         List<Object> mockData = new ArrayList<>(fields.size());
 
 
-        for (Field field : fields) {
+        for (TableField field : fields) {
 
             MockTypeEnum type = MockTypeEnum.valueOf(field.getMockType());
             DataGenerator generator = DataGeneratorFactory.getGenerator(type);

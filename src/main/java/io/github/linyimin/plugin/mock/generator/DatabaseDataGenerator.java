@@ -4,7 +4,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.intellij.openapi.project.Project;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import org.apache.commons.lang3.RandomUtils;
@@ -48,7 +48,7 @@ public class DatabaseDataGenerator implements DataGenerator {
     });
 
     @Override
-    public Object generate(Project project, Field field) throws Exception {
+    public Object generate(Project project, TableField field) throws Exception {
 
         this.project = project;
 

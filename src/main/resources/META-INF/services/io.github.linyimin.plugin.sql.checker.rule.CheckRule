@@ -18,3 +18,4 @@ io.github.linyimin.plugin.sql.checker.rule.VarcharLengthLimitRule
 io.github.linyimin.plugin.sql.checker.rule.BooleanFieldNameRule
 io.github.linyimin.plugin.sql.checker.rule.UpdateUpdateTimeFieldWhenUpdateRecordRule
 io.github.linyimin.plugin.sql.checker.rule.BigAndCompleteUpdateMethodRule
+io.github.linyimin.plugin.sql.checker.rule.IndexNamingRule

@@ -1,7 +1,7 @@
 package io.github.linyimin.plugin.mock.generator;
 
 import com.intellij.openapi.project.Project;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -11,11 +11,11 @@ import org.apache.commons.lang3.StringUtils;
 public class DefaultValueGenerator implements DataGenerator {
 
     @Override
-    public Object generate(Project project, Field field) {
+    public Object generate(Project project, TableField field) {
 
         String defaultValue = field.getDefaultValue();
 
-        if (Field.isNumber(field.getActualType())) {
+        if (TableField.isNumber(field.getActualType())) {
 
             if (StringUtils.isBlank(defaultValue)) {
                 defaultValue = "0";

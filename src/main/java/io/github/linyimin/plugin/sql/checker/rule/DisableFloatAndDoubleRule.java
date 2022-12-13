@@ -1,12 +1,13 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
 import com.alibaba.fastjson.JSONObject;
-import io.github.linyimin.plugin.mock.schema.Field;
+import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ import java.util.List;
 public class DisableFloatAndDoubleRule implements CheckRule {
     @Override
     public Report check(String target) {
-        Field field = JSONObject.parseObject(target, Field.class);
+        TableField field = JSONObject.parseObject(target, TableField.class);
 
         if (StringUtils.containsIgnoreCase(field.getActualType(), "float") || StringUtils.equalsIgnoreCase(field.getActualType(), "double")) {
 
@@ -31,6 +32,6 @@ public class DisableFloatAndDoubleRule implements CheckRule {
 
     @Override
     public List<CheckScopeEnum> scopes() {
-        return null;
+        return Collections.singletonList(CheckScopeEnum.field);
     }
 }

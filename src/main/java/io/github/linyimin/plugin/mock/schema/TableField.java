@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * @author banzhe
  * @date 2022/11/30 11:47
  **/
-public class Field {
+public class TableField {
 
     private static final Pattern FIELD_LENGTH_PATTERN = Pattern.compile("[a-zA-Z\\d\\s]+\\((\\d+)\\)");
 

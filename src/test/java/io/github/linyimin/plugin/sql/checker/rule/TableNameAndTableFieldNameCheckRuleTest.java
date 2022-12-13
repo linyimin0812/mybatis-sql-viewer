@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
  * @author banzhe
  * @date 2022/12/09 20:15
  **/
-class TableNameAndFieldNameCheckRuleTest {
+class TableNameAndTableFieldNameCheckRuleTest {
     private final TableNameAndFieldNameCheckRule checkRule = new TableNameAndFieldNameCheckRule();
 
     @Test
