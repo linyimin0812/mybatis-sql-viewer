@@ -29,6 +29,7 @@ public class TryToAvoidInOperationRule extends SelectCheckRuleAbstract<InExpress
 
     @Override
     public List<CheckScopeEnum> scopes() {
+        // TODO: 需要分开， Select Update Delete之间不能转换，存在ClassCastException
         return Arrays.asList(CheckScopeEnum.select, CheckScopeEnum.delete, CheckScopeEnum.update);
     }
 }

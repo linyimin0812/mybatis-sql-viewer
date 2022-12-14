@@ -95,17 +95,23 @@ public class ResultConverter {
 
         List<Report> noPassReports = reports.stream().filter(report -> !report.isPass()).collect(Collectors.toList());
 
+        StringBuilder sb = new StringBuilder();
+
         if (CollectionUtils.isEmpty(noPassReports)) {
+            sb.append("符合SQL规范要求\n").append("\n");
             noPassReports.addAll(Constant.DEFAULT_REPORT_MAP.getOrDefault(scope, new ArrayList<>()));
+        } else {
+            sb.append("不符合SQL规范要求, 不满足以下规范：\n").append("\n");
         }
 
-        StringBuilder sb = new StringBuilder();
-        for (Report report : noPassReports) {
-            sb.append("【").append(report.getLevel().name()).append("】\n");
-            sb.append("  ").append(report.getDesc()).append("\n");
+        for (int i = 0; i < noPassReports.size(); i++) {
+            Report report = noPassReports.get(i);
+            sb.append(i + 1).append(".【").append(report.getLevel().name()).append("】");
+            sb.append(report.getDesc()).append("\n");
             if (StringUtils.isNotBlank(report.getSample())) {
                 sb.append("  【sample】\n").append("    ").append(report.getSample()).append("\n");
             }
+            sb.append("\n");
         }
 
         return sb.toString();
