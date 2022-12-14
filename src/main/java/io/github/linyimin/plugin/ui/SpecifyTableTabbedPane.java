@@ -23,6 +23,7 @@ import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.builder.SqlBuilder;
 import io.github.linyimin.plugin.sql.checker.Checker;
 import io.github.linyimin.plugin.sql.checker.CheckerHolder;
+import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.rule.CheckField;
 import io.github.linyimin.plugin.sql.converter.ResultConverter;
@@ -443,12 +444,37 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     }
 
     private void checkTableRule(DefaultTableModel model) {
-        // TODO: 建表规约
-        this.tableRuleText.setText("TODO: 建表规约");
+        // check table name
+        Checker checker = CheckerHolder.getChecker(CheckScopeEnum.naming_convention);
+        List<Report> reports = checker.check(parent.getTitleAt(parent.getSelectedIndex()));
+
+        boolean isPass = reports.stream().allMatch(Report::isPass);
+
+        if (!isPass) {
+            this.tableRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.naming_convention, reports));
+            return;
+        }
+
+        // check table field
+        checker = CheckerHolder.getChecker(CheckScopeEnum.field);
+        List<TableField> tableFields = Model2Field.parse(TableField.class, model);
+        for (TableField field : tableFields) {
+            reports = checker.check(JSONObject.toJSONString(field));
+            isPass = reports.stream().allMatch(Report::isPass);
+            if (!isPass) {
+                this.tableRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.naming_convention, reports));
+                return;
+            }
+        }
+
+        // check table field composition
+        checker = CheckerHolder.getChecker(CheckScopeEnum.field_composition);
+        reports = checker.check(JSONObject.toJSONString(tableFields));
+
+        this.tableRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.naming_convention, reports));
     }
 
     private void checkIndexRule(DefaultTableModel tableModel, DefaultTableModel indexModel) {
-        this.indexRuleText.setText("TODO: 索引规约");
         Checker checker = CheckerHolder.getChecker(CheckScopeEnum.index);
         if (checker == null) {
             this.indexRuleText.setText("No checker for index checker");
@@ -458,8 +484,8 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         List<IndexField> indexFields = Model2Field.parse(IndexField.class, indexModel);
 
         CheckField checkField = new CheckField(tableFields, indexFields);
-        String report = ResultConverter.convert2RuleInfo(checker.check(JSONObject.toJSONString(checkField)));
-        this.indexRuleText.setText(StringUtils.isBlank(report) ? "索引规范符合要求" : report);
+        List<Report> reports = checker.check(JSONObject.toJSONString(checkField));
+        this.indexRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.index, reports));
     }
 
     private DefaultTableModel copyModel(DefaultTableModel model) {

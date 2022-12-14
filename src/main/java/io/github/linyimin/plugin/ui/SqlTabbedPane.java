@@ -267,7 +267,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
                 }
 
                 List<Report> reports = checker.check(sql);
-                String ruleInfo = ResultConverter.convert2RuleInfo(reports);
+                String ruleInfo = ResultConverter.convert2RuleInfo(scope, reports);
 
                 ApplicationManager.getApplication().invokeLater(() -> {
                     if (StringUtils.isBlank(ruleInfo)) {

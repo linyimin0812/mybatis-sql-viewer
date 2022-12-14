@@ -1,6 +1,8 @@
 package io.github.linyimin.plugin.sql.converter;
 
+import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.checker.Report;
+import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.InsertResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
@@ -13,6 +15,7 @@ import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -88,12 +91,12 @@ public class ResultConverter {
                 + "[Total Rows]: " + result.getTotalRows().get(0).getValue() + "\n";
     }
 
-    public static String convert2RuleInfo(List<Report> reports) {
+    public static String convert2RuleInfo(CheckScopeEnum scope, List<Report> reports) {
 
         List<Report> noPassReports = reports.stream().filter(report -> !report.isPass()).collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(noPassReports)) {
-            return StringUtils.EMPTY;
+            noPassReports.addAll(Constant.DEFAULT_REPORT_MAP.getOrDefault(scope, new ArrayList<>()));
         }
 
         StringBuilder sb = new StringBuilder();

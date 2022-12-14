@@ -27,7 +27,8 @@ public class TableFieldCompositionRule implements CheckRule {
 
             Map<String, TableField> fieldMap = fields.stream().collect(Collectors.toMap(TableField::getName, Function.identity(), (o1, o2) -> o1));
 
-            String desc = "";
+            String desc = "表必备三字段：id，create_time，update_time。\n" +
+                    "  其中id必为主键，类型为bigint unsigned、单表时递增、步长为1。create_time, update_time的类型均为datetime类型，前者现在时表示主动式创建，后者过去分词表示被动式更新。";
             if (!fieldMap.containsKey("id")) {
                 return new Report().isPass(false).level(LevelEnum.mandatory).desc(desc);
             }

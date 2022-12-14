@@ -31,6 +31,6 @@ public class TablePluralNameCheckRule implements CheckRule {
 
     @Override
     public List<CheckScopeEnum> scopes() {
-        return Collections.singletonList(CheckScopeEnum.table);
+        return Collections.singletonList(CheckScopeEnum.naming_convention);
     }
 }

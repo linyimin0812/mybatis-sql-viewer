@@ -10,7 +10,8 @@ public enum CheckScopeEnum {
     select,
     delete,
 
-    table,
+    naming_convention,
+
     field,
     field_composition,
 

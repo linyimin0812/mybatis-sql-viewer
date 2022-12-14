@@ -19,3 +19,5 @@ io.github.linyimin.plugin.sql.checker.rule.BooleanFieldNameRule
 io.github.linyimin.plugin.sql.checker.rule.UpdateUpdateTimeFieldWhenUpdateRecordRule
 io.github.linyimin.plugin.sql.checker.rule.BigAndCompleteUpdateMethodRule
 io.github.linyimin.plugin.sql.checker.rule.IndexNamingRule
+io.github.linyimin.plugin.sql.checker.rule.VarcharIndexLengthRule
+io.github.linyimin.plugin.sql.checker.rule.CombineIndexOrderRule
