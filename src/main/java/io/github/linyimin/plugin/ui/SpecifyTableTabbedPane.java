@@ -31,6 +31,7 @@ import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.InsertResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
+import io.github.linyimin.plugin.utils.MockTypeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -54,9 +55,6 @@ import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED;
  * @date 2022/11/29 01:40
  **/
 public class SpecifyTableTabbedPane implements TabbedChangeListener {
-
-    public static final String MOCK_TYPE_COLUMN_NAME = "Mock Type";
-    public static final String MOCK_VALUE_COLUMN_NAME = "Mock Value";
 
     private JPanel specifyTablePanel;
     private JTabbedPane tabbedPane;
@@ -431,9 +429,9 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         checkTableRule(metaModel);
         this.tableSchema.setModel(metaModel);
 
-        DefaultTableModel mockTable = copyModel(metaModel);
-        addMockColumns(mockTable);
-        this.mockConfigTable.setModel(mockTable);
+        this.mockConfigTable.setModel(MockTypeUtils.copyModel(metaModel));
+        MockTypeUtils.addMockColumns(this.mockConfigTable, this.mockTypes, false);
+
         this.mockConfigResultText.setText("1. 「Lexicon」创建词库\n" +
                 "2. 「Preview」根据配置生成50条insert预览语句\n" +
                 "3. 「Mock」往数据库中插入mock数据\n" +
@@ -486,115 +484,6 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         CheckField checkField = new CheckField(tableFields, indexFields);
         List<Report> reports = checker.check(JSONObject.toJSONString(checkField));
         this.indexRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.index, reports));
-    }
-
-    private DefaultTableModel copyModel(DefaultTableModel model) {
-
-        Vector<String> columnIdentifiers = new Vector<>();
-        for (int i = 0; i < model.getColumnCount(); i++) {
-            columnIdentifiers.add(model.getColumnName(i));
-        }
-
-        Vector dataVector = new Vector(model.getDataVector());
-
-        return new DefaultTableModel(dataVector, columnIdentifiers);
-
-    }
-
-    private void addMockColumns(DefaultTableModel model) {
-
-        initMockColumnValues(model);
-        this.mockConfigTable.setModel(model);
-        TableColumnModel columnModel = this.mockConfigTable.getColumnModel();
-
-        TableColumn typeColumn = columnModel.getColumn(columnModel.getColumnIndex(MOCK_TYPE_COLUMN_NAME));
-
-        typeColumn.setCellEditor(new DefaultCellEditor(this.mockTypes));
-
-        TableColumn valueColumn = columnModel.getColumn(columnModel.getColumnIndex(MOCK_VALUE_COLUMN_NAME));
-
-        valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
-
-        this.mockTypes.addActionListener(e -> mockTypeSelectionListener(this.mockTypes, valueColumn));
-
-    }
-
-    private void initMockColumnValues(DefaultTableModel model) {
-
-        Vector<String> mockTypes = new Vector<>();
-        Vector<String> mockParamTypes = new Vector<>();
-
-        for (int i = 0; i < model.getRowCount(); i++) {
-            String key = (String) model.getValueAt(i, 4);
-            if (StringUtils.endsWithIgnoreCase(key, "PRI")) {
-                mockTypes.add(MockTypeEnum.none.name());
-                mockParamTypes.add(StringUtils.EMPTY);
-            } else {
-
-                mockTypes.add(MockTypeEnum.random.name());
-
-                String type = TableField.parseType((String) model.getValueAt(i, 1));
-                mockParamTypes.add(FieldTypeEnum.resolve(type).getMockType().name());
-            }
-        }
-
-        model.addColumn(MOCK_TYPE_COLUMN_NAME, mockTypes);
-        model.addColumn(MOCK_VALUE_COLUMN_NAME, mockParamTypes);
-    }
-
-    private void mockTypeSelectionListener(ComboBox<String> typeCombobox, TableColumn valueColumn) {
-
-        String type = (String) typeCombobox.getSelectedItem();
-
-        String toolTipText = "";
-
-        if (StringUtils.equals(type, MockTypeEnum.random.name())) {
-            toolTipText = "random rule";
-            ComboBox<String> comboBox = new ComboBox<>();
-            for (MockRandomParamTypeEnum randomType : MockRandomParamTypeEnum.values()) {
-                comboBox.addItem(randomType.name());
-            }
-            valueColumn.setCellEditor(new DefaultCellEditor(comboBox));
-        }
-
-        if (StringUtils.equals(type, MockTypeEnum.increment.name())) {
-            toolTipText = "initial value";
-
-            valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
-        }
-
-        if (StringUtils.equals(type, MockTypeEnum.fixed.name())) {
-            toolTipText = "constant value";
-            valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
-        }
-
-        if (StringUtils.equals(type, MockTypeEnum.regex.name())) {
-            toolTipText = "regular expression";
-            valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
-        }
-
-        if (StringUtils.equals(type, MockTypeEnum.lexicon.name())) {
-            toolTipText = "lexicon";
-            List<Lexicon> lexicons = ApplicationManager.getApplication().getComponent(LexiconComponent.class).getConfig().getLexicons();
-            ComboBox<String> comboBox = new ComboBox<>();
-            for (Lexicon lexicon : lexicons) {
-                comboBox.addItem(lexicon.getName());
-            }
-            valueColumn.setCellEditor(new DefaultCellEditor(comboBox));
-        }
-
-        if (StringUtils.equals(type, MockTypeEnum.database.name())) {
-            toolTipText = "field from table";
-            valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
-        }
-
-        if (StringUtils.equals(type, MockTypeEnum.none.name())) {
-            valueColumn.setCellEditor(new DefaultCellEditor(new JTextField()));
-        }
-
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer();
-        renderer.setToolTipText(toolTipText);
-        valueColumn.setCellRenderer(renderer);
     }
 
     @Override

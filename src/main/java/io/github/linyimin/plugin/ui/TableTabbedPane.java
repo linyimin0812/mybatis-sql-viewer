@@ -10,9 +10,7 @@ import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
-import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.parser.SqlParser;
-import io.github.linyimin.plugin.sql.result.SelectResult;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,9 +18,6 @@ import javax.swing.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
-
-import static io.github.linyimin.plugin.constant.Constant.TABLE_INDEX_SQL_TEMPLATE;
-import static io.github.linyimin.plugin.constant.Constant.TABLE_META_SQL_TEMPLATE;
 
 /**
  * @author banzhe
@@ -60,8 +55,7 @@ public class TableTabbedPane implements TabbedChangeListener {
                 MybatisSqlConfiguration configuration = project.getService(MybatisSqlStateComponent.class).getConfiguration();
 
                 if (StringUtils.isBlank(configuration.getSql())) {
-                    String sqlStr = SqlParamGenerateComponent.generateSql(project, configuration.getMethod(), configuration.getParams());
-                    configuration.setSql(sqlStr);
+                    SqlParamGenerateComponent.generateSql(project, configuration.getMethod(), configuration.getParams());
                 }
 
                 if (isInvalid(configuration.getSql(), infoPane)) {

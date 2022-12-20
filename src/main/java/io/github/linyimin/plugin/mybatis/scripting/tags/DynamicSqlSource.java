@@ -2,10 +2,8 @@ package io.github.linyimin.plugin.mybatis.scripting.tags;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.github.vertical_blank.sqlformatter.SqlFormatter;
-import com.github.vertical_blank.sqlformatter.core.FormatConfig;
-import com.github.vertical_blank.sqlformatter.languages.Dialect;
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
+import io.github.linyimin.plugin.sql.formatter.MysqlFormatter;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,12 +33,7 @@ public class DynamicSqlSource implements SqlSource {
 
         String sql = parameterize(context.getSql(), context);
 
-        FormatConfig config = FormatConfig.builder()
-                .indent("  ")
-                .linesBetweenQueries(1)
-                .build();
-
-        return SqlFormatter.of(Dialect.MySql).format(sql, config);
+        return MysqlFormatter.format(sql);
     }
 
     private String parameterize(String preparedStatement, DynamicContext context) {

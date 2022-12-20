@@ -17,6 +17,9 @@ public class TableField {
 
     private static final Pattern FIELD_LENGTH_PATTERN = Pattern.compile("[a-zA-Z\\d\\s]+\\((\\d+)\\)");
 
+    @JSONField(name = "Table")
+    private String table;
+
     @JSONField(name = "Name")
     private String name;
 
@@ -46,6 +49,14 @@ public class TableField {
 
     @JSONField(name = "Mock Value")
     private String mockParam;
+
+    public String getTable() {
+        return table;
+    }
+
+    public void setTable(String table) {
+        this.table = table;
+    }
 
 
     public boolean isPrimaryKey() {

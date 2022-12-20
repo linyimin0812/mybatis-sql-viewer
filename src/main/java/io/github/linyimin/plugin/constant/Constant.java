@@ -1,10 +1,14 @@
 package io.github.linyimin.plugin.constant;
 
 import com.google.common.collect.Lists;
+import com.intellij.ui.JBColor;
+import com.intellij.util.ui.UIUtil;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
 
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +44,7 @@ public class Constant {
             "`column_type` AS Type, \n" +
             "CASE WHEN `IS_NULLABLE` = 'NO' THEN 'FALSE' ELSE 'TRUE' END AS Nullable,\n" +
             "`column_default` AS 'Default', \n" +
-            "`column_key` AS 'key', \n" +
+            "`column_key` AS 'Key', \n" +
             "`EXTRA` AS Extra,\n" +
             "`column_comment` AS 'Comment' \n" +
             "FROM `information_schema`.`COLUMNS` \n" +
@@ -98,5 +102,7 @@ public class Constant {
         put(CheckScopeEnum.update, DEFAULT_SELECT_REPORTS);
         put(CheckScopeEnum.delete, DEFAULT_SELECT_REPORTS);
     }};
+
+    public static final Border LINE_BORDER = UIUtil.isUnderDarcula() ? new LineBorder(JBColor.darkGray) : new LineBorder(JBColor.lightGray);
 
 }

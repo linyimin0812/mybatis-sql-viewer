@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
  **/
 public class IncrementDataGenerator implements DataGenerator {
     @Override
-    public Long generate(Project project, TableField field) {
+    public Object generate(Project project, TableField field) {
 
         String mockParam = field.getMockParam();
 
@@ -22,6 +22,10 @@ public class IncrementDataGenerator implements DataGenerator {
 
         field.setMockParam(String.valueOf(initValue++));
 
-        return initValue;
+        if (TableField.isNumber(field.getActualType())) {
+            return initValue;
+        }
+
+        return String.valueOf(initValue);
     }
 }

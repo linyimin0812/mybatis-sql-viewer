@@ -76,6 +76,11 @@ public class SqlTabbedPane implements TabbedChangeListener {
     private JTable executeResultTable;
     private JScrollPane executeResultScroll;
 
+    // sql压测面板
+    private JPanel stressPane;
+
+    private final SqlStressTabbedPane sqlStressTabbedPane;
+
     private final InfoPane infoPane;
     private final Project project;
     private final BackgroundTaskQueue backgroundTaskQueue;
@@ -85,14 +90,23 @@ public class SqlTabbedPane implements TabbedChangeListener {
         this.project = project;
         this.backgroundTaskQueue = new BackgroundTaskQueue(project, APPLICATION_NAME);
 
+        this.sqlStressTabbedPane = new SqlStressTabbedPane(this.project);
+
         this.infoPane = new InfoPane();
 
         initSqlPanel();
         initResultPanel();
+        initSqlStressPanel();
+
         setTableRowHeight();
         setScrollUnitIncrement();
         // 监听sql tabbed panel的点击事件
         sqlTabbedPanel.addChangeListener(e -> sqlTabbedPanelListener());
+    }
+
+    private void initSqlStressPanel() {
+        this.stressPane.setLayout(new BorderLayout());
+        this.stressPane.add(this.sqlStressTabbedPane.getSqlStressPane());
     }
 
 
@@ -201,21 +215,9 @@ public class SqlTabbedPane implements TabbedChangeListener {
         if (selectedIndex == SqlComponentType.result.getIndex()) {
             executeSql();
         }
-    }
 
-    private ProcessResult<String> generateSql() {
-
-        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
-
-        try {
-            String sqlStr = SqlParamGenerateComponent.generateSql(project, sqlConfig.getMethod(), sqlConfig.getParams());
-            sqlConfig.setSql(sqlStr);
-            return ProcessResult.success(sqlStr);
-        } catch (Throwable e) {
-            sqlConfig.setSql(StringUtils.EMPTY);
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            return ProcessResult.fail(String.format("generate sql error.\n %s", sw));
+        if (selectedIndex == SqlComponentType.stress.getIndex()) {
+            this.sqlStressTabbedPane.updateStressConfig();
         }
     }
 
@@ -237,7 +239,8 @@ public class SqlTabbedPane implements TabbedChangeListener {
             infoPane.setText(SQL_STATEMENT_LOADING_PROMPT);
         });
 
-        ProcessResult<String> result = generateSql();
+        ProcessResult<String> result = SqlParamGenerateComponent.generateSql(project);
+
         if (!result.isSuccess()) {
             infoPane.setText(result.getErrorMsg());
             return;
@@ -305,7 +308,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
         String sql = statementText.getText();
 
         if (StringUtils.isBlank(sql)) {
-            ProcessResult<String> result = generateSql();
+            ProcessResult<String> result = SqlParamGenerateComponent.generateSql(project);
             if (!result.isSuccess()) {
                 this.infoPane.setText(result.getErrorMsg());
                 return;
@@ -367,7 +370,9 @@ public class SqlTabbedPane implements TabbedChangeListener {
          * Tanned类型对应的index
          */
         statement(0),
-        result(1);
+        result(1),
+        stress(2);
+
         private final int index;
 
         SqlComponentType(int index) {

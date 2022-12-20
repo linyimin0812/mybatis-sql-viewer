@@ -1,7 +1,9 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
-
-import com.alibaba.fastjson.JSONObject;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -30,25 +32,14 @@ class WriteClearlySelectFieldRuleTest {
     }
 
     @Test
-    public void test() {
-        Main main = new Main();
-        main.setDeleted(Boolean.TRUE);
+    public void test() throws JSQLParserException {
+        Select select = (Select) CCJSqlParserUtil.parse("select t1.id, t2.name from t1,t2 where t1.id = t2.u_id;");
+        PlainSelect plainSelect = (PlainSelect)select.getSelectBody();
 
-        System.out.println(JSONObject.toJSONString(main));
+        plainSelect.getFromItem();
+
+        System.out.println(select.toString());
+
+
     }
-
-    static class Main {
-        private Boolean isDeleted;
-
-        public Boolean getDeleted() {
-            return isDeleted;
-        }
-
-        public void setDeleted(Boolean deleted) {
-            isDeleted = deleted;
-        }
-    }
-
-
-
 }

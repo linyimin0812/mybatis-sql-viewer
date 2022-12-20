@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.result.SelectResult;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -59,7 +60,16 @@ public class DatabaseDataGenerator implements DataGenerator {
 
         List<Object> contents = contentCache.get(mockParam);
 
+        if (CollectionUtils.isEmpty(contents)) {
+            throw new RuntimeException(field.getMockParam() + " in table is empty.");
+        }
+
         int index = RandomUtils.nextInt(0, contents.size());
-        return contents.get(index);
+
+        if (TableField.isNumber(field.getActualType())) {
+            return Long.parseLong(contents.get(index).toString());
+        }
+
+        return contents.get(index).toString();
     }
 }

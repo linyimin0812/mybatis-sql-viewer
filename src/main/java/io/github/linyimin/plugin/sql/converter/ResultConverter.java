@@ -98,7 +98,7 @@ public class ResultConverter {
         StringBuilder sb = new StringBuilder();
 
         if (CollectionUtils.isEmpty(noPassReports)) {
-            sb.append("符合SQL规范要求\n").append("\n");
+            sb.append("符合SQL规范要求, 以下信息仅供参考：\n").append("\n");
             noPassReports.addAll(Constant.DEFAULT_REPORT_MAP.getOrDefault(scope, new ArrayList<>()));
         } else {
             sb.append("不符合SQL规范要求, 不满足以下规范：\n").append("\n");

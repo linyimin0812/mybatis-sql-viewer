@@ -73,18 +73,36 @@ public class SqlParamGenerateComponent {
 
     }
 
-    public static String generateSql(Project project, String methodQualifiedName, String params) {
+    public static ProcessResult<String> generateSql(Project project, String methodQualifiedName, String params) {
 
-        ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params);
+        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
 
-        if (processResult.isSuccess()) {
-            return processResult.getData();
+        try {
+            ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params);
+            if (processResult.isSuccess()) {
+
+                return processResult;
+            }
+
+            processResult = getSqlFromXml(project, methodQualifiedName, params);
+
+            if (processResult.isSuccess()) {
+                sqlConfig.setSql(processResult.getData());
+            }
+
+            return processResult;
+
+        } catch (Throwable t) {
+            StringWriter sw = new StringWriter();
+            t.printStackTrace(new PrintWriter(sw));
+
+            return ProcessResult.fail(String.format("gengerate sql error. \n%s", sw));
         }
+    }
 
-        processResult = getSqlFromXml(project, methodQualifiedName, params);
-
-        return processResult.isSuccess() ? processResult.getData() : processResult.getErrorMsg();
-
+    public static ProcessResult<String> generateSql(Project project) {
+        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+        return generateSql(project, sqlConfig.getMethod(), sqlConfig.getParams());
     }
 
     private static ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params) {

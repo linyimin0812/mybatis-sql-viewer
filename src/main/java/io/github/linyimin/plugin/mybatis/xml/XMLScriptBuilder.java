@@ -60,10 +60,9 @@ public class XMLScriptBuilder {
             } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
                 String nodeName = child.getNode().getNodeName();
                 NodeHandler handler = nodeHandlerMap.get(nodeName);
-                if (handler == null) {
-                    throw new ParseException("Unknown element <" + nodeName + "> in SQL statement.");
+                if (handler != null) {
+                    handler.handleNode(child, contents);
                 }
-                handler.handleNode(child, contents);
             }
         }
         return new MixedSqlNode(contents);
