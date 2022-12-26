@@ -3,6 +3,7 @@ package io.github.linyimin.plugin.ui;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.ui.JBColor;
+import com.intellij.util.PsiNavigateUtil;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
@@ -97,6 +98,12 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         datasourceButton.addMouseListener(new MouseCursorAdapter(this.datasourceButton));
 
         jumpButton.addMouseListener(new MouseCursorAdapter(this.jumpButton));
+        jumpButton.addActionListener(e -> {
+            MybatisSqlConfiguration config = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
+            if (config.getPsiElement() != null) {
+                PsiNavigateUtil.navigate(config.getPsiElement());
+            }
+        });
 
         // 监听tabbedpane点击事件
         totalTabbedPanel.addChangeListener(e -> totalTabbedPanelListener());
