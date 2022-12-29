@@ -32,6 +32,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -101,7 +102,16 @@ public class SqlTabbedPane implements TabbedChangeListener {
         setTableRowHeight();
         setScrollUnitIncrement();
         // 监听sql tabbed panel的点击事件
-        sqlTabbedPanel.addChangeListener(e -> sqlTabbedPanelListener());
+        this.sqlTabbedPanel.addChangeListener(e -> sqlTabbedPanelListener());
+        this.sqlTabbedPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                if (event.getClickCount() == 2) {
+                    // TODO: 双击时再更新
+                    sqlTabbedPanel.indexAtLocation(event.getX(), event.getY());
+                }
+            }
+        });
     }
 
     private void initSqlStressPanel() {

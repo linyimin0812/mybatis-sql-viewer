@@ -23,6 +23,9 @@ dependencies {
     implementation 'net.datafaker:datafaker:1.7.0'
     implementation group: 'com.github.mifmif', name: 'generex', version: '1.0.1'
     implementation group: 'com.github.jsqlparser', name: 'jsqlparser', version: '4.5'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.3.0'
+    implementation group: 'jfree', name: 'jfreechart', version: '1.0.13'
+
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/

@@ -20,6 +20,7 @@ import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.formatter.MysqlFormatter;
 import io.github.linyimin.plugin.sql.parser.SqlParser;
+import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.utils.MockTypeUtils;
 import net.sf.jsqlparser.JSQLParserException;
@@ -48,12 +49,12 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static io.github.linyimin.plugin.constant.Constant.TABLE_META_SQL_TEMPLATE;
-import static io.github.linyimin.plugin.constant.Constant.TABLE_ROW_HEIGHT;
+import static io.github.linyimin.plugin.constant.Constant.*;
 
 /**
  * @author banzhe
@@ -74,11 +75,26 @@ public class SqlStressTabbedPane {
     private JButton stressButton;
     private JTextField stressDurationText;
     private JTextField incrementDurationText;
-    private JTextField randomRatioText;
     private JComboBox valueTypeCombobox;
     private JPanel sqlStressContentPane;
-    private JTextArea usageDescription;
     private JTextField concurrentNumText;
+    private JComboBox trafficModelCombobox;
+    private JTextField successRateText;
+    private JTextField averageRtText;
+    private JTextField tpsText;
+    private JTextField concurrentNumTextField;
+    private JTextField errorNumText;
+    private JTextField totalRequestText;
+    private JPanel successRatePanel;
+    private JPanel averageRtPanel;
+    private JPanel tpsPanel;
+    private JPanel concurrentNumPanel;
+    private JPanel errorNumPanel;
+    private JPanel totalRequestPanel;
+    private JPanel successRateChartPanel;
+    private JPanel averageRtChartPanel;
+    private JPanel tpsChartPanel;
+    private JTabbedPane sqlStressTabbedPane;
 
     private RSyntaxTextArea sqlText;
     private RSyntaxTextArea sqlTemplateText;
@@ -90,6 +106,12 @@ public class SqlStressTabbedPane {
     private final BackgroundTaskQueue backgroundTaskQueue;
 
     private final Pattern FIELD_NAME_PATTERN = Pattern.compile("\\$\\{([\\w.]+)}");
+
+    private final AtomicBoolean isStop = new AtomicBoolean(false);
+
+    private LineChart successRateLineChart;
+    private LineChart averageRtLineChart;
+    private LineChart tpsLineChart;
 
     SqlStressTabbedPane(Project project) {
 
@@ -110,15 +132,190 @@ public class SqlStressTabbedPane {
         this.initMockTypeCombobox();
         this.paramsConfigTable.setRowHeight(TABLE_ROW_HEIGHT);
 
+        this.stressButton.addMouseListener(new MouseCursorAdapter(this.stressButton));
         this.stressButton.addActionListener(e -> stressButtonAction());
+
+        this.initReportTextFields();
+        this.initChartPanel();
+
+    }
+
+    private void initReportTextFields() {
+        this.successRateText.setBorder(JBUI.Borders.empty());
+        this.successRatePanel.setBorder(Constant.LINE_BORDER);
+
+        this.averageRtText.setBorder(JBUI.Borders.empty());
+        this.averageRtPanel.setBorder(Constant.LINE_BORDER);
+
+        this.tpsText.setBorder(JBUI.Borders.empty());
+        this.tpsPanel.setBorder(Constant.LINE_BORDER);
+
+        this.concurrentNumTextField.setBorder(JBUI.Borders.empty());
+        this.concurrentNumPanel.setBorder(LINE_BORDER);
+
+        this.errorNumText.setBorder(JBUI.Borders.empty());
+        this.errorNumPanel.setBorder(LINE_BORDER);
+
+        this.totalRequestText.setBorder(JBUI.Borders.empty());
+        this.totalRequestPanel.setBorder(LINE_BORDER);
+    }
+
+    private void initChartPanel() {
+        this.successRateChartPanel.setLayout(new BorderLayout());
+        this.successRateChartPanel.setBorder(LINE_BORDER);
+
+        this.averageRtChartPanel.setLayout(new BorderLayout());
+        this.averageRtChartPanel.setBorder(LINE_BORDER);
+
+        this.tpsChartPanel.setLayout(new BorderLayout());
+        this.tpsChartPanel.setBorder(LINE_BORDER);
+
+        this.successRateLineChart = new LineChart("请求成功率", "时间(s)", "请求成功率(%)");
+        this.successRateChartPanel.add(this.successRateLineChart.getChartPanel());
+
+        this.averageRtLineChart = new LineChart("RT", "时间(s)", "平均RT(ms)");
+        this.averageRtChartPanel.add(this.averageRtLineChart.getChartPanel());
+
+        this.tpsLineChart = new LineChart("TPS", "时间(s)", "TPS");
+        this.tpsChartPanel.add(this.tpsLineChart.getChartPanel());
+
     }
 
     private void stressButtonAction() {
 
-        try {
+        String text = this.stressButton.getText();
+        if (StringUtils.equals(text, "stress")) {
+            this.stressButton.setText("stop");
+            this.sqlStressTabbedPane.setSelectedIndex(1);
+        } else {
+            this.stressButton.setText("stress");
+            this.isStop.set(true);
+            return;
+        }
 
-            // TODO: stress
+        ProcessResult<Void> checkResult = checkStressConfig();
+        if (!checkResult.isSuccess()) {
+            return;
+        }
 
+        backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                try {
+                    isStop.set(false);
+                    doStress();
+                } catch (Exception e) {
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        StringWriter sw = new StringWriter();
+                        e.printStackTrace(new PrintWriter(sw));
+                        SqlStressTabbedPane.this.configTabbedPane.remove(SqlStressTabbedPane.this.sqlStressContentPane);
+                        SqlStressTabbedPane.this.configTabbedPane.add(SqlStressTabbedPane.this.infoPane.getInfoPane());
+                        SqlStressTabbedPane.this.infoPane.setText(String.format("%s", sw));
+                    });
+
+                } finally {
+                    isStop.set(true);
+                }
+            }
+        });
+    }
+
+    private void doStress() {
+
+        StressMetrics stressMetrics = new StressMetrics();
+
+        int concurrentNum = Integer.parseInt(this.concurrentNumText.getText());
+
+        Thread[] threads = new Thread[concurrentNum];
+
+        for (int i = 0; i < concurrentNum; i++) {
+            threads[i] = new Thread(doExecute(stressMetrics));
+        }
+
+        String trafficModel = (String) this.trafficModelCombobox.getSelectedItem();
+
+        if (StringUtils.equals(trafficModel, "increase in a constant rate")) {
+            int incrementDuration = Integer.parseInt(this.incrementDurationText.getText());
+            int waitTimeMillis = Math.max(incrementDuration / concurrentNum, 1);
+            for (int i = 0; i < concurrentNum; i++) {
+                threads[i].start();
+                for (int j = 0; j < waitTimeMillis && !isStop.get(); j++) {
+                    try {
+                        displayMetrics(stressMetrics);
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ignored) {
+                        isStop.set(true);
+                        return;
+                    }
+                }
+            }
+        } else if (StringUtils.equals(trafficModel, "fixed concurrent threads")) {
+            for (int i = 0; i < concurrentNum; i++) {
+                threads[i].start();
+            }
+        }
+
+        int stressDuration = Integer.parseInt(this.stressDurationText.getText()) * 60 * 1000;
+        long end = System.currentTimeMillis() + stressDuration;
+        long now = System.currentTimeMillis();
+
+        while (end > now && !isStop.get()) {
+            try {
+                displayMetrics(stressMetrics);
+                Thread.sleep(1000);
+                now = System.currentTimeMillis();
+            } catch (InterruptedException ignored) {
+                break;
+            }
+        }
+
+        displayMetrics(stressMetrics);
+
+        isStop.set(true);
+        this.stressButton.setText("stress");
+
+    }
+
+    private void displayMetrics(StressMetrics metrics) {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            this.successRateText.setText(metrics.successRate());
+            this.averageRtText.setText(metrics.averageRt());
+            this.tpsText.setText(metrics.tps());
+            this.concurrentNumTextField.setText(this.concurrentNumText.getText());
+            this.errorNumText.setText(metrics.failedCount());
+            this.totalRequestText.setText(metrics.total());
+
+            this.successRateLineChart.updateDataset(metrics.successRateMap());
+            this.averageRtLineChart.updateDataset(metrics.averageRtMap());
+            this.tpsLineChart.updateDataset(metrics.tpsMap());
+
+        });
+
+    }
+
+    private Runnable doExecute(StressMetrics stressMetrics) {
+        return () -> {
+            while (true) {
+                if (isStop.get()) {
+                    return;
+                }
+                try {
+                    String sql = acquireSql();
+                    BaseResult result = SqlExecutor.executeSql(project, sql, false);
+                    stressMetrics.addSuccess(result.getCost());
+                } catch (Exception e) {
+                    stressMetrics.addFailed();
+                }
+            }
+
+        };
+    }
+
+    private String acquireSql() throws Exception {
+        String sqlType = (String) this.valueTypeCombobox.getSelectedItem();
+        if (StringUtils.equals(sqlType, "use sql directly")) {
+            return this.sqlText.getText();
+        } else if (StringUtils.equals(sqlType, "configure parameters")) {
             String templateSql = this.sqlTemplateText.getText();
             List<TableField> fields = generateMockConfig();
             for (TableField field : fields) {
@@ -126,19 +323,31 @@ public class SqlStressTabbedPane {
                 templateSql = mockInData(templateSql, field);
                 templateSql = mockOrdinaryData(templateSql, field);
             }
-
-            this.sqlTemplateText.setText(templateSql);
-
-        } catch (Exception e) {
-            ApplicationManager.getApplication().invokeLater(() -> {
-                StringWriter sw = new StringWriter();
-                e.printStackTrace(new PrintWriter(sw));
-                SqlStressTabbedPane.this.configTabbedPane.remove(SqlStressTabbedPane.this.sqlStressContentPane);
-                SqlStressTabbedPane.this.configTabbedPane.add(SqlStressTabbedPane.this.infoPane.getInfoPane());
-                SqlStressTabbedPane.this.infoPane.setText(String.format("%s", sw));
-            });
-
+            return templateSql;
         }
+
+        return StringUtils.EMPTY;
+    }
+
+    private ProcessResult<Void> checkStressConfig() {
+
+        String duration = this.incrementDurationText.getText();
+        if (StringUtils.isBlank(duration) || !StringUtils.isNumeric(duration)) {
+            return ProcessResult.fail("increment duration should be an integer.");
+        }
+
+        String concurrentNum = this.concurrentNumText.getText();
+        if (StringUtils.isBlank(concurrentNum) || !StringUtils.isNumeric(concurrentNum)) {
+            return ProcessResult.fail("concurrent number should be an integer.");
+        }
+
+        duration = this.stressDurationText.getText();
+        if (StringUtils.isBlank(duration) || !StringUtils.isNumeric(duration)) {
+            return ProcessResult.fail("stress duration should be an integer.");
+        }
+
+       return ProcessResult.success(null);
+
     }
 
     private String mockOrdinaryData(String templateSql, TableField field) throws Exception {
