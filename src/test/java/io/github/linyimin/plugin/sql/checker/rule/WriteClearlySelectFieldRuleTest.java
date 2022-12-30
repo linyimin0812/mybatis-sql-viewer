@@ -30,16 +30,4 @@ class WriteClearlySelectFieldRuleTest {
         Assertions.assertFalse(checkRule.check(sql).isPass());
 
     }
-
-    @Test
-    public void test() throws JSQLParserException {
-        Select select = (Select) CCJSqlParserUtil.parse("select t1.id, t2.name from t1,t2 where t1.id = t2.u_id;");
-        PlainSelect plainSelect = (PlainSelect)select.getSelectBody();
-
-        plainSelect.getFromItem();
-
-        System.out.println(select.toString());
-
-
-    }
 }

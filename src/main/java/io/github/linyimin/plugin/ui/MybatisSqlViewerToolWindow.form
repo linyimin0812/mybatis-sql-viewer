@@ -74,7 +74,7 @@
         <properties>
           <enabled value="true"/>
           <horizontalAlignment value="0"/>
-          <text value="&lt;html&gt;&lt;u&gt;help&lt;/u&gt;&lt;/html&gt;"/>
+          <text value="&lt;html&gt;&lt;u&gt;help or star&lt;/u&gt;&lt;/html&gt;"/>
         </properties>
       </component>
     </children>

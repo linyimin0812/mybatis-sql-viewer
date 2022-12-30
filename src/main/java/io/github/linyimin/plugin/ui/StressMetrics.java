@@ -5,7 +5,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 /**
  * @author banzhe
@@ -13,11 +12,17 @@ import java.util.stream.Collectors;
  **/
 public class StressMetrics {
 
-
     private final Map<Long, List<Long>> successMap = new ConcurrentHashMap<>();
     private final Map<Long, Long> failedMap = new ConcurrentHashMap<>();
 
+    private final Map<Long, Double> successRateMap = new ConcurrentHashMap<>();
+    private final Map<Long, Double> averageRtMap = new ConcurrentHashMap<>();
+    private final Map<Long, Double> tpsMap = new ConcurrentHashMap<>();
     private final Map<Long, Long> concurrentNumMap = new ConcurrentHashMap<>();
+
+    private long successMapProcessTimeSecond = 0;
+    private long averageRtMapProcessTimeSecond = 0;
+    private long tpsMapProcessTime = 0;
 
     private final AtomicLong success = new AtomicLong(0);
     private final AtomicLong failed = new AtomicLong(0);
@@ -26,6 +31,13 @@ public class StressMetrics {
     private final AtomicLong totalRt = new AtomicLong(0);
 
     private final AtomicLong concurrentNum = new AtomicLong(0);
+
+    private final int[] SCALE = new int[2400];
+    private final int[] COUNT_CONTAINER = new int[2400];
+
+    public StressMetrics() {
+        initScaleAndCountContainer();
+    }
 
     public void addSuccess(long cost) {
 
@@ -39,6 +51,8 @@ public class StressMetrics {
             if (cost > maxRt.get()) {
                 maxRt.set(cost);
             }
+
+            addCostCount((int) cost);
         }
 
         concurrentNumMap.put(timestamp, this.concurrentNum.get());
@@ -77,21 +91,19 @@ public class StressMetrics {
 
     public Map<Long, Double> successRateMap() {
 
-        Map<Long, List<Long>> successMapCopy = copySuccessMap();
-        Map<Long, Long> failedMapCopy;
+        long currentTimeSecond = getTimeSeconds();
 
-        synchronized (failedMap) {
-            failedMapCopy = new HashMap<>(failedMap);
-        }
+        Map<Long, List<Long>> successMapCopy = copySuccessMap(this.successMapProcessTimeSecond, currentTimeSecond);
+        Map<Long, Long> failedMapCopy = copyFailedMap(this.successMapProcessTimeSecond, currentTimeSecond);
 
-        Map<Long, Double> result = new HashMap<>();
+        this.successMapProcessTimeSecond = currentTimeSecond;
 
         for (Map.Entry<Long, List<Long>> entry : successMapCopy.entrySet()) {
             double rate = 100.0 * entry.getValue().size() / (entry.getValue().size() + failedMapCopy.getOrDefault(entry.getKey(), 0L));
-            result.put(entry.getKey(), rate);
+            this.successRateMap.put(entry.getKey(), rate);
         }
 
-        return result;
+        return this.successRateMap;
     }
 
     public String averageRt() {
@@ -131,46 +143,82 @@ public class StressMetrics {
         return timestamp - (timestamp % 1000);
     }
 
-    public Map<Long, List<Long>> copySuccessMap() {
+    private Map<Long, List<Long>> copySuccessMap(long processedTimeSecond, long currentTimeSecond) {
+
         Map<Long, List<Long>> successMapCopy = new HashMap<>();
 
-        synchronized (successMap) {
-
+        if (processedTimeSecond == 0) {
             for (Map.Entry<Long, List<Long>> entry : successMap.entrySet()) {
                 List<Long> value = new ArrayList<>(entry.getValue());
                 successMapCopy.put(entry.getKey(), value);
+            }
+        } else {
+            synchronized (this.successMap) {
+                for (long seconds = processedTimeSecond; seconds <= currentTimeSecond; seconds += 1000) {
+                    if (this.successMap.containsKey(seconds)) {
+                        List<Long> value = new ArrayList<>(this.successMap.get(seconds));
+                        successMapCopy.put(seconds, value);
+                    }
+                }
             }
         }
 
         return successMapCopy;
     }
 
+    private Map<Long, Long> copyFailedMap(long processedTimeSecond, long currentTimeSecond) {
+
+        Map<Long, Long> failedMapCopy = new HashMap<>();
+
+        if (processedTimeSecond == 0) {
+            synchronized (failedMap) {
+                failedMapCopy = new HashMap<>(failedMap);
+            }
+        } else {
+
+            synchronized (this.failedMap) {
+                for (long seconds = processedTimeSecond; seconds <= currentTimeSecond; seconds += 1000) {
+                    if (this.failedMap.containsKey(seconds)) {
+                        failedMapCopy.put(seconds, this.failedMap.get(seconds));
+                    }
+                }
+            }
+        }
+
+        return failedMapCopy;
+    }
+
     public Map<Long, Double> averageRtMap() {
 
-        Map<Long, Double> result = new HashMap<>();
+        long currentSeconds = getTimeSeconds();
 
-        Map<Long, List<Long>> successMapCopy = copySuccessMap();
+        Map<Long, List<Long>> successMapCopy = copySuccessMap(this.averageRtMapProcessTimeSecond, currentSeconds);
+
+        this.averageRtMapProcessTimeSecond = currentSeconds;
 
         for (Map.Entry<Long, List<Long>> entry : successMapCopy.entrySet()) {
             double average = entry.getValue().stream().mapToInt(Math::toIntExact).summaryStatistics().getAverage();
 
-            result.put(entry.getKey(), average);
+            this.averageRtMap.put(entry.getKey(), average);
         }
 
-        return result;
+        return averageRtMap;
     }
 
     public Map<Long, Double> tpsMap() {
-        Map<Long, Double> result = new HashMap<>();
 
-        Map<Long, List<Long>> successMapCopy = copySuccessMap();
+        long currentTimeSecond = getTimeSeconds();
+
+        Map<Long, List<Long>> successMapCopy = copySuccessMap(this.tpsMapProcessTime, currentTimeSecond);
+
+        this.tpsMapProcessTime = currentTimeSecond;
 
         for (Map.Entry<Long, List<Long>> entry : successMapCopy.entrySet()) {
 
-            result.put(entry.getKey(), (double) entry.getValue().size());
+            this.tpsMap.put(entry.getKey(), (double) entry.getValue().size());
         }
 
-        return result;
+        return this.tpsMap;
 
     }
 
@@ -194,47 +242,26 @@ public class StressMetrics {
     }
 
     public long maxTps() {
-        Map<Long, List<Long>> copy;
-
-        synchronized (successMap) {
-            copy = copySuccessMap();
-        }
-
-        return copy.values().stream().mapToLong(Collection::size).max().orElse(0);
+        return (long) this.tpsMap().values().stream().mapToDouble(x -> x).max().orElse(0);
     }
 
     public Pair<Long, Long> tp99And90() {
 
-        Map<Long, List<Long>> successMapCopy = copySuccessMap();
+        long tp99 = (long) (this.success.get() * 0.99);
+        long tp90 = (long) (this.success.get() * 0.90);
 
-        List<Long> costs = successMapCopy.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
-
-        int max = costs.stream().mapToInt(Math::toIntExact).max().orElse(0);
-        int[] countContainer = new int[max + 1];
-
-        for (int i = 0; i <= max; i++) {
-            countContainer[i] = 0;
-        }
-
-        for (long cost : costs) {
-            countContainer[(int) cost] = countContainer[(int) cost] + 1;
-        }
-
-        int tp99 = (int) (0.99 * costs.size());
-        int tp90 = (int) (0.90 * costs.size());
-
-        int total = 0;
         long left = -1;
         long right = -1;
 
-        for (int i = 0; i < countContainer.length; i++) {
-            total += countContainer[i];
-            if (total >= tp90 && left == -1) {
-                left = i;
+        long total = 0;
+        for (int i = 0; i < 2400; i++) {
+            total += COUNT_CONTAINER[i];
+            if (total >=tp90 && left == -1) {
+                left = SCALE[i];
             }
 
             if (total >= tp99 && right == -1) {
-                right = i;
+                right = SCALE[i];
             }
 
             if (left != -1 && right != -1) {
@@ -243,6 +270,40 @@ public class StressMetrics {
         }
 
         return Pair.of(left, right);
+
+    }
+
+    private void initScaleAndCountContainer() {
+        for (int i = 0; i < 1000; i++) {
+            SCALE[i] = i;
+            COUNT_CONTAINER[i] = 0;
+        }
+        for (int i = 1000; i < 1900; i++) {
+            SCALE[i] = (i - 1000 + 1) * 10 + 1000;
+            COUNT_CONTAINER[i] = 0;
+        }
+
+        for (int i = 1900; i < 2400; i++) {
+            SCALE[i] = (i - 1900 + 1) * 100 + 10000;
+            COUNT_CONTAINER[i] = 0;
+        }
+    }
+
+    private void addCostCount(int cost) {
+        int index = 0;
+        if (cost < 1000) {
+            index = cost;
+        } else if (cost < 10000) {
+            index = (cost - 1000) / 10 + 1000;
+        } else{
+            index = (cost - 10000) / 100 + 1900;
+        }
+
+        if (index >= 2400) {
+            index = 2399;
+        }
+
+        COUNT_CONTAINER[SCALE[index]] = COUNT_CONTAINER[SCALE[index]] + 1;
 
     }
 
