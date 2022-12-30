@@ -1,10 +1,11 @@
 package io.github.linyimin.plugin.ui;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * @author banzhe
@@ -16,6 +17,16 @@ public class StressMetrics {
     private final Map<Long, List<Long>> successMap = new ConcurrentHashMap<>();
     private final Map<Long, Long> failedMap = new ConcurrentHashMap<>();
 
+    private final Map<Long, Long> concurrentNumMap = new ConcurrentHashMap<>();
+
+    private final AtomicLong success = new AtomicLong(0);
+    private final AtomicLong failed = new AtomicLong(0);
+
+    private final AtomicLong maxRt = new AtomicLong(0);
+    private final AtomicLong totalRt = new AtomicLong(0);
+
+    private final AtomicLong concurrentNum = new AtomicLong(0);
+
     public void addSuccess(long cost) {
 
         long timestamp = getTimeSeconds();
@@ -23,9 +34,16 @@ public class StressMetrics {
         synchronized (successMap) {
             List<Long> costs = successMap.getOrDefault(timestamp, new ArrayList<>());
             costs.add(cost);
-
             successMap.put(timestamp, costs);
+
+            if (cost > maxRt.get()) {
+                maxRt.set(cost);
+            }
         }
+
+        concurrentNumMap.put(timestamp, this.concurrentNum.get());
+        success.incrementAndGet();
+        totalRt.addAndGet(cost);
     }
 
     public void addFailed() {
@@ -37,27 +55,18 @@ public class StressMetrics {
 
             failedMap.put(timestamp, count);
         }
+        concurrentNumMap.put(timestamp, this.concurrentNum.get());
+        failed.incrementAndGet();
+    }
+
+    public synchronized void setConcurrentNum(int count) {
+        this.concurrentNum.set(count);
     }
 
     public String successRate() {
 
-        long success = 0;
-
-        List<List<Long>> values = copySuccessMapValues();
-        for (List<Long> costs : values) {
-            success += costs.size();
-        }
-
-        long failed = 0;
-
-        List<Long> failedValues;
-        synchronized (failedMap) {
-            failedValues = new ArrayList<>(failedMap.values());
-        }
-
-        for (long count : failedValues) {
-            failed += count;
-        }
+        long success = this.success.get();
+        long failed = this.failed.get();
 
         if (success + failed == 0) {
             return "0.00";
@@ -86,17 +95,8 @@ public class StressMetrics {
     }
 
     public String averageRt() {
-        long success = 0;
-        long cost = 0;
-
-        List<List<Long>> values = copySuccessMapValues();
-
-        for (List<Long> costs : values) {
-            success += costs.size();
-            for (long requestCost : costs) {
-                cost += requestCost;
-            }
-        }
+        long success = this.success.get();
+        long cost = this.totalRt.get();
 
         if (success == 0) {
             return "0.00";
@@ -107,77 +107,28 @@ public class StressMetrics {
 
     public String tps() {
 
-        long success = 0;
+        long success = this.success.get();
+        int size = successMap.size();
 
-        List<List<Long>> values = copySuccessMapValues();
-
-        for (List<Long> costs : values) {
-            success += costs.size();
-        }
-
-        if (successMap.size() == 0) {
+        if (size == 0) {
             return "0";
         }
 
-        return String.valueOf(success / successMap.size());
+        return String.valueOf(success / size);
     }
 
     public String failedCount() {
-        long failed = 0;
-
-        List<Long> failedValues;
-        synchronized (failedMap) {
-            failedValues = new ArrayList<>(failedMap.values());
-        }
-
-        for (long count : failedValues) {
-            failed += count;
-        }
-
-
-        return String.valueOf(failed);
+        return String.valueOf(failed.get());
     }
 
     public String total() {
-
-        List<List<Long>> values = copySuccessMapValues();
-
-        long success = 0;
-        for (List<Long> costs : values) {
-            success += costs.size();
-        }
-
-
-        List<Long> failedValues;
-        synchronized (failedMap) {
-            failedValues = new ArrayList<>(failedMap.values());
-        }
-
-        long failed = 0;
-        for (long count : failedValues) {
-            failed += count;
-        }
-
-        return String.valueOf(success + failed);
+        return String.valueOf(success.get() + failed.get());
     }
 
     private long getTimeSeconds() {
         long timestamp = System.currentTimeMillis();
 
         return timestamp - (timestamp % 1000);
-    }
-
-    private List<List<Long>> copySuccessMapValues() {
-
-        List<List<Long>> values = new ArrayList<>();
-        synchronized (successMap) {
-            for (List<Long> value : successMap.values()) {
-                List<Long> temp = new ArrayList<>(value);
-                values.add(temp);
-            }
-        }
-
-        return values;
     }
 
     public Map<Long, List<Long>> copySuccessMap() {
@@ -220,6 +171,78 @@ public class StressMetrics {
         }
 
         return result;
+
+    }
+
+    public Map<Long, Long> concurrentNumMap() {
+
+        Map<Long, Long> copyMap;
+
+        synchronized (concurrentNumMap) {
+            copyMap = new HashMap<>(concurrentNumMap);
+        }
+
+        return copyMap;
+    }
+
+    public long getConcurrentNum() {
+        return this.concurrentNum.get();
+    }
+
+    public long maxRt() {
+        return this.maxRt.get();
+    }
+
+    public long maxTps() {
+        Map<Long, List<Long>> copy;
+
+        synchronized (successMap) {
+            copy = copySuccessMap();
+        }
+
+        return copy.values().stream().mapToLong(Collection::size).max().orElse(0);
+    }
+
+    public Pair<Long, Long> tp99And90() {
+
+        Map<Long, List<Long>> successMapCopy = copySuccessMap();
+
+        List<Long> costs = successMapCopy.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+
+        int max = costs.stream().mapToInt(Math::toIntExact).max().orElse(0);
+        int[] countContainer = new int[max + 1];
+
+        for (int i = 0; i <= max; i++) {
+            countContainer[i] = 0;
+        }
+
+        for (long cost : costs) {
+            countContainer[(int) cost] = countContainer[(int) cost] + 1;
+        }
+
+        int tp99 = (int) (0.99 * costs.size());
+        int tp90 = (int) (0.90 * costs.size());
+
+        int total = 0;
+        long left = -1;
+        long right = -1;
+
+        for (int i = 0; i < countContainer.length; i++) {
+            total += countContainer[i];
+            if (total >= tp90 && left == -1) {
+                left = i;
+            }
+
+            if (total >= tp99 && right == -1) {
+                right = i;
+            }
+
+            if (left != -1 && right != -1) {
+                break;
+            }
+        }
+
+        return Pair.of(left, right);
 
     }
 

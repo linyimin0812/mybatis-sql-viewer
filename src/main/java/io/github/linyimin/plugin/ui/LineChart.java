@@ -16,7 +16,6 @@ import org.jfree.data.xy.XYDataset;
 
 import javax.swing.*;
 import java.awt.*;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -69,7 +68,13 @@ public class LineChart {
 
         renderer.setBaseShapesVisible(false);
 
-        plot.setRenderer(renderer);
+        plot.setRenderer(0, renderer);
+
+        XYLineAndShapeRenderer concurrentNumRender = new XYLineAndShapeRenderer();
+        concurrentNumRender.setSeriesPaint(0, JBColor.BLUE);
+        concurrentNumRender.setBaseShapesVisible(false);
+        plot.setRenderer(1, concurrentNumRender);
+
         plot.setBackgroundPaint(JBColor.WHITE);
 
         plot.setRangeGridlinesVisible(true);
@@ -90,45 +95,42 @@ public class LineChart {
         return this.chartPanel;
     }
 
-    public void updateDataset(Map<Long, Double> data) {
-
-        TimeSeries series = new TimeSeries(title);
-
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
-
-        for (Map.Entry<Long, Double> entry : data.entrySet()) {
-            Second second = new Second(new Date(entry.getKey()));
-            series.addOrUpdate(second, entry.getValue());
-        }
-
-        int multiple = Math.max(data.size() / 5, 1);
-
-        dataset.addSeries(series);
+    public void updateDataset(Map<Long, Double> data, Map<Long, Long> concurrentNumMap) {
 
         XYPlot xyPlot = chart.getXYPlot();
 
         DateAxis dateAxis = (DateAxis) xyPlot.getDomainAxis();
+
+        int multiple = Math.max(data.size() / 5, 1);
         dateAxis.setTickUnit(new DateTickUnit(DateTickUnitType.SECOND, multiple, new SimpleDateFormat("HH:mm:ss")));
 
         NumberAxis numberAxis = (NumberAxis)xyPlot.getRangeAxis();
+        chart.getXYPlot().setRangeAxis(0, numberAxis);
+        chart.getXYPlot().setDataset(0, mapToDataset(data, title));
+        chart.getXYPlot().mapDatasetToRangeAxis(0, 0);
 
-        NumberFormat numberFormat = NumberFormat.getInstance();
-        numberFormat.setMinimumFractionDigits(2);
-        double min = data.values().stream().min(Double::compareTo).orElse(0.0);
-        double max = data.values().stream().max(Double::compareTo).orElse(0.0);
+        NumberAxis concurrentAxis = new NumberAxis("并发数");
+        concurrentAxis.setLabelFont(new Font("黑体", Font.PLAIN, 13));
+        chart.getXYPlot().setRangeAxis(1, concurrentAxis);
+        chart.getXYPlot().setDataset(1, mapToDataset(concurrentNumMap, "并发数"));
+        chart.getXYPlot().mapDatasetToRangeAxis(1, 1);
 
-        if (max == min) {
-            max = max * 1.20;
-            min = min * 0.80;
+    }
+
+    private <T> TimeSeriesCollection mapToDataset(Map<Long, T> data, String seriesTitle) {
+
+        TimeSeries series = new TimeSeries(seriesTitle);
+
+        TimeSeriesCollection dataset = new TimeSeriesCollection();
+
+        for (Map.Entry<Long, T> entry : data.entrySet()) {
+            Second second = new Second(new Date(entry.getKey()));
+            series.addOrUpdate(second, (Number) entry.getValue());
         }
 
-        int size = Math.max((int) ((max - min) / 10), 10);
+        dataset.addSeries(series);
 
-        numberAxis.setTickUnit(new NumberTickUnit(size, numberFormat));
-        numberAxis.setLowerBound(min);
-        numberAxis.setUpperBound(max);
-
-        chart.getXYPlot().setDataset(dataset);
+        return dataset;
     }
 
 }

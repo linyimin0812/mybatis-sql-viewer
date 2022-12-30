@@ -37,6 +37,7 @@ import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.statement.update.Update;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jetbrains.annotations.NotNull;
@@ -95,6 +96,14 @@ public class SqlStressTabbedPane {
     private JPanel averageRtChartPanel;
     private JPanel tpsChartPanel;
     private JTabbedPane sqlStressTabbedPane;
+    private JTextField maxRtText;
+    private JPanel maxRtPanel;
+    private JTextField maxTpsText;
+    private JPanel maxTpsPanel;
+    private JPanel tp90Panel;
+    private JTextField tp90Text;
+    private JPanel tp99Panel;
+    private JTextField tp99Text;
 
     private RSyntaxTextArea sqlText;
     private RSyntaxTextArea sqlTemplateText;
@@ -144,9 +153,19 @@ public class SqlStressTabbedPane {
         this.successRateText.setBorder(JBUI.Borders.empty());
         this.successRatePanel.setBorder(Constant.LINE_BORDER);
 
+        this.tp90Text.setBorder(JBUI.Borders.empty());
+        this.tp90Panel.setBorder(LINE_BORDER);
+        this.tp99Text.setBorder(JBUI.Borders.empty());
+        this.tp99Panel.setBorder(LINE_BORDER);
+
+        this.maxRtText.setBorder(JBUI.Borders.empty());
+        this.maxRtPanel.setBorder(LINE_BORDER);
+
         this.averageRtText.setBorder(JBUI.Borders.empty());
         this.averageRtPanel.setBorder(Constant.LINE_BORDER);
 
+        this.maxTpsText.setBorder(JBUI.Borders.empty());
+        this.maxTpsPanel.setBorder(LINE_BORDER);
         this.tpsText.setBorder(JBUI.Borders.empty());
         this.tpsPanel.setBorder(Constant.LINE_BORDER);
 
@@ -158,6 +177,7 @@ public class SqlStressTabbedPane {
 
         this.totalRequestText.setBorder(JBUI.Borders.empty());
         this.totalRequestPanel.setBorder(LINE_BORDER);
+
     }
 
     private void initChartPanel() {
@@ -239,6 +259,7 @@ public class SqlStressTabbedPane {
             int waitTimeMillis = Math.max(incrementDuration / concurrentNum, 1);
             for (int i = 0; i < concurrentNum; i++) {
                 threads[i].start();
+                stressMetrics.setConcurrentNum(i + 1);
                 for (int j = 0; j < waitTimeMillis && !isStop.get(); j++) {
                     try {
                         displayMetrics(stressMetrics);
@@ -252,6 +273,7 @@ public class SqlStressTabbedPane {
         } else if (StringUtils.equals(trafficModel, "fixed concurrent threads")) {
             for (int i = 0; i < concurrentNum; i++) {
                 threads[i].start();
+                stressMetrics.setConcurrentNum(i + 1);
             }
         }
 
@@ -277,17 +299,30 @@ public class SqlStressTabbedPane {
     }
 
     private void displayMetrics(StressMetrics metrics) {
+
         ApplicationManager.getApplication().invokeLater(() -> {
+
             this.successRateText.setText(metrics.successRate());
+
+            Pair<Long, Long> tp = metrics.tp99And90();
+            this.tp99Text.setText(String.valueOf(tp.getRight()));
+            this.tp90Text.setText(String.valueOf(tp.getLeft()));
+
+            this.maxRtText.setText(String.valueOf(metrics.maxRt()));
             this.averageRtText.setText(metrics.averageRt());
+
+            this.maxTpsText.setText(String.valueOf(metrics.maxTps()));
             this.tpsText.setText(metrics.tps());
-            this.concurrentNumTextField.setText(this.concurrentNumText.getText());
+
+            this.concurrentNumTextField.setText(String.valueOf(metrics.getConcurrentNum()));
             this.errorNumText.setText(metrics.failedCount());
             this.totalRequestText.setText(metrics.total());
 
-            this.successRateLineChart.updateDataset(metrics.successRateMap());
-            this.averageRtLineChart.updateDataset(metrics.averageRtMap());
-            this.tpsLineChart.updateDataset(metrics.tpsMap());
+            Map<Long, Long> concurrentNumMap = metrics.concurrentNumMap();
+
+            this.successRateLineChart.updateDataset(metrics.successRateMap(), concurrentNumMap);
+            this.averageRtLineChart.updateDataset(metrics.averageRtMap(), concurrentNumMap);
+            this.tpsLineChart.updateDataset(metrics.tpsMap(), concurrentNumMap);
 
         });
 
