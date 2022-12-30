@@ -104,6 +104,7 @@ public class SqlStressTabbedPane {
     private JTextField tp90Text;
     private JPanel tp99Panel;
     private JTextField tp99Text;
+    private JButton stopButton;
 
     private RSyntaxTextArea sqlText;
     private RSyntaxTextArea sqlTemplateText;
@@ -143,6 +144,9 @@ public class SqlStressTabbedPane {
 
         this.stressButton.addMouseListener(new MouseCursorAdapter(this.stressButton));
         this.stressButton.addActionListener(e -> stressButtonAction());
+
+        this.stopButton.addMouseListener(new MouseCursorAdapter(this.stopButton));
+        this.stopButton.addActionListener(e -> this.isStop.set(true));
 
         this.initReportTextFields();
         this.initChartPanel();
@@ -203,6 +207,12 @@ public class SqlStressTabbedPane {
 
     private void stressButtonAction() {
 
+        ProcessResult<Void> checkResult = checkStressConfig();
+        if (!checkResult.isSuccess()) {
+            Notifier.notifyError(project, "sql stress configuration", checkResult.getErrorMsg());
+            return;
+        }
+
         String text = this.stressButton.getText();
         if (StringUtils.equals(text, "stress")) {
             this.stressButton.setText("stop");
@@ -210,11 +220,6 @@ public class SqlStressTabbedPane {
         } else {
             this.stressButton.setText("stress");
             this.isStop.set(true);
-            return;
-        }
-
-        ProcessResult<Void> checkResult = checkStressConfig();
-        if (!checkResult.isSuccess()) {
             return;
         }
 
@@ -302,6 +307,8 @@ public class SqlStressTabbedPane {
 
         ApplicationManager.getApplication().invokeLater(() -> {
 
+            metrics.addConcurrentNum();
+
             this.successRateText.setText(metrics.successRate());
 
             Pair<Long, Long> tp = metrics.tp99And90();
@@ -376,9 +383,19 @@ public class SqlStressTabbedPane {
             return ProcessResult.fail("concurrent number should be an integer.");
         }
 
+        int number = Integer.parseInt(concurrentNum);
+        if (number > 10) {
+            return ProcessResult.fail("The number of concurrency should be less than or equal to 10");
+        }
+
         duration = this.stressDurationText.getText();
         if (StringUtils.isBlank(duration) || !StringUtils.isNumeric(duration)) {
             return ProcessResult.fail("stress duration should be an integer.");
+        }
+
+        number = Integer.parseInt(duration);
+        if (number > 60) {
+            return ProcessResult.fail("The stress test time should be less than 1 hour");
         }
 
        return ProcessResult.success(null);

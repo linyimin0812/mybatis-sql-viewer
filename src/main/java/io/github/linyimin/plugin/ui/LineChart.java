@@ -101,7 +101,7 @@ public class LineChart {
 
         DateAxis dateAxis = (DateAxis) xyPlot.getDomainAxis();
 
-        int multiple = Math.max(data.size() / 5, 1);
+        int multiple = Math.max(concurrentNumMap.size() / 5, 1);
         dateAxis.setTickUnit(new DateTickUnit(DateTickUnitType.SECOND, multiple, new SimpleDateFormat("HH:mm:ss")));
 
         NumberAxis numberAxis = (NumberAxis)xyPlot.getRangeAxis();

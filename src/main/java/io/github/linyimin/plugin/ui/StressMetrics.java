@@ -39,6 +39,11 @@ public class StressMetrics {
         initScaleAndCountContainer();
     }
 
+    public void addConcurrentNum() {
+        long timestamp = getTimeSeconds();
+        this.concurrentNumMap.put(timestamp, this.concurrentNum.get());
+    }
+
     public void addSuccess(long cost) {
 
         long timestamp = getTimeSeconds();
@@ -55,9 +60,10 @@ public class StressMetrics {
             addCostCount((int) cost);
         }
 
-        concurrentNumMap.put(timestamp, this.concurrentNum.get());
         success.incrementAndGet();
         totalRt.addAndGet(cost);
+
+        concurrentNumMap.put(timestamp, this.concurrentNum.get());
     }
 
     public void addFailed() {
@@ -69,8 +75,10 @@ public class StressMetrics {
 
             failedMap.put(timestamp, count);
         }
-        concurrentNumMap.put(timestamp, this.concurrentNum.get());
+
         failed.incrementAndGet();
+
+        concurrentNumMap.put(timestamp, this.concurrentNum.get());
     }
 
     public synchronized void setConcurrentNum(int count) {
@@ -295,7 +303,7 @@ public class StressMetrics {
             index = cost;
         } else if (cost < 10000) {
             index = (cost - 1000) / 10 + 1000;
-        } else{
+        } else {
             index = (cost - 10000) / 100 + 1900;
         }
 
@@ -303,7 +311,7 @@ public class StressMetrics {
             index = 2399;
         }
 
-        COUNT_CONTAINER[SCALE[index]] = COUNT_CONTAINER[SCALE[index]] + 1;
+        COUNT_CONTAINER[index] = COUNT_CONTAINER[index] + 1;
 
     }
 
