@@ -2,6 +2,7 @@ package io.github.linyimin.plugin.ui;
 
 import com.intellij.openapi.ui.Messages;
 import com.intellij.ui.JBColor;
+import com.intellij.util.ui.UIUtil;
 import io.github.linyimin.plugin.constant.Constant;
 import org.fife.ui.rsyntaxtextarea.*;
 
@@ -26,21 +27,30 @@ public class CustomTextField {
             area.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
         }
 
-        SyntaxScheme scheme = area.getSyntaxScheme();
+        if (UIUtil.isUnderDarcula()) {
+            try {
+                Theme theme = Theme.load(CustomTextField.class.getResourceAsStream("/org/fife/ui/rsyntaxtextarea/themes/dark.xml"));
+                theme.apply(area);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            SyntaxScheme scheme = area.getSyntaxScheme();
 
-        scheme.getStyle(Token.LITERAL_BOOLEAN).foreground = new JBColor(new Color(167, 29, 93), new Color(167, 29, 93));
+            scheme.getStyle(Token.LITERAL_BOOLEAN).foreground = new JBColor(new Color(167, 29, 93), new Color(167, 29, 93));
 
-        scheme.getStyle(Token.LITERAL_NUMBER_DECIMAL_INT).foreground = new JBColor(new Color(0, 134, 179), new Color(0, 134, 179));
+            scheme.getStyle(Token.LITERAL_NUMBER_DECIMAL_INT).foreground = new JBColor(new Color(0, 134, 179), new Color(0, 134, 179));
 
-        scheme.getStyle(Token.LITERAL_STRING_DOUBLE_QUOTE).foreground = new JBColor(new Color(24, 54, 145), new Color(24, 54, 145));
-        scheme.getStyle(Token.VARIABLE).foreground = new JBColor(new Color(0, 134, 179), new Color(0, 134, 179));
-        scheme.getStyle(Token.LITERAL_CHAR).foreground = new JBColor(new Color(99, 163, 92), new Color(99, 163, 92));
+            scheme.getStyle(Token.LITERAL_STRING_DOUBLE_QUOTE).foreground = new JBColor(new Color(24, 54, 145), new Color(24, 54, 145));
+            scheme.getStyle(Token.VARIABLE).foreground = new JBColor(new Color(0, 134, 179), new Color(0, 134, 179));
+            scheme.getStyle(Token.LITERAL_CHAR).foreground = new JBColor(new Color(99, 163, 92), new Color(99, 163, 92));
 
-        scheme.getStyle(Token.SEPARATOR).foreground = new JBColor(new Color(99, 163, 92), new Color(99, 163, 92));
-        scheme.getStyle(Token.OPERATOR).foreground = new JBColor(new Color(99, 163, 92), new Color(99, 163, 92));
+            scheme.getStyle(Token.SEPARATOR).foreground = new JBColor(new Color(99, 163, 92), new Color(99, 163, 92));
+            scheme.getStyle(Token.OPERATOR).foreground = new JBColor(new Color(99, 163, 92), new Color(99, 163, 92));
 
-        scheme.getStyle(Token.RESERVED_WORD).foreground = new JBColor(new Color(167, 29, 93), new Color(167, 29, 93));
-        scheme.getStyle(Token.RESERVED_WORD_2).foreground = new JBColor(new Color(167, 29, 93), new Color(167, 29, 93));
+            scheme.getStyle(Token.RESERVED_WORD).foreground = new JBColor(new Color(167, 29, 93), new Color(167, 29, 93));
+            scheme.getStyle(Token.RESERVED_WORD_2).foreground = new JBColor(new Color(167, 29, 93), new Color(167, 29, 93));
+        }
 
         area.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
 

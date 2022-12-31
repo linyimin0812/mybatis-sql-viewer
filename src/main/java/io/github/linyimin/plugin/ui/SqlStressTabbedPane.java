@@ -105,6 +105,8 @@ public class SqlStressTabbedPane {
     private JPanel tp99Panel;
     private JTextField tp99Text;
     private JButton stopButton;
+    private JPanel sqlAndLabelPanel;
+    private JPanel sqlTemplateAndLabelPanel;
 
     private RSyntaxTextArea sqlText;
     private RSyntaxTextArea sqlTemplateText;
@@ -480,6 +482,7 @@ public class SqlStressTabbedPane {
 
         this.sqlText = CustomTextField.createArea("sql");
         this.sqlPane.setLayout(new BorderLayout());
+        this.sqlAndLabelPanel.setBorder(LINE_BORDER);
 
         RTextScrollPane sqlTextScroll = new RTextScrollPane(this.sqlText);
         sqlTextScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
@@ -499,6 +502,7 @@ public class SqlStressTabbedPane {
 
         this.sqlTemplateText = CustomTextField.createArea("sql");
         this.sqlTemplatePane.setLayout(new BorderLayout());
+        this.sqlTemplateAndLabelPanel.setBorder(LINE_BORDER);
 
         RTextScrollPane sqlTemplateTextScroll = new RTextScrollPane(this.sqlTemplateText);
         sqlTemplateTextScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));

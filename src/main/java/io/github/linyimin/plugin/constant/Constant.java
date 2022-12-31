@@ -103,6 +103,6 @@ public class Constant {
         put(CheckScopeEnum.delete, DEFAULT_SELECT_REPORTS);
     }};
 
-    public static final Border LINE_BORDER = UIUtil.isUnderDarcula() ? new LineBorder(JBColor.darkGray) : new LineBorder(JBColor.lightGray);
+    public static final Border LINE_BORDER = UIUtil.isUnderDarcula() ? new LineBorder(JBColor.BLACK) : new LineBorder(JBColor.lightGray);
 
 }

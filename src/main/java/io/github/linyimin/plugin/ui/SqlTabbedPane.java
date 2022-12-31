@@ -11,6 +11,7 @@ import io.github.linyimin.plugin.ProcessResult;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
+import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.checker.Checker;
 import io.github.linyimin.plugin.sql.checker.CheckerHolder;
 import io.github.linyimin.plugin.sql.checker.Report;
@@ -146,10 +147,14 @@ public class SqlTabbedPane implements TabbedChangeListener {
         executeInfoText.setRows(3);
 
         RTextScrollPane executeInfoTextScroll = new RTextScrollPane(executeInfoText);
-        executeInfoTextScroll.setBorder(new LineBorder(JBColor.GRAY));
+        executeInfoTextScroll.setBorder(LINE_BORDER);
 
         executeInfoPanel.setLayout(new BorderLayout());
         executeInfoPanel.add(executeInfoTextScroll);
+
+        executeHitIndexScroll.setBorder(LINE_BORDER);
+        executeResultScroll.setBorder(LINE_BORDER);
+
     }
 
     private void initSqlPanel() {

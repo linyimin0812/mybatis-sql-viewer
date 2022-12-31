@@ -5,6 +5,7 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.ui.JBColor;
 import com.intellij.util.PsiNavigateUtil;
 import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.UIUtil;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
@@ -60,7 +61,12 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         this.tableTabbedPane = new TableTabbedPane(myProject);
         this.totalTabbedPanel.addTab("table", this.tableTabbedPane.getTableTabbedPanel());
 
-        methodName.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+        if (UIUtil.isUnderDarcula()) {
+            methodName.setBorder(Constant.LINE_BORDER);
+        } else {
+            methodName.setBorder(new EmptyBorder(JBUI.emptyInsets()));
+        }
+
         datasourceButton.setFocusPainted(false);
         initSourceLinkLabel();
 
