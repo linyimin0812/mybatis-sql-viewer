@@ -105,4 +105,8 @@ public class Constant {
 
     public static final Border LINE_BORDER = UIUtil.isUnderDarcula() ? new LineBorder(JBColor.BLACK) : new LineBorder(JBColor.lightGray);
 
+    public static final String INPUT_SQL_PROMPT = "Please input sql statement.";
+
+    public static final String DOUBLE_CLICK_PROMPT = "-- Double-Click the 'statement', 'result' and 'stress' tab to update the sql with params\n";
+
 }

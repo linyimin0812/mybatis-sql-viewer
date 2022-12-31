@@ -6,9 +6,11 @@ import com.intellij.ui.JBColor;
 import com.intellij.util.PsiNavigateUtil;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
+import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -30,6 +32,9 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private JButton datasourceButton;
     private JButton jumpButton;
     private JLabel sourceLink;
+    private JCheckBox mybatisModeCheckBox;
+    private JPanel mybatisModePanel;
+    private JPanel methodNamePanel;
 
     private final ParamTabbedPane paramTabbedPane;
     private final SqlTabbedPane sqlTabbedPane;
@@ -53,13 +58,13 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         this.myProject = project;
 
         this.paramTabbedPane = new ParamTabbedPane(myProject);
-        this.totalTabbedPanel.addTab("params", this.paramTabbedPane.getParamTabbedPanel());
+        this.totalTabbedPanel.addTab(TabbedComponentType.params.name(), this.paramTabbedPane.getParamTabbedPanel());
 
         this.sqlTabbedPane = new SqlTabbedPane(myProject);
-        this.totalTabbedPanel.addTab("sql", this.sqlTabbedPane.getSqlTabbedPanel());
+        this.totalTabbedPanel.addTab(TabbedComponentType.sql.name(), this.sqlTabbedPane.getSqlTabbedPanel());
 
         this.tableTabbedPane = new TableTabbedPane(myProject);
-        this.totalTabbedPanel.addTab("table", this.tableTabbedPane.getTableTabbedPanel());
+        this.totalTabbedPanel.addTab(TabbedComponentType.table.name(), this.tableTabbedPane.getTableTabbedPanel());
 
         if (UIUtil.isUnderDarcula()) {
             methodName.setBorder(Constant.LINE_BORDER);
@@ -67,13 +72,15 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             methodName.setBorder(new EmptyBorder(JBUI.emptyInsets()));
         }
 
-        datasourceButton.setFocusPainted(false);
         initSourceLinkLabel();
 
         addComponentListener();
 
-    }
+        this.mybatisModePanel.setBorder(Constant.LINE_BORDER);
 
+        this.mybatisModeCheckBox.addItemListener(e -> this.mybatisModeCheckBoxListener());
+
+    }
 
     /**
      * 刷新tool window配置内容
@@ -89,7 +96,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         // 默认每次打开，都展示第一个tab
         totalTabbedPanel.setSelectedIndex(0);
         this.paramTabbedPane.getParamTabbedPanel().setSelectedIndex(0);
-        this.sqlTabbedPane.getSqlTabbedPanel().setSelectedIndex(0);
 
     }
 
@@ -116,24 +122,47 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
     }
 
+    private void mybatisModeCheckBoxListener() {
+
+        boolean isSelected = this.mybatisModeCheckBox.isSelected();
+
+        GlobalConfig.isMybatisMode = isSelected;
+
+        int index = this.totalTabbedPanel.indexOfTab(TabbedComponentType.params.name());
+
+        if (isSelected) {
+            if (index < 0) {
+                this.methodNamePanel.setVisible(true);
+                this.totalTabbedPanel.insertTab(TabbedComponentType.params.name(), null, this.paramTabbedPane.getParamTabbedPanel(), null, 0);
+                this.totalTabbedPanel.setSelectedIndex(0);
+            }
+            return;
+        }
+
+        if (index >= 0) {
+            this.totalTabbedPanel.removeTabAt(index);
+            this.methodNamePanel.setVisible(false);
+        }
+    }
+
     private void totalTabbedPanelListener() {
 
         int selectedIndex = totalTabbedPanel.getSelectedIndex();
+        String title = totalTabbedPanel.getTitleAt(selectedIndex);
 
         // 点击param tab时生成对应参数
-        if (selectedIndex == TabbedComponentType.params.index) {
+        if (StringUtils.equals(title, TabbedComponentType.params.name())) {
             this.paramTabbedPane.listen();
         }
 
         // 点击sql tab时生成sql
-        if (selectedIndex == TabbedComponentType.sql.index) {
+        if (StringUtils.equals(title, TabbedComponentType.sql.name())) {
             this.sqlTabbedPane.listen();
         }
 
         // 点击table tab时获取table的schema信息
-        if (selectedIndex == TabbedComponentType.table.index) {
+        if (StringUtils.equals(title, TabbedComponentType.table.name())) {
             this.tableTabbedPane.listen();
-
         }
 
     }
@@ -153,18 +182,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     }
 
     private enum TabbedComponentType {
-        /**
-         * Tanned类型对应的index
-         */
-        params(0),
-        sql(1),
-        table(2);
-
-        private final int index;
-
-        TabbedComponentType(int index) {
-            this.index = index;
-        }
-
+        params,
+        sql,
+        table
     }
 }

@@ -68,8 +68,6 @@ public class TableTabbedPane implements TabbedChangeListener {
                     tableTabbedPanel.removeAll();
                 });
 
-
-
                 for (String table : tables) {
                     SpecifyTableTabbedPane tabbedPanel = new SpecifyTableTabbedPane(project, tableTabbedPanel);
 
@@ -97,18 +95,26 @@ public class TableTabbedPane implements TabbedChangeListener {
     }
 
     private boolean isInvalid(String sql, InfoPane infoPane) {
+
+        if (StringUtils.isBlank(sql)) {
+            ApplicationManager.getApplication().invokeLater(() -> infoPane.setText(Constant.INPUT_SQL_PROMPT));
+            return true;
+        }
+
         try {
             ProcessResult<String> validateResult = SqlParser.validate(sql);
             if (!validateResult.isSuccess()) {
                 sql = StringUtils.replace(sql, "\n", " ").replaceAll("\\s+", " ");
-                infoPane.setText(String.format("%s\n%s", sql, validateResult.getErrorMsg()));
+                String prompt = String.format("%s\n%s", sql, validateResult.getErrorMsg());
+                ApplicationManager.getApplication().invokeLater(() -> infoPane.setText(prompt));
                 return true;
             }
 
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            infoPane.setText(String.format("SQL parse error.%s", sw));
+            String prompt = String.format("SQL parse error.%s", sw);
+            ApplicationManager.getApplication().invokeLater(() -> infoPane.setText(prompt));
             return true;
         }
 

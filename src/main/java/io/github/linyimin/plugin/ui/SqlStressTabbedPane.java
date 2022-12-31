@@ -9,6 +9,7 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.ProcessResult;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
+import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
@@ -525,7 +526,12 @@ public class SqlStressTabbedPane {
         this.backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
                 try {
+                    if (!GlobalConfig.isMybatisMode && StringUtils.isBlank(sqlConfig.getSql())) {
+                        ApplicationManager.getApplication().invokeLater(() -> SqlStressTabbedPane.this.infoPane.setText(INPUT_SQL_PROMPT));
+                        return;
+                    }
                     ProcessResult<String> result = updateSql();
                     generateMockConfigTable(result);
                 } catch (Exception e) {

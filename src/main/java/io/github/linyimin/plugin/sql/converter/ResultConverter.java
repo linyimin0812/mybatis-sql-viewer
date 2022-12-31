@@ -61,7 +61,9 @@ public class ResultConverter {
         StringBuilder sb = new StringBuilder("------[Execution Succeeded]------\n");
 
         if (StringUtils.isNotBlank(result.getSql())) {
-            sb.append("[statement]: ").append(result.getSql()).append("\n");
+            String prompt = StringUtils.replace(Constant.DOUBLE_CLICK_PROMPT, "\n", " ");
+            String sql = StringUtils.replace(result.getSql(), prompt, "");
+            sb.append("[statement]: ").append(sql).append("\n");
         }
 
         sb.append("[cost]: ").append(result.getCost()).append("(ms)").append("\n");

@@ -3,9 +3,11 @@ package io.github.linyimin.plugin.ui;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
+import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.pojo2json.POJO2JSONParserFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -14,6 +16,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,6 +45,16 @@ public class ParamTabbedPane implements TabbedChangeListener {
 
         initParamPanel();
         setScrollUnitIncrement();
+
+        this.paramTabbedPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                if (!GlobalConfig.isMybatisMode || event.getClickCount() != 2 || paramTabbedPanel.indexAtLocation(event.getX(), event.getY()) < 0) {
+                    return;
+                }
+                paramTabbedPanelListener(true);
+            }
+        });
 
     }
 
@@ -78,12 +92,10 @@ public class ParamTabbedPane implements TabbedChangeListener {
         randomParamsScroll = new RTextScrollPane(randomParamsText);
         randomParamsScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
 
-
         randomParamPanel.add(randomParamsScroll);
         defaultParamPanel.add(defaultParamsScroll);
 
-
-        paramTabbedPanel.addChangeListener(e -> paramTabbedPanelListener());
+        paramTabbedPanel.addChangeListener(e -> paramTabbedPanelListener(false));
 
         addParamsTextListener();
 
@@ -130,7 +142,7 @@ public class ParamTabbedPane implements TabbedChangeListener {
         }
     }
 
-    private void paramTabbedPanelListener() {
+    private void paramTabbedPanelListener(boolean forceUpdate) {
 
         int selectedIndex = paramTabbedPanel.getSelectedIndex();
 
@@ -138,13 +150,19 @@ public class ParamTabbedPane implements TabbedChangeListener {
 
         // 获取参数默认值
         if (selectedIndex == ParamComponentType.default_param.index) {
-            SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.DEFAULT_POJO_2_JSON_PARSER);
+
+            if (forceUpdate || StringUtils.isBlank(configuration.getParams()) || !configuration.isDefaultParams()) {
+                SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.DEFAULT_POJO_2_JSON_PARSER);
+            }
             defaultParamsText.setText(configuration.getParams());
         }
 
         // 获取参数随机值
         if (selectedIndex == ParamComponentType.random_param.index) {
-            SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER);
+            if (forceUpdate || StringUtils.isBlank(configuration.getParams()) || configuration.isDefaultParams()) {
+                SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER);
+            }
+
             randomParamsText.setText(configuration.getParams());
         }
     }

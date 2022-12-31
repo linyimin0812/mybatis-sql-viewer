@@ -5,13 +5,12 @@ import com.intellij.openapi.progress.BackgroundTaskQueue;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
 import io.github.linyimin.plugin.ProcessResult;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
+import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.configuration.MybatisSqlStateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
-import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.checker.Checker;
 import io.github.linyimin.plugin.sql.checker.CheckerHolder;
 import io.github.linyimin.plugin.sql.checker.Report;
@@ -29,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -103,14 +101,15 @@ public class SqlTabbedPane implements TabbedChangeListener {
         setTableRowHeight();
         setScrollUnitIncrement();
         // 监听sql tabbed panel的点击事件
-        this.sqlTabbedPanel.addChangeListener(e -> sqlTabbedPanelListener());
+        this.sqlTabbedPanel.addChangeListener(e -> sqlTabbedPanelListener(false));
+
         this.sqlTabbedPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
-                if (event.getClickCount() == 2) {
-                    // TODO: 双击时再更新
-                    sqlTabbedPanel.indexAtLocation(event.getX(), event.getY());
+                if (!GlobalConfig.isMybatisMode || event.getClickCount() != 2 || sqlTabbedPanel.indexAtLocation(event.getX(), event.getY()) < 0) {
+                    return;
                 }
+                sqlTabbedPanelListener(true);
             }
         });
     }
@@ -119,7 +118,6 @@ public class SqlTabbedPane implements TabbedChangeListener {
         this.stressPane.setLayout(new BorderLayout());
         this.stressPane.add(this.sqlStressTabbedPane.getSqlStressPane());
     }
-
 
     private void createUIComponents() {
         this.executeResultTable = new JTable() {
@@ -176,7 +174,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
                 }
                 MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
                 sqlConfig.setSql(statementText.getText());
-                validateSql(statementText.getText());
+                validateSql(sqlConfig.getSql());
             }
         });
 
@@ -217,57 +215,86 @@ public class SqlTabbedPane implements TabbedChangeListener {
         this.statementScroll.getHorizontalScrollBar().setUnitIncrement(unit);
     }
 
-    private void sqlTabbedPanelListener() {
+    private void sqlTabbedPanelListener(boolean forceUpdate) {
 
         int selectedIndex = sqlTabbedPanel.getSelectedIndex();
 
         // 完整SQL语句
         if (selectedIndex == SqlComponentType.statement.index) {
-            updateSql();
+            updateSql(forceUpdate);
         }
 
         // 执行SQL
         if (selectedIndex == SqlComponentType.result.getIndex()) {
+            if (forceUpdate) {
+                updateSql(true);
+            }
             executeSql();
         }
 
+        // sql压测
         if (selectedIndex == SqlComponentType.stress.getIndex()) {
+            if (forceUpdate) {
+                updateSql(true);
+            }
             this.sqlStressTabbedPane.updateStressConfig();
         }
     }
 
-    private void updateSql() {
-        backgroundTaskQueue.run(new Task.Backgroundable(project, APPLICATION_NAME) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                updateSqlBackground();
-            }
-        });
+    private void updateSql(boolean forceUpdate) {
+        if (GlobalConfig.isMybatisMode) {
+            backgroundTaskQueue.run(new Task.Backgroundable(project, APPLICATION_NAME) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+
+                    if (forceUpdate || sqlConfig.isUpdateSql()) {
+                        ProcessResult<String> result = updateSqlBackground();
+                        if (!result.isSuccess()) {
+                            ApplicationManager.getApplication().invokeLater(() -> infoPane.setText(result.getErrorMsg()));
+                            return;
+                        }
+                    }
+
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        SqlTabbedPane.this.statementTabbedPane.remove(statementContentPane);
+                        SqlTabbedPane.this.statementTabbedPane.remove(infoPane.getInfoPane());
+
+                        SqlTabbedPane.this.statementTabbedPane.add(statementContentPane);
+
+                        statementText.setText(sqlConfig.getSql());
+                    });
+                    validateSql(sqlConfig.getSql());
+                }
+            });
+        } else {
+            backgroundTaskQueue.run(new Task.Backgroundable(project, APPLICATION_NAME) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        SqlTabbedPane.this.statementTabbedPane.remove(statementContentPane);
+                        SqlTabbedPane.this.statementTabbedPane.remove(infoPane.getInfoPane());
+                        SqlTabbedPane.this.statementTabbedPane.add(statementContentPane);
+                    });
+                    validateSql(statementText.getText());
+                }
+            });
+        }
     }
 
-    private void updateSqlBackground() {
+    private ProcessResult<String> updateSqlBackground() {
 
         ApplicationManager.getApplication().invokeLater(() -> {
+
+            this.statementTabbedPane.remove(this.infoPane.getInfoPane());
             this.statementTabbedPane.remove(statementContentPane);
+
             this.statementTabbedPane.add(this.infoPane.getInfoPane());
 
             infoPane.setText(SQL_STATEMENT_LOADING_PROMPT);
         });
 
-        ProcessResult<String> result = SqlParamGenerateComponent.generateSql(project);
-
-        if (!result.isSuccess()) {
-            infoPane.setText(result.getErrorMsg());
-            return;
-        }
-
-        ApplicationManager.getApplication().invokeLater(() -> {
-            this.statementTabbedPane.remove(infoPane.getInfoPane());
-            this.statementTabbedPane.add(statementContentPane);
-
-            statementText.setText(result.getData());
-        });
-        validateSql(result.getData());
+        return SqlParamGenerateComponent.generateSql(project);
     }
 
     private void validateSql(String sql) {
@@ -315,21 +342,29 @@ public class SqlTabbedPane implements TabbedChangeListener {
     private void executeSqlBackground() {
 
         ApplicationManager.getApplication().invokeLater(() -> {
+            this.resultTabbedPane.remove(this.infoPane.getInfoPane());
             this.resultTabbedPane.remove(this.resultContentPane);
+
             this.resultTabbedPane.add(this.infoPane.getInfoPane());
             this.infoPane.setText("Executing statement...");
         });
 
         String sql = statementText.getText();
 
+        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+
         if (StringUtils.isBlank(sql)) {
+            if (!GlobalConfig.isMybatisMode) {
+                ApplicationManager.getApplication().invokeLater(() -> this.infoPane.setText(INPUT_SQL_PROMPT));
+                return;
+            }
             ProcessResult<String> result = SqlParamGenerateComponent.generateSql(project);
             if (!result.isSuccess()) {
-                this.infoPane.setText(result.getErrorMsg());
+                ApplicationManager.getApplication().invokeLater(() -> this.infoPane.setText(result.getErrorMsg()));
                 return;
             }
             sql = result.getData();
-            statementText.setText(sql);
+            ApplicationManager.getApplication().invokeLater(() -> statementText.setText(sqlConfig.getSql()));
         }
 
         try {
@@ -346,6 +381,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
             executeInfoText.setText(ResultConverter.convert2ExecuteInfo(executeResult));
 
             ApplicationManager.getApplication().invokeLater(() -> {
+                this.resultTabbedPane.remove(this.resultContentPane);
                 this.resultTabbedPane.remove(this.infoPane.getInfoPane());
                 this.resultTabbedPane.add(this.resultContentPane);
             });
@@ -355,7 +391,8 @@ public class SqlTabbedPane implements TabbedChangeListener {
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
-            this.infoPane.setText(String.format("Execute Sql Failed.\n%s", sw));
+            String prompt = String.format("Execute Sql Failed.\n%s", sw);
+            ApplicationManager.getApplication().invokeLater(() -> this.infoPane.setText(prompt));
         }
     }
 
@@ -377,7 +414,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
     @Override
     public void listen() {
         this.sqlTabbedPanel.setSelectedIndex(0);
-        updateSql();
+        updateSql(false);
     }
 
     private enum SqlComponentType {

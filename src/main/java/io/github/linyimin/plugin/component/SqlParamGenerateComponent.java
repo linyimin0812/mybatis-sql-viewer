@@ -15,7 +15,9 @@ import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 import io.github.linyimin.plugin.mybatis.xml.XMLLanguageDriver;
 import io.github.linyimin.plugin.mybatis.xml.XMLMapperBuilder;
+import io.github.linyimin.plugin.pojo2json.DefaultPOJO2JSONParser;
 import io.github.linyimin.plugin.pojo2json.POJO2JSONParser;
+import io.github.linyimin.plugin.pojo2json.RandomPOJO2JSONParser;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.JavaUtils;
@@ -65,10 +67,21 @@ public class SqlParamGenerateComponent {
             sqlConfig.setMethod(acquireMethodName(psiMethod));
 
             sqlConfig.setParams(generateMethodParam(psiMethod, parser));
+
+            sqlConfig.setUpdateSql(true);
+
+            if (parser instanceof RandomPOJO2JSONParser) {
+                sqlConfig.setDefaultParams(false);
+            }
+
+            if (parser instanceof DefaultPOJO2JSONParser) {
+                sqlConfig.setDefaultParams(true);
+            }
+
         } else if (statementId != null) {
             // 找不到对应的接口方法
             sqlConfig.setMethod(statementId);
-            sqlConfig.setParams("{}");
+            sqlConfig.setParams("");
         }
 
     }
@@ -88,6 +101,7 @@ public class SqlParamGenerateComponent {
 
             if (processResult.isSuccess()) {
                 sqlConfig.setSql(processResult.getData());
+                sqlConfig.setUpdateSql(false);
             }
 
             return processResult;
@@ -96,12 +110,15 @@ public class SqlParamGenerateComponent {
             StringWriter sw = new StringWriter();
             t.printStackTrace(new PrintWriter(sw));
 
-            return ProcessResult.fail(String.format("gengerate sql error. \n%s", sw));
+            return ProcessResult.fail(String.format("generate sql error. \n%s", sw));
         }
     }
 
     public static ProcessResult<String> generateSql(Project project) {
         MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+        if (StringUtils.isBlank(sqlConfig.getMethod())) {
+            return ProcessResult.fail("Please select a mybatis method");
+        }
         return generateSql(project, sqlConfig.getMethod(), sqlConfig.getParams());
     }
 

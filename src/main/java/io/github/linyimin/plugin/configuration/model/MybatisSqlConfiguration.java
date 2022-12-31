@@ -1,6 +1,8 @@
 package io.github.linyimin.plugin.configuration.model;
 
 import com.intellij.psi.PsiElement;
+import io.github.linyimin.plugin.configuration.GlobalConfig;
+import io.github.linyimin.plugin.constant.Constant;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -15,6 +17,8 @@ public class MybatisSqlConfiguration {
     private String params;
     private String sql;
     private String result;
+    private boolean defaultParams;
+    private boolean updateSql = true;
 
     public String getMethod() {
         return method;
@@ -37,7 +41,15 @@ public class MybatisSqlConfiguration {
     }
 
     public void setSql(String sql) {
-        this.sql = sql;
+        if (!GlobalConfig.isMybatisMode) {
+            this.sql = StringUtils.replace(sql, Constant.DOUBLE_CLICK_PROMPT, StringUtils.EMPTY);
+            return;
+        }
+        if (StringUtils.contains(sql, Constant.DOUBLE_CLICK_PROMPT)) {
+            this.sql = sql;
+        } else {
+            this.sql = Constant.DOUBLE_CLICK_PROMPT + sql;
+        }
     }
 
     public String getResult() {
@@ -56,11 +68,29 @@ public class MybatisSqlConfiguration {
         this.psiElement = psiElement;
     }
 
+    public boolean isDefaultParams() {
+        return defaultParams;
+    }
+
+    public void setDefaultParams(boolean defaultParams) {
+        this.defaultParams = defaultParams;
+    }
+
     public void reset() {
         method = StringUtils.EMPTY;
         params = StringUtils.EMPTY;
         sql = StringUtils.EMPTY;
         result = StringUtils.EMPTY;
         psiElement = null;
+        defaultParams = false;
+        updateSql = true;
+    }
+
+    public boolean isUpdateSql() {
+        return updateSql;
+    }
+
+    public void setUpdateSql(boolean updateSql) {
+        this.updateSql = updateSql;
     }
 }

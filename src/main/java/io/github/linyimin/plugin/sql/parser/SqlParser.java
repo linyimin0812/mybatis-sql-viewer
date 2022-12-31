@@ -15,6 +15,7 @@ import net.sf.jsqlparser.util.validation.Validation;
 import net.sf.jsqlparser.util.validation.ValidationError;
 import net.sf.jsqlparser.util.validation.ValidationException;
 import net.sf.jsqlparser.util.validation.feature.DatabaseType;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -74,6 +75,11 @@ public class SqlParser {
     }
 
     public static ProcessResult<String> validate(String sql) {
+
+        if (StringUtils.isBlank(sql)) {
+            return ProcessResult.fail("sql statement is blank. Please input sql statement.");
+        }
+
         Validation validation = new Validation(Collections.singletonList(DatabaseType.MYSQL), sql);
         ValidationException exception = validation.validate().stream().map(ValidationError::getErrors).flatMap(Set::stream).findFirst().orElse(null);
         if (exception == null) {
