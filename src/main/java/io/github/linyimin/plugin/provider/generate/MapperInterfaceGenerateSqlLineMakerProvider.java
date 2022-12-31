@@ -5,6 +5,7 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.utils.IconUtils;
 import io.github.linyimin.plugin.utils.JavaUtils;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +20,10 @@ public class MapperInterfaceGenerateSqlLineMakerProvider implements LineMarkerPr
 
     @Override
     public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
+
+        if (!GlobalConfig.isMybatisMode) {
+            return null;
+        }
 
         // 只处理Mapper接口中的内容
         if (!JavaUtils.isMapperMethod(element)) {

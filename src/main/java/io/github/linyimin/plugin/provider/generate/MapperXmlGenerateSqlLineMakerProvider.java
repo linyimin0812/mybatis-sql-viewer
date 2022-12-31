@@ -7,6 +7,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlToken;
 import com.intellij.psi.xml.XmlTokenType;
+import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.utils.IconUtils;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +19,10 @@ import org.jetbrains.annotations.NotNull;
 public class MapperXmlGenerateSqlLineMakerProvider implements LineMarkerProvider {
     @Override
     public LineMarkerInfo<?> getLineMarkerInfo(@NotNull PsiElement element) {
+
+        if (!GlobalConfig.isMybatisMode) {
+            return null;
+        }
 
         // 避免LineMarker is supposed to be registered for leaf elements only, but got: XmlTag:select Warning
         if (!(element instanceof XmlToken) || ((XmlToken)element).getTokenType() != XmlTokenType.XML_START_TAG_START) {
