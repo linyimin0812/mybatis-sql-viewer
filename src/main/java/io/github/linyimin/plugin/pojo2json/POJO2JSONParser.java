@@ -5,7 +5,6 @@ import com.intellij.psi.*;
 import com.intellij.psi.javadoc.PsiDocComment;
 import com.intellij.psi.javadoc.PsiDocTag;
 import com.intellij.psi.util.PsiUtil;
-import io.github.linyimin.plugin.mybatis.parsing.ParseException;
 import io.github.linyimin.plugin.pojo2json.type.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;

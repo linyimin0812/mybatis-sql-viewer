@@ -38,7 +38,7 @@ import static io.github.linyimin.plugin.constant.Constant.MYBATIS_SQL_ANNOTATION
  **/
 public class SqlParamGenerateComponent {
 
-    public static void generate(PsiElement psiElement, POJO2JSONParser parser) {
+    public static ProcessResult<MybatisSqlConfiguration> generate(PsiElement psiElement, POJO2JSONParser parser, boolean cache) {
 
         PsiMethod psiMethod = null;
 
@@ -59,36 +59,43 @@ public class SqlParamGenerateComponent {
 
         MybatisSqlConfiguration sqlConfig = psiElement.getProject().getService(MybatisSqlStateComponent.class).getConfiguration();
 
-        sqlConfig.setPsiElement(psiElement);
+        if (psiMethod == null) {
 
-        // 设置缓存, method qualified name and params
-        if (Objects.nonNull(psiMethod)) {
+            if (cache) {
+                sqlConfig.setPsiElement(psiElement);
+                // 找不到对应的接口方法
+                sqlConfig.setMethod(statementId);
+                sqlConfig.setParams("");
+            }
+            return ProcessResult.fail(String.format("method of %s is not exist.", statementId));
+        }
 
-            sqlConfig.setMethod(acquireMethodName(psiMethod));
+        String method = acquireMethodName(psiMethod);
+        String params = generateMethodParam(psiMethod, parser);
 
-            sqlConfig.setParams(generateMethodParam(psiMethod, parser));
-
+        if (cache) {
+            sqlConfig.setMethod(method);
+            sqlConfig.setParams(params);
             sqlConfig.setUpdateSql(true);
-
             if (parser instanceof RandomPOJO2JSONParser) {
                 sqlConfig.setDefaultParams(false);
             }
-
             if (parser instanceof DefaultPOJO2JSONParser) {
                 sqlConfig.setDefaultParams(true);
             }
 
-        } else if (statementId != null) {
-            // 找不到对应的接口方法
-            sqlConfig.setMethod(statementId);
-            sqlConfig.setParams("");
+            return ProcessResult.success(sqlConfig);
         }
 
+        MybatisSqlConfiguration configuration = new MybatisSqlConfiguration();
+        configuration.setPsiElement(psiElement);
+        configuration.setMethod(method);
+        configuration.setParams(params);
+
+        return ProcessResult.success(configuration);
     }
 
-    public static ProcessResult<String> generateSql(Project project, String methodQualifiedName, String params) {
-
-        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+    public static ProcessResult<String> generateSql(Project project, String methodQualifiedName, String params, boolean cache) {
 
         try {
             ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params);
@@ -99,7 +106,9 @@ public class SqlParamGenerateComponent {
 
             processResult = getSqlFromXml(project, methodQualifiedName, params);
 
-            if (processResult.isSuccess()) {
+            if (processResult.isSuccess() && cache) {
+                MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+
                 sqlConfig.setSql(processResult.getData());
                 sqlConfig.setUpdateSql(false);
             }
@@ -119,7 +128,7 @@ public class SqlParamGenerateComponent {
         if (StringUtils.isBlank(sqlConfig.getMethod())) {
             return ProcessResult.fail("Please select a mybatis method");
         }
-        return generateSql(project, sqlConfig.getMethod(), sqlConfig.getParams());
+        return generateSql(project, sqlConfig.getMethod(), sqlConfig.getParams(), true);
     }
 
     private static ProcessResult<String> getSqlFromAnnotation(Project project, String qualifiedMethod, String params) {
@@ -236,7 +245,7 @@ public class SqlParamGenerateComponent {
             String paramAnnotationValue = getParamAnnotationValue(param);
             String name = StringUtils.isBlank(paramAnnotationValue) ? param.getName() : paramAnnotationValue;
 
-            ParamNameType paramNameType = new ParamNameType(name, param.getType());
+            ParamNameType paramNameType = ApplicationManager.getApplication().runReadAction((Computable<ParamNameType>) () -> new ParamNameType(name, param.getType()));
             result.add(paramNameType);
         }
         return result;

@@ -36,7 +36,7 @@ public class SqlGenerateNavigationHandler implements GutterIconNavigationHandler
 
         if (!mybatisSqlViewerToolWindow.isActive()) {
 
-            SqlParamGenerateComponent.generate(elt, POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER);
+            SqlParamGenerateComponent.generate(elt, POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER, true);
 
             activateWindow(mybatisSqlViewerToolWindow);
             notifyParamChange(elt.getProject());

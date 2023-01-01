@@ -55,7 +55,7 @@ public class TableTabbedPane implements TabbedChangeListener {
                 MybatisSqlConfiguration configuration = project.getService(MybatisSqlStateComponent.class).getConfiguration();
 
                 if (StringUtils.isBlank(configuration.getSql())) {
-                    SqlParamGenerateComponent.generateSql(project, configuration.getMethod(), configuration.getParams());
+                    SqlParamGenerateComponent.generateSql(project, configuration.getMethod(), configuration.getParams(), true);
                 }
 
                 if (isInvalid(configuration.getSql(), infoPane)) {

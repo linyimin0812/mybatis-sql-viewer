@@ -152,7 +152,7 @@ public class ParamTabbedPane implements TabbedChangeListener {
         if (selectedIndex == ParamComponentType.default_param.index) {
 
             if (forceUpdate || StringUtils.isBlank(configuration.getParams()) || !configuration.isDefaultParams()) {
-                SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.DEFAULT_POJO_2_JSON_PARSER);
+                SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.DEFAULT_POJO_2_JSON_PARSER, true);
             }
             defaultParamsText.setText(configuration.getParams());
         }
@@ -160,7 +160,7 @@ public class ParamTabbedPane implements TabbedChangeListener {
         // 获取参数随机值
         if (selectedIndex == ParamComponentType.random_param.index) {
             if (forceUpdate || StringUtils.isBlank(configuration.getParams()) || configuration.isDefaultParams()) {
-                SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER);
+                SqlParamGenerateComponent.generate(configuration.getPsiElement(), POJO2JSONParserFactory.RANDOM_POJO_2_JSON_PARSER, true);
             }
 
             randomParamsText.setText(configuration.getParams());

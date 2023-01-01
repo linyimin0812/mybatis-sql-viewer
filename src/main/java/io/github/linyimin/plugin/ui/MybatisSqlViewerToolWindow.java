@@ -35,11 +35,13 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     private JCheckBox mybatisModeCheckBox;
     private JPanel mybatisModePanel;
     private JPanel methodNamePanel;
+    private JButton mybatisSqlScanButton;
 
     private final ParamTabbedPane paramTabbedPane;
     private final SqlTabbedPane sqlTabbedPane;
 
     private final TableTabbedPane tableTabbedPane;
+    private final MybatisSqlScannerPanel  mybatisSqlScannerPanel;
 
     private final Project myProject;
 
@@ -65,6 +67,8 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         this.tableTabbedPane = new TableTabbedPane(myProject);
         this.totalTabbedPanel.addTab(TabbedComponentType.table.name(), this.tableTabbedPane.getTableTabbedPanel());
+
+        this.mybatisSqlScannerPanel = new MybatisSqlScannerPanel(project);
 
         if (UIUtil.isUnderDarcula()) {
             methodName.setBorder(Constant.LINE_BORDER);
@@ -109,6 +113,15 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         datasourceButton.addMouseListener(new MouseCursorAdapter(this.datasourceButton));
 
+        this.mybatisSqlScanButton.addMouseListener(new MouseCursorAdapter(this.mybatisSqlScanButton));
+        this.mybatisSqlScanButton.addActionListener(e -> {
+            int projectIndex = this.totalTabbedPanel.indexOfTab(TabbedComponentType.project.name());
+            if (projectIndex < 0) {
+                this.totalTabbedPanel.insertTab(TabbedComponentType.project.name(), null, this.mybatisSqlScannerPanel.getScannerResultPanel(), null, TabbedComponentType.project.index);
+            }
+            this.totalTabbedPanel.setSelectedIndex(TabbedComponentType.project.index);
+        });
+
         jumpButton.addMouseListener(new MouseCursorAdapter(this.jumpButton));
         jumpButton.addActionListener(e -> {
             MybatisSqlConfiguration config = myProject.getService(MybatisSqlStateComponent.class).getConfiguration();
@@ -128,21 +141,34 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         GlobalConfig.isMybatisMode = isSelected;
 
-        int index = this.totalTabbedPanel.indexOfTab(TabbedComponentType.params.name());
+        int paramsIndex = this.totalTabbedPanel.indexOfTab(TabbedComponentType.params.name());
 
         if (isSelected) {
-            if (index < 0) {
+            if (paramsIndex < 0) {
                 this.methodNamePanel.setVisible(true);
-                this.totalTabbedPanel.insertTab(TabbedComponentType.params.name(), null, this.paramTabbedPane.getParamTabbedPanel(), null, 0);
+                this.mybatisSqlScanButton.setVisible(true);
+                this.totalTabbedPanel.insertTab(TabbedComponentType.params.name(), null, this.paramTabbedPane.getParamTabbedPanel(), null, TabbedComponentType.params.index);
+
                 this.totalTabbedPanel.setSelectedIndex(0);
             }
+
             return;
         }
 
-        if (index >= 0) {
-            this.totalTabbedPanel.removeTabAt(index);
+        if (paramsIndex >= 0) {
+            this.totalTabbedPanel.removeTabAt(paramsIndex);
             this.methodNamePanel.setVisible(false);
+            this.mybatisSqlScanButton.setVisible(false);
+            this.totalTabbedPanel.setSelectedIndex(0);
         }
+
+        int projectIndex = this.totalTabbedPanel.indexOfTab(TabbedComponentType.project.name());
+
+        if (projectIndex >= 0) {
+            this.totalTabbedPanel.removeTabAt(projectIndex);
+            this.totalTabbedPanel.setSelectedIndex(0);
+        }
+
     }
 
     private void totalTabbedPanelListener() {
@@ -165,6 +191,11 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
             this.tableTabbedPane.listen();
         }
 
+        // 扫描项目中mybatis sql语句
+        if (StringUtils.equals(title, TabbedComponentType.project.name())) {
+            this.mybatisSqlScannerPanel.listen();
+        }
+
     }
 
     private void initSourceLinkLabel() {
@@ -182,8 +213,15 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
     }
 
     private enum TabbedComponentType {
-        params,
-        sql,
-        table
+        params(0),
+        sql(1),
+        table(2),
+        project(3);
+
+        private final int index;
+
+        TabbedComponentType(int index) {
+            this.index = index;
+        }
     }
 }

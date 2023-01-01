@@ -52,6 +52,10 @@ public class MybatisSqlConfiguration {
         }
     }
 
+    public void setRawSql(String sql) {
+        this.sql = sql;
+    }
+
     public String getResult() {
         return result;
     }

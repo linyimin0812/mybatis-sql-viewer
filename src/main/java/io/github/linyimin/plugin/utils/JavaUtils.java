@@ -45,7 +45,7 @@ public class JavaUtils {
             return false;
         }
 
-        List<String> namespaces = MybatisXmlContentCache.acquireByNamespace(psiElement.getProject());
+        List<String> namespaces = MybatisXmlContentCache.acquireByNamespace(psiElement.getProject(), false);
 
         PsiClass psiClass = (PsiClass) psiElement;
         String qualifiedName = psiClass.getQualifiedName();

@@ -27,10 +27,16 @@ public class MybatisXmlContentCache {
 
     private static final Map<Project, Map<String /* method qualified name */, Set<XmlTag>>> projectMapperMethodMap = new HashMap<>();
 
+    private static final Map<Project, Map<String /* namespace */, Set<XmlTag> /* method xmlTag */>> projectNamespaceMethodMap = new HashMap<>();
 
-    public static List<String> acquireByNamespace(Project project) {
+    public static List<String> acquireByNamespace(Project project, boolean forceUpdate) {
 
         Set<String> namespaces = projectMybatisMapperMap.getOrDefault(project, new HashMap<>()).keySet();
+
+        if (forceUpdate) {
+            addXmlCache(project);
+            return new ArrayList<>(projectMybatisMapperMap.getOrDefault(project, new HashMap<>()).keySet());
+        }
 
         if (!namespaces.isEmpty()) {
             return new ArrayList<>(namespaces);
@@ -65,6 +71,19 @@ public class MybatisXmlContentCache {
         addXmlCache(project);
 
         return projectMapperMethodMap.getOrDefault(project, new HashMap<>()).getOrDefault(methodQualifiedName, new HashSet<>());
+    }
+
+    public static Set<XmlTag> acquireMethodsByNamespace(Project project, String namespace) {
+
+        Map<String /* namespace */, Set<XmlTag>> cache = projectNamespaceMethodMap.getOrDefault(project, new HashMap<>());
+
+        if (cache.containsKey(namespace)) {
+            return cache.get(namespace);
+        }
+
+        addXmlCache(project);
+
+        return projectNamespaceMethodMap.getOrDefault(project, new HashMap<>()).getOrDefault(namespace, new HashSet<>());
     }
 
     private static void addXmlCache(Project project) {
@@ -125,7 +144,22 @@ public class MybatisXmlContentCache {
 
             addNamespaceCache(project, namespace, id);
 
+            addNamespaceMethodCache(project, namespace, subTag);
+
         }
+
+    }
+
+    private static void addNamespaceMethodCache(Project project, String namespace, XmlTag subTag) {
+
+        Map<String, Set<XmlTag>> map = projectNamespaceMethodMap.getOrDefault(project, new HashMap<>());
+
+        Set<XmlTag> xmlTags = map.getOrDefault(namespace, new HashSet<>());
+
+        xmlTags.add(subTag);
+        map.put(namespace, xmlTags);
+
+        projectNamespaceMethodMap.put(project, map);
 
     }
 
