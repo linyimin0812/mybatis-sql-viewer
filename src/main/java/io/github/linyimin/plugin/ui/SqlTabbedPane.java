@@ -309,7 +309,7 @@ public class SqlTabbedPane implements TabbedChangeListener {
                 CheckScopeEnum scope = SqlParser.getCheckScope(sql);
                 Checker checker = CheckerHolder.getChecker(scope);
                 if (checker == null) {
-                    statementRuleText.setText("No checker for the statement.");
+                    statementRuleText.setText("No rule checker for the statement.");
                     return;
                 }
 

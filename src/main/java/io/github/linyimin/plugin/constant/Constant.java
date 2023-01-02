@@ -109,4 +109,6 @@ public class Constant {
 
     public static final String DOUBLE_CLICK_PROMPT = "-- Double-Click the 'statement', 'result' and 'stress' tab to update the sql with params\n";
 
+    public static final String ROOT_NAME = "Mybatis Sql";
+
 }

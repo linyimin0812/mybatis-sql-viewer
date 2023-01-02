@@ -18,6 +18,8 @@ public interface IconUtils {
     Icon CRITICAL_ICON = IconLoader.getIcon("/images/critical.svg", IconUtils.class);
     Icon MAJOR_ICON = IconLoader.getIcon("/images/major.svg", IconUtils.class);
 
+    Icon ERROR_ICON = IconLoader.getIcon("/images/error.svg", IconUtils.class);
+
     Icon MAPPER_ICON = IconLoader.getIcon("/images/mapper.svg", IconUtils.class);
 
 }

@@ -4,6 +4,8 @@ import com.intellij.ui.treeStructure.SimpleNode;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.ui.MybatisSqlScannerPanel;
 
+import javax.swing.*;
+
 /**
  * @author banzhe
  * @date 2023/01/01 19:00
@@ -13,9 +15,10 @@ public class MethodTreeNode extends BaseSimpleNode {
     private MybatisSqlConfiguration configuration;
     private MybatisSqlScannerPanel mybatisSqlScannerPanel;
 
-    public MethodTreeNode(SimpleNode aParent, String name) {
+    public MethodTreeNode(SimpleNode aParent, String name, Icon icon) {
         // 父节点和name赋值
         super(aParent, name);
+        this.getTemplatePresentation().setIcon(icon);
     }
 
     @Override

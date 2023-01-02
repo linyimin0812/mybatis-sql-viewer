@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
@@ -135,6 +136,15 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         // 监听tabbedpane点击事件
         totalTabbedPanel.addChangeListener(e -> totalTabbedPanelListener());
+
+        this.totalTabbedPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+            if (event.getClickCount() == 2 && totalTabbedPanel.indexAtLocation(event.getX(), event.getY()) < TabbedComponentType.project.index) {
+                mybatisSqlScannerPanel.listen();
+            }
+            }
+        });
 
     }
 

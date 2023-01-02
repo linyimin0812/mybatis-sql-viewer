@@ -40,4 +40,8 @@ public class NamespaceTreeNode extends BaseSimpleNode {
         checkChild(this, methodTreeNode);
         this.methodTreeNodeList.add(index, methodTreeNode);
     }
+
+    public List<MethodTreeNode> getMethodTreeNodeList() {
+        return this.methodTreeNodeList;
+    }
 }

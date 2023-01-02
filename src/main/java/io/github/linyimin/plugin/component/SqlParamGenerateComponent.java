@@ -51,8 +51,6 @@ public class SqlParamGenerateComponent {
 
         }
 
-
-
         if (psiElement instanceof XmlToken && psiElement.getParent() instanceof XmlTag) {
             List<PsiMethod> methods = MapperXmlProcessor.processMapperMethod(psiElement.getParent());
             psiMethod = methods.stream().findFirst().orElse(null);
@@ -69,13 +67,22 @@ public class SqlParamGenerateComponent {
                 // 找不到对应的接口方法
                 sqlConfig.setMethod(statementId);
                 sqlConfig.setParams("");
+                return ProcessResult.fail(String.format("method of %s is not exist.", statementId), sqlConfig);
             }
-            return ProcessResult.fail(String.format("method of %s is not exist.", statementId));
+
+            MybatisSqlConfiguration configuration = new MybatisSqlConfiguration();
+            configuration.setPsiElement(psiElement);
+            configuration.setMethod(statementId);
+            configuration.setParams("{}");
+
+            return ProcessResult.success(configuration);
+
         }
 
         String params = generateMethodParam(psiMethod, parser);
 
         if (cache) {
+            sqlConfig.setPsiElement(psiElement);
             sqlConfig.setMethod(statementId);
             sqlConfig.setParams(params);
             sqlConfig.setUpdateSql(true);

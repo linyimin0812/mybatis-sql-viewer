@@ -76,4 +76,8 @@ public class ProcessResult<T> {
         return new ProcessResult<>(false, null, errorMsg, null);
     }
 
+    public static <T> ProcessResult<T> fail(String errorMsg, T data) {
+        return new ProcessResult<>(false, null, errorMsg, data);
+    }
+
 }

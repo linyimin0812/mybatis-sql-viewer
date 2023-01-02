@@ -20,11 +20,19 @@ import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
+import io.github.linyimin.plugin.pojo2json.DefaultPOJO2JSONParser;
 import io.github.linyimin.plugin.pojo2json.RandomPOJO2JSONParser;
+import io.github.linyimin.plugin.sql.checker.Checker;
+import io.github.linyimin.plugin.sql.checker.CheckerHolder;
+import io.github.linyimin.plugin.sql.checker.Report;
+import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
+import io.github.linyimin.plugin.sql.parser.SqlParser;
 import io.github.linyimin.plugin.ui.tree.MethodTreeNode;
 import io.github.linyimin.plugin.ui.tree.NamespaceTreeNode;
 import io.github.linyimin.plugin.ui.tree.RootTreeNode;
 import io.github.linyimin.plugin.ui.tree.TreeListener;
+import io.github.linyimin.plugin.utils.IconUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -67,7 +77,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
     private final InfoPane infoPane;
     private final TreeListener treeListener;
 
-    private final RootTreeNode root = new RootTreeNode("Mybatis Sql");
+    private RootTreeNode allRoot = new RootTreeNode(Constant.ROOT_NAME);
 
     private final BackgroundTaskQueue backgroundTaskQueue;
 
@@ -118,6 +128,66 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
         this.doesNotMeetSpecRadioButton.addMouseListener(new MouseCursorAdapter(this.doesNotMeetSpecRadioButton));
         this.fullTableScanRadioButton.addMouseListener(new MouseCursorAdapter(this.fullTableScanRadioButton));
 
+        this.allRadioButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (allRadioButton.isSelected()) {
+                    backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                        @Override
+                        public void run(@NotNull ProgressIndicator indicator) {
+                            RootTreeNode root = getRootByType(FilterType.all);
+                            createTree(root);
+                        }
+                    });
+                }
+            }
+        });
+
+        this.complianceWithSpecRadioButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (complianceWithSpecRadioButton.isSelected()) {
+                    backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                        @Override
+                        public void run(@NotNull ProgressIndicator indicator) {
+                            RootTreeNode root = getRootByType(FilterType.compliance_spec);
+                            createTree(root);
+                        }
+                    });
+                }
+            }
+        });
+
+        this.doesNotMeetSpecRadioButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (doesNotMeetSpecRadioButton.isSelected()) {
+                    backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                        @Override
+                        public void run(@NotNull ProgressIndicator indicator) {
+                            RootTreeNode root = getRootByType(FilterType.not_meet_spec);
+                            createTree(root);
+                        }
+                    });
+                }
+            }
+        });
+
+        this.fullTableScanRadioButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (fullTableScanRadioButton.isSelected()) {
+                    backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                        @Override
+                        public void run(@NotNull ProgressIndicator indicator) {
+                            RootTreeNode root = getRootByType(FilterType.full_table_scan);
+                            createTree(root);
+                        }
+                    });
+                }
+            }
+        });
+
     }
 
     private void initText() {
@@ -153,7 +223,8 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
                     scannerResultPanel.add(infoPane.getInfoPane());
                     infoPane.setText("Scan mybatis sql...");
                 });
-                createTree();
+                allRoot = scanMybatisSql();
+                createTree(allRoot);
                 ApplicationManager.getApplication().invokeLater(() -> {
                     scannerResultPanel.remove(infoPane.getInfoPane());
                     scannerResultPanel.add(scannerResultContentPanel);
@@ -162,9 +233,41 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
         });
     }
 
-    private void createTree() {
+    private RootTreeNode getRootByType(FilterType filterType) {
+        RootTreeNode root = new RootTreeNode(Constant.ROOT_NAME);
 
-        scanMybatisSql();
+        SimpleNode[] simpleNodes = allRoot.getChildren();
+        if (simpleNodes.length == 0) {
+            return root;
+        }
+        for (SimpleNode node : simpleNodes) {
+
+            SimpleNode[] methodNodes = node.getChildren();
+            if (methodNodes.length == 0) {
+                continue;
+            }
+
+            NamespaceTreeNode namespaceTreeNode = new NamespaceTreeNode(root, node.getName());
+            root.add(namespaceTreeNode);
+
+            for (SimpleNode methodNode : methodNodes) {
+
+                Icon icon = methodNode.getPresentation().getIcon(true);
+
+                FilterType type = FilterType.resolveByIcon(icon);
+
+                if (filterType == FilterType.all || icon == IconUtils.ERROR_ICON || filterType == type) {
+                    MethodTreeNode methodTreeNode = new MethodTreeNode(namespaceTreeNode, methodNode.getName(), icon);
+                    methodTreeNode.setMybatisSqlScannerPanel(this).setConfiguration(((MethodTreeNode)methodNode).getConfiguration());
+                    namespaceTreeNode.add(methodTreeNode);
+                }
+            }
+        }
+
+        return root;
+    }
+
+    private void createTree(RootTreeNode root) {
 
         // 设置 tree structure
         SimpleTreeStructure treeStructure = new SimpleTreeStructure.Impl(root);
@@ -198,7 +301,8 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
     }
 
-    private void scanMybatisSql(String namespace) {
+    private void scanMybatisSql(RootTreeNode root, String namespace) {
+
         NamespaceTreeNode namespaceTreeNode = new NamespaceTreeNode(root, namespace);
         root.add(namespaceTreeNode);
 
@@ -206,43 +310,101 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
         for (XmlTag method : methods) {
             ProcessResult<MybatisSqlConfiguration> result = ApplicationManager.getApplication().runReadAction(
-                    (Computable<ProcessResult<MybatisSqlConfiguration>>) () -> SqlParamGenerateComponent.generate(method.getFirstChild(), new RandomPOJO2JSONParser(), false)
+                    (Computable<ProcessResult<MybatisSqlConfiguration>>) () -> SqlParamGenerateComponent.generate(method.getFirstChild(), new DefaultPOJO2JSONParser(), false)
             );
+
+            MybatisSqlConfiguration configuration = result.getData();
+
+            MethodTreeNode methodTreeNode;
+
             if (result.isSuccess()) {
-                MybatisSqlConfiguration configuration = result.getData();
-                MethodTreeNode methodTreeNode = new MethodTreeNode(namespaceTreeNode, configuration.getMethod());
-                methodTreeNode.setMybatisSqlScannerPanel(this).setConfiguration(configuration);
-                namespaceTreeNode.add(methodTreeNode);
 
                 ProcessResult<String> sqlResult = ApplicationManager.getApplication().runReadAction((Computable<ProcessResult<String>>) () -> SqlParamGenerateComponent.generateSql(project, configuration.getMethod(), configuration.getParams(), false));
 
                 if (sqlResult.isSuccess()) {
                     configuration.setRawSql(sqlResult.getData());
+                    Icon icon = sqlCheck(sqlResult.getData());
+                    methodTreeNode = new MethodTreeNode(namespaceTreeNode, configuration.getMethod(), icon);
+
                 } else {
-                    // TODO: 无法生成错误提示
+                    methodTreeNode = new MethodTreeNode(namespaceTreeNode, configuration.getMethod(), IconUtils.ERROR_ICON);
                 }
 
             } else {
-                // TODO: 无法生成错误提示
+                methodTreeNode = new MethodTreeNode(namespaceTreeNode, configuration.getMethod(), IconUtils.ERROR_ICON);
             }
-
+            methodTreeNode.setMybatisSqlScannerPanel(this).setConfiguration(configuration);
+            namespaceTreeNode.add(methodTreeNode);
         }
     }
 
-    private void scanMybatisSql() {
+    private Icon sqlCheck(String sql) {
+        try {
+            // 语法校验
+            ProcessResult<String> validateResult = SqlParser.validate(sql);
+
+            if (!validateResult.isSuccess()) {
+                return IconUtils.ERROR_ICON;
+            }
+
+            // 索引检查
+            ProcessResult<Boolean> indexCheckResult = checkIndex(sql);
+            if (!indexCheckResult.isSuccess()) {
+                return IconUtils.ERROR_ICON;
+            }
+
+            if (!indexCheckResult.getData()) {
+                return IconUtils.CRITICAL_ICON;
+            }
+
+            ProcessResult<Boolean> ruleCheckResult = checkRule(sql);
+            if (!ruleCheckResult.isSuccess()) {
+                return IconUtils.ERROR_ICON;
+            }
+
+            if (!ruleCheckResult.getData()) {
+                return IconUtils.BLOCKED_ICON;
+            }
+
+            return IconUtils.MAJOR_ICON;
+        } catch (Exception e) {
+            return IconUtils.ERROR_ICON;
+        }
+    }
+
+    private ProcessResult<Boolean> checkIndex(String sql) {
+        // TODO:
+        return ProcessResult.success(true);
+    }
+
+    private ProcessResult<Boolean> checkRule(String sql) {
+
+        CheckScopeEnum scope = SqlParser.getCheckScope(sql);
+        Checker checker = CheckerHolder.getChecker(scope);
+
+        if (checker == null) {
+            return ProcessResult.success(true);
+        }
+
+        List<Report> reports = checker.check(sql);
+        if (CollectionUtils.isEmpty(reports)) {
+            return ProcessResult.success(true);
+        }
+
+        boolean meetRule = reports.stream().allMatch(Report::isPass);
+
+        return ProcessResult.success(meetRule);
+    }
+
+    private RootTreeNode scanMybatisSql() {
+        RootTreeNode root = new RootTreeNode(Constant.ROOT_NAME);
         // mapper 列表节点
         List<String> namespaces = ApplicationManager.getApplication().runReadAction((Computable<List<String>>) () -> MybatisXmlContentCache.acquireByNamespace(project, true));
         for (String namespace : namespaces) {
-            scanMybatisSql(namespace);
+            scanMybatisSql(root, namespace);
         }
-    }
 
-    public JPanel getSqlContentPanel() {
-        return sqlContentPanel;
-    }
-
-    public JPanel getSqlPanel() {
-        return sqlPanel;
+        return root;
     }
 
     public InfoPane getInfoPane() {
@@ -255,5 +417,23 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
     public JScrollPane getIndexScrollPane() {
         return indexScrollPane;
+    }
+
+    public enum FilterType {
+
+        all(null),
+        compliance_spec(IconUtils.MAJOR_ICON),
+        not_meet_spec(IconUtils.BLOCKED_ICON),
+        full_table_scan(IconUtils.CRITICAL_ICON);
+
+        private final Icon icon;
+
+        FilterType(Icon icon) {
+            this.icon = icon;
+        }
+
+        public static FilterType resolveByIcon(Icon icon) {
+            return Arrays.stream(FilterType.values()).filter(type -> type.icon == icon).findFirst().orElse(FilterType.all);
+        }
     }
 }
