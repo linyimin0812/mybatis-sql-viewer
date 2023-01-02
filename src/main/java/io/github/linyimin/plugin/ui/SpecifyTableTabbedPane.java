@@ -124,6 +124,8 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         addButtonListener();
         addButtonMouseCursorAdapter();
+
+        this.specifyTablePanel.addMouseListener(new MouseCursorAdapter(this.specifyTablePanel));
     }
 
     private void initMockTypeCombobox() {

@@ -26,7 +26,7 @@ public class RootTreeNode extends BaseSimpleNode {
 
     public RootTreeNode(String name) {
         super(null, name);
-        this.getTemplatePresentation().setIcon(IconUtils.GENERATE_ICON);
+        this.getTemplatePresentation().setIcon(IconUtils.MAPPER_ICON);
     }
 
     /**

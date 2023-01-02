@@ -5,11 +5,13 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.progress.BackgroundTaskQueue;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
 import com.intellij.ui.treeStructure.SimpleNode;
 import com.intellij.ui.treeStructure.SimpleTree;
 import com.intellij.util.PsiNavigateUtil;
 import io.github.linyimin.plugin.ProcessResult;
+import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.checker.Checker;
@@ -90,9 +92,15 @@ public class TreeListener extends MouseAdapter {
     }
 
     public void updateSqlPanel(MybatisSqlConfiguration configuration) {
-        this.updateSql(configuration.getSql());
-        this.validateSql(configuration.getSql());
-        this.explainSql(configuration.getSql());
+        ProcessResult<String> sqlResult = ApplicationManager.getApplication().runReadAction((Computable<ProcessResult<String>>) () -> SqlParamGenerateComponent.generateSql(mybatisSqlScannerPanel.getProject(), configuration.getMethod(), configuration.getParams(), false));
+        if (sqlResult.isSuccess()) {
+            this.updateSql(sqlResult.getData());
+            this.validateSql(sqlResult.getData());
+        } else {
+            this.updateSql(sqlResult.getErrorMsg());
+            this.validateSql(Constant.INPUT_SQL_PROMPT);
+        }
+        this.explainSql(sqlResult);
     }
 
     private void updateSql(String sql) {
@@ -133,18 +141,26 @@ public class TreeListener extends MouseAdapter {
         }
     }
 
-    private void explainSql(String sql) {
+    private void explainSql(ProcessResult<String> sqlResult) {
 
         ApplicationManager.getApplication().invokeLater(() -> {
             mybatisSqlScannerPanel.getIndexPanel().setLayout(new BorderLayout());
             mybatisSqlScannerPanel.getIndexPanel().remove(mybatisSqlScannerPanel.getIndexScrollPane());
             mybatisSqlScannerPanel.getIndexPanel().remove(mybatisSqlScannerPanel.getInfoPane().getInfoPane());
             mybatisSqlScannerPanel.getIndexPanel().add(mybatisSqlScannerPanel.getInfoPane().getInfoPane());
-            mybatisSqlScannerPanel.getInfoPane().setText("Loading explain result...");
+            if (sqlResult.isSuccess()) {
+                mybatisSqlScannerPanel.getInfoPane().setText("Loading explain result...");
+            } else {
+                mybatisSqlScannerPanel.getInfoPane().setText(Constant.INPUT_SQL_PROMPT);
+            }
         });
 
+        if (!sqlResult.isSuccess()) {
+            return;
+        }
+
         try {
-            String explainSql = String.format("explain %s", sql);
+            String explainSql = String.format("explain %s", sqlResult.getData());
             SelectResult executeResult = (SelectResult) SqlExecutor.executeSql(this.mybatisSqlScannerPanel.getProject(), explainSql, false);
 
             ApplicationManager.getApplication().invokeLater(() -> {

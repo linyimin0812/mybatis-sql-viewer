@@ -1,6 +1,7 @@
 package io.github.linyimin.plugin.ui.tree;
 
 import com.intellij.ui.treeStructure.SimpleNode;
+import io.github.linyimin.plugin.utils.IconUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ public class NamespaceTreeNode extends BaseSimpleNode {
     public NamespaceTreeNode(SimpleNode aParent, String name) {
         // 父节点和name赋值
         super(aParent, name);
+        this.getTemplatePresentation().setIcon(IconUtils.GENERATE_ICON);
     }
 
     @Override

@@ -112,6 +112,8 @@ public class SqlTabbedPane implements TabbedChangeListener {
                 sqlTabbedPanelListener(true);
             }
         });
+
+        this.sqlTabbedPanel.addMouseListener(new MouseCursorAdapter(this.sqlTabbedPanel));
     }
 
     private void initSqlStressPanel() {

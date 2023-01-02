@@ -83,6 +83,9 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         this.mybatisModePanel.setBorder(Constant.LINE_BORDER);
 
         this.mybatisModeCheckBox.addItemListener(e -> this.mybatisModeCheckBoxListener());
+        this.mybatisModeCheckBox.addMouseListener(new MouseCursorAdapter(this.mybatisModeCheckBox));
+
+        this.totalTabbedPanel.addMouseListener(new MouseCursorAdapter(this.totalTabbedPanel));
 
     }
 

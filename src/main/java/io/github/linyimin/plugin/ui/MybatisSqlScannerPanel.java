@@ -31,12 +31,9 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * @author banzhe
@@ -115,6 +112,12 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
         buttonGroup.add(complianceWithSpecRadioButton);
         buttonGroup.add(doesNotMeetSpecRadioButton);
         buttonGroup.add(fullTableScanRadioButton);
+
+        this.allRadioButton.addMouseListener(new MouseCursorAdapter(this.allRadioButton));
+        this.complianceWithSpecRadioButton.addMouseListener(new MouseCursorAdapter(this.complianceWithSpecRadioButton));
+        this.doesNotMeetSpecRadioButton.addMouseListener(new MouseCursorAdapter(this.doesNotMeetSpecRadioButton));
+        this.fullTableScanRadioButton.addMouseListener(new MouseCursorAdapter(this.fullTableScanRadioButton));
+
     }
 
     private void initText() {
@@ -144,7 +147,17 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
         backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    scannerResultPanel.setLayout(new BorderLayout());
+                    scannerResultPanel.remove(scannerResultContentPanel);
+                    scannerResultPanel.add(infoPane.getInfoPane());
+                    infoPane.setText("Scan mybatis sql...");
+                });
                 createTree();
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    scannerResultPanel.remove(infoPane.getInfoPane());
+                    scannerResultPanel.add(scannerResultContentPanel);
+                });
             }
         });
     }

@@ -56,6 +56,8 @@ public class ParamTabbedPane implements TabbedChangeListener {
             }
         });
 
+        this.paramTabbedPanel.addMouseListener(new MouseCursorAdapter(this.paramTabbedPanel));
+
     }
 
     public JTabbedPane getParamTabbedPanel() {

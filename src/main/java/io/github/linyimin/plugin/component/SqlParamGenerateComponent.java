@@ -42,13 +42,16 @@ public class SqlParamGenerateComponent {
 
         PsiMethod psiMethod = null;
 
+        String statementId = "";
+
         if (psiElement instanceof PsiIdentifier && psiElement.getParent() instanceof PsiMethod) {
 
             psiMethod = (PsiMethod) psiElement.getParent();
+            statementId = acquireMethodName(psiMethod);
 
         }
 
-        String statementId = "";
+
 
         if (psiElement instanceof XmlToken && psiElement.getParent() instanceof XmlTag) {
             List<PsiMethod> methods = MapperXmlProcessor.processMapperMethod(psiElement.getParent());
@@ -70,11 +73,10 @@ public class SqlParamGenerateComponent {
             return ProcessResult.fail(String.format("method of %s is not exist.", statementId));
         }
 
-        String method = acquireMethodName(psiMethod);
         String params = generateMethodParam(psiMethod, parser);
 
         if (cache) {
-            sqlConfig.setMethod(method);
+            sqlConfig.setMethod(statementId);
             sqlConfig.setParams(params);
             sqlConfig.setUpdateSql(true);
             if (parser instanceof RandomPOJO2JSONParser) {
@@ -89,7 +91,7 @@ public class SqlParamGenerateComponent {
 
         MybatisSqlConfiguration configuration = new MybatisSqlConfiguration();
         configuration.setPsiElement(psiElement);
-        configuration.setMethod(method);
+        configuration.setMethod(statementId);
         configuration.setParams(params);
 
         return ProcessResult.success(configuration);

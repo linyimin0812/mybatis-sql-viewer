@@ -35,6 +35,7 @@ public class TableTabbedPane implements TabbedChangeListener {
     public TableTabbedPane(Project project) {
         this.project = project;
         this.backgroundTaskQueue = new BackgroundTaskQueue(project, Constant.APPLICATION_NAME);
+        this.tableTabbedPanel.addMouseListener(new MouseCursorAdapter(this.tableTabbedPanel));
     }
 
     public JTabbedPane getTableTabbedPanel() {
