@@ -41,7 +41,7 @@ public class NamespaceTreeNode extends BaseSimpleNode {
         this.methodTreeNodeList.add(index, methodTreeNode);
     }
 
-    public List<MethodTreeNode> getMethodTreeNodeList() {
-        return this.methodTreeNodeList;
+    public int childrenSize() {
+        return this.methodTreeNodeList.size();
     }
 }

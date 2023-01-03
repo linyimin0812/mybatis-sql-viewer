@@ -247,7 +247,6 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             }
 
             NamespaceTreeNode namespaceTreeNode = new NamespaceTreeNode(root, node.getName());
-            root.add(namespaceTreeNode);
 
             for (SimpleNode methodNode : methodNodes) {
 
@@ -260,6 +259,10 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
                     methodTreeNode.setMybatisSqlScannerPanel(this).setConfiguration(((MethodTreeNode)methodNode).getConfiguration());
                     namespaceTreeNode.add(methodTreeNode);
                 }
+            }
+
+            if (namespaceTreeNode.childrenSize() > 0) {
+                root.add(namespaceTreeNode);
             }
         }
 
@@ -353,7 +356,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             }
 
             if (!indexCheckResult.getData()) {
-                return IconUtils.CRITICAL_ICON;
+                return IconUtils.FULL_SCAN_ICON;
             }
 
             ProcessResult<Boolean> ruleCheckResult = checkRule(sql);
@@ -362,7 +365,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             }
 
             if (!ruleCheckResult.getData()) {
-                return IconUtils.BLOCKED_ICON;
+                return IconUtils.NOT_MEET_SPEC_ICON;
             }
 
             return IconUtils.MAJOR_ICON;
@@ -422,8 +425,8 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
         all(null),
         compliance_spec(IconUtils.MAJOR_ICON),
-        not_meet_spec(IconUtils.BLOCKED_ICON),
-        full_table_scan(IconUtils.CRITICAL_ICON);
+        not_meet_spec(IconUtils.NOT_MEET_SPEC_ICON),
+        full_table_scan(IconUtils.FULL_SCAN_ICON);
 
         private final Icon icon;
 
