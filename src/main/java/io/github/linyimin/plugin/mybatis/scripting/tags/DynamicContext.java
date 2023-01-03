@@ -94,7 +94,7 @@ public class DynamicContext {
     static class ContextMap extends HashMap<String, Object> {
 
         private static final long serialVersionUID = 2977601501966151582L;
-        private final JSONObject parameterJSONObject;
+        private JSONObject parameterJSONObject;
         private final Object parameterObject;
 
         public ContextMap(Object parameterObject) {
@@ -118,6 +118,7 @@ public class DynamicContext {
 
             if (JSONObject.isValidObject(parameterObjectStr)) {
                 this.parameterJSONObject = JSONObject.parseObject(parameterObjectStr);
+                this.processRowBounds();
             } else {
                 this.parameterJSONObject = null;
             }
@@ -149,6 +150,30 @@ public class DynamicContext {
             }
 
             return null;
+        }
+
+        private void processRowBounds() {
+            if (this.parameterJSONObject.size() != 2) {
+                return;
+            }
+            for (Map.Entry<String, Object> entry : this.parameterJSONObject.entrySet()) {
+                if (!(entry.getValue() instanceof JSONObject)) {
+                    return;
+                }
+                JSONObject json = (JSONObject) entry.getValue();
+                if (json.size() == 2 && json.containsKey("limit") && json.containsKey("offset")) {
+                    this.parameterJSONObject.remove(entry.getKey());
+                }
+            }
+
+            if (this.parameterJSONObject.size() != 1) {
+                return;
+            }
+
+            Object obj = new ArrayList<>(this.parameterJSONObject.values()).get(0);
+            if (obj instanceof JSONObject) {
+                parameterJSONObject = (JSONObject) obj;
+            }
         }
     }
 

@@ -74,18 +74,21 @@ public class SqlParamGenerateComponent {
             configuration.setPsiElement(psiElement);
             configuration.setMethod(statementId);
             configuration.setParams("{}");
+            configuration.setRowBounds(false);
 
             return ProcessResult.success(configuration);
 
         }
 
         String params = generateMethodParam(psiMethod, parser);
+        boolean isRowBounds = isRowBounds(psiMethod);
 
         if (cache) {
             sqlConfig.setPsiElement(psiElement);
             sqlConfig.setMethod(statementId);
             sqlConfig.setParams(params);
             sqlConfig.setUpdateSql(true);
+            sqlConfig.setRowBounds(isRowBounds);
             if (parser instanceof RandomPOJO2JSONParser) {
                 sqlConfig.setDefaultParams(false);
             }
@@ -100,8 +103,17 @@ public class SqlParamGenerateComponent {
         configuration.setPsiElement(psiElement);
         configuration.setMethod(statementId);
         configuration.setParams(params);
+        configuration.setRowBounds(isRowBounds);
 
         return ProcessResult.success(configuration);
+    }
+
+    private static boolean isRowBounds(PsiMethod method) {
+        List<ParamNameType> paramNameTypes = getMethodBodyParamList(method);
+        return paramNameTypes.stream().anyMatch(paramNameType -> {
+           String classQualifier = paramNameType.psiType.getCanonicalText();
+           return StringUtils.equals(classQualifier, "org.apache.ibatis.session.RowBounds");
+        });
     }
 
     public static ProcessResult<String> generateSql(Project project, String methodQualifiedName, String params, boolean cache) {
@@ -200,7 +212,14 @@ public class SqlParamGenerateComponent {
                 return ProcessResult.fail(String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod));
             }
 
-            return ProcessResult.success(sqlSourceMap.get(qualifiedMethod).getSql(params));
+            String sql = sqlSourceMap.get(qualifiedMethod).getSql(params);
+
+            MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+            if (sqlConfig.isRowBounds()) {
+                sql = String.format("%s\nLIMIT 0, 10", sql);
+            }
+
+            return ProcessResult.success(sql);
         } catch (Throwable t) {
             StringWriter sw = new StringWriter();
             t.printStackTrace(new PrintWriter(sw));

@@ -23,9 +23,6 @@ public class XMLIncludeTransformer {
     }
 
     public void applyIncludes(Node source) {
-//        Properties variablesContext = new Properties();
-//        Properties configurationVariables = configuration.getVariables();
-//        Optional.ofNullable(configurationVariables).ifPresent(variablesContext::putAll);
         applyIncludes(source, new Properties(), false);
     }
 

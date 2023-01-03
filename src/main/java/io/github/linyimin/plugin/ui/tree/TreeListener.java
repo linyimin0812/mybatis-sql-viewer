@@ -24,7 +24,6 @@ import io.github.linyimin.plugin.sql.parser.SqlParser;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.ui.MouseCursorAdapter;
 import io.github.linyimin.plugin.ui.MybatisSqlScannerPanel;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -38,7 +37,6 @@ import java.util.List;
 
 /**
  * @author banzhe
- * @date 2023/01/02 01:03
  **/
 public class TreeListener extends MouseAdapter {
 

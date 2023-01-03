@@ -19,6 +19,7 @@ public class MybatisSqlConfiguration {
     private String result;
     private boolean defaultParams;
     private boolean updateSql = true;
+    private boolean rowBounds = false;
 
     public String getMethod() {
         return method;
@@ -84,5 +85,13 @@ public class MybatisSqlConfiguration {
 
     public void setUpdateSql(boolean updateSql) {
         this.updateSql = updateSql;
+    }
+
+    public boolean isRowBounds() {
+        return rowBounds;
+    }
+
+    public void setRowBounds(boolean rowBounds) {
+        this.rowBounds = rowBounds;
     }
 }
