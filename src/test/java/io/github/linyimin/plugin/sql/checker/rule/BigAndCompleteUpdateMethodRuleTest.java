@@ -15,9 +15,9 @@ class BigAndCompleteUpdateMethodRuleTest {
     @Test
     public void testCheck() {
         String sql = "UPDATE table SET c1 = v1, c2 = v2, c3 = v3;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "UPDATE table SET c1 = v1, c2 = v2, c3 = v3, c4 = v4, c5 = v5, c6 = v6;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
     }
 }

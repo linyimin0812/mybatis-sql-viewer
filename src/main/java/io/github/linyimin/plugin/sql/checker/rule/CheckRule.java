@@ -1,8 +1,6 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
-import com.alibaba.druid.sql.SQLUtils;
-import com.alibaba.druid.sql.ast.SQLStatement;
-import com.alibaba.druid.sql.visitor.SchemaStatVisitor;
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.Report;
 
@@ -17,7 +15,7 @@ public interface CheckRule {
      * @param target 需要检查的对象(sql, table, xml)
      * @return 规则检查报告
      */
-    Report check(String target);
+    Report check(Project project, String target);
 
     List<CheckScopeEnum> scopes();
 

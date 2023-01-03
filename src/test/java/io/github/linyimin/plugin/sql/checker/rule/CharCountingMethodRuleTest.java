@@ -17,23 +17,23 @@ class CharCountingMethodRuleTest {
 
         String sql = "SELECT LENGTH(\"轻松工作\");";
 
-        Report report = checkRule.check(sql);
+        Report report = checkRule.check(null, sql);
 
         Assertions.assertFalse(report.isPass());
 
         sql = "SELECT CHARACTER_LENGTH(\"轻松工作\");";
 
-        report = checkRule.check(sql);
+        report = checkRule.check(null, sql);
 
         Assertions.assertFalse(report.isPass());
 
         sql = "SELECT id from t;";
-        report = checkRule.check(sql);
+        report = checkRule.check(null, sql);
         Assertions.assertTrue(report.isPass());
 
         sql = "SELECT id from t1, t2 where t1.id and t2.t1_id and LENGTH(t2.name) > 10";
 
-        report = checkRule.check(sql);
+        report = checkRule.check(null, sql);
         Assertions.assertFalse(report.isPass());
 
     }

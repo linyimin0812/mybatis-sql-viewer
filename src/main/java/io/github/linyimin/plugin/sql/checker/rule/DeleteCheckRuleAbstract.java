@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import net.sf.jsqlparser.JSQLParserException;
@@ -23,7 +24,7 @@ public abstract class DeleteCheckRuleAbstract<T> extends CheckRuleAbstract<T> {
     }
 
     @Override
-    public Report check(String target) {
+    public Report check(Project project, String target) {
         Report report = new Report().isPass(true);
 
         try {

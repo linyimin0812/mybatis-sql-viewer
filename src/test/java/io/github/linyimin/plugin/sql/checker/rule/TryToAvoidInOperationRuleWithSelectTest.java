@@ -13,13 +13,13 @@ class TryToAvoidInOperationRuleWithSelectTest {
     @Test
     public void testCheck() {
         String sql = "SELECT * FROM t WHERE id IN (1,2,3,4,5,6);";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
         sql = "SELECT * FROM t WHERE id = 1;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "SELECT * FROM t WHERE id IN (SELECT id FROM t2);";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
     }
 }

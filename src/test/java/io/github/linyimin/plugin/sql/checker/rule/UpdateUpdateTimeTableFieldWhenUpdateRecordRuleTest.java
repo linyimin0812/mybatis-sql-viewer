@@ -3,8 +3,6 @@ package io.github.linyimin.plugin.sql.checker.rule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * @author banzhe
  * @date 2022/12/10 20:51
@@ -16,9 +14,9 @@ class UpdateUpdateTimeTableFieldWhenUpdateRecordRuleTest {
     @Test
     public void testCheck() {
         String sql = "UPDATE t SET name = 'jack', update_time = now() WHERE id = 1;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "UPDATE t SET name = 'jack' WHERE id = 1;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
     }
 }

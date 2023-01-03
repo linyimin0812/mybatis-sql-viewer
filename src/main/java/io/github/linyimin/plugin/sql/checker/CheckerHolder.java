@@ -51,4 +51,17 @@ public class CheckerHolder {
         return checkers.get(scope);
     }
 
+    public static List<Checker> getCheckers(CheckScopeEnum... scopes) {
+
+        List<Checker> checkerList = new ArrayList<>();
+
+        for (CheckScopeEnum scope : scopes) {
+            if (checkers.containsKey(scope)) {
+                checkerList.add(checkers.get(scope));
+            }
+        }
+
+        return checkerList;
+    }
+
 }

@@ -1,6 +1,7 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
 import com.alibaba.fastjson.JSONObject;
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.schema.IndexField;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 public class IndexNamingRule implements CheckRule {
 
     @Override
-    public Report check(String target) {
+    public Report check(Project project, String target) {
 
         CheckField checkField = JSONObject.parseObject(target, CheckField.class);
 
@@ -48,7 +49,7 @@ public class IndexNamingRule implements CheckRule {
 
     @Override
     public List<CheckScopeEnum> scopes() {
-        return Collections.singletonList(CheckScopeEnum.index);
+        return Collections.singletonList(CheckScopeEnum.index_field);
     }
 
 }

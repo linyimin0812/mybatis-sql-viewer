@@ -13,13 +13,13 @@ class BooleanFieldNameRuleTest {
     @Test
     public void testCheck() {
         String field = "{\"name\":\"is_deleted\",\"type\":\"unsigned tinyint\",\"nullable\":false}";
-        Assertions.assertTrue(checkRule.check(field).isPass());
+        Assertions.assertTrue(checkRule.check(null, field).isPass());
 
         field = "{\"name\":\"deleted\",\"type\":\"tinyint\",\"nullable\":false}";
-        Assertions.assertTrue(checkRule.check(field).isPass());
+        Assertions.assertTrue(checkRule.check(null, field).isPass());
 
         field = "{\"name\":\"is_deleted\",\"type\":\"int\",\"nullable\":false}";
-        Assertions.assertFalse(checkRule.check(field).isPass());
+        Assertions.assertFalse(checkRule.check(null, field).isPass());
 
     }
 }

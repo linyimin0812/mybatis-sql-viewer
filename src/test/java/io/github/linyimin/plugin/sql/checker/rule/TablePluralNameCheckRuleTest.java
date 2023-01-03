@@ -1,6 +1,5 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
-import io.github.linyimin.plugin.sql.checker.rule.TablePluralNameCheckRule;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,26 +13,26 @@ class TablePluralNameCheckRuleTest {
     @Test
     public void testCheck() {
         String table = "app_admins";
-        Assertions.assertFalse(checkRule.check(table).isPass());
+        Assertions.assertFalse(checkRule.check(null, table).isPass());
 
         table = "app_admin";
-        Assertions.assertTrue(checkRule.check(table).isPass());
+        Assertions.assertTrue(checkRule.check(null, table).isPass());
 
 
         table = "app_apple";
-        Assertions.assertTrue(checkRule.check(table).isPass());
+        Assertions.assertTrue(checkRule.check(null, table).isPass());
 
         table = "app_apples";
-        Assertions.assertFalse(checkRule.check(table).isPass());
+        Assertions.assertFalse(checkRule.check(null, table).isPass());
 
         table = "actress";
-        Assertions.assertTrue(checkRule.check(table).isPass());
+        Assertions.assertTrue(checkRule.check(null, table).isPass());
 
         table = "baby";
-        Assertions.assertTrue(checkRule.check(table).isPass());
+        Assertions.assertTrue(checkRule.check(null, table).isPass());
 
         table = "babies";
-        Assertions.assertFalse(checkRule.check(table).isPass());
+        Assertions.assertFalse(checkRule.check(null, table).isPass());
 
     }
 }

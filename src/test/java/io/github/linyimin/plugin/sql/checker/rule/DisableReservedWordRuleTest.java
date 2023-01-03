@@ -22,28 +22,28 @@ class DisableReservedWordRuleTest {
     public void testCheck() {
 
         field.setName("desc");
-        Assertions.assertFalse(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertFalse(checkRule.check(null, gson.toJson(field)).isPass());
 
         field.setName("cast");
-        Assertions.assertFalse(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertFalse(checkRule.check(null, gson.toJson(field)).isPass());
 
         field.setName("between");
-        Assertions.assertFalse(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertFalse(checkRule.check(null, gson.toJson(field)).isPass());
 
         field.setName("create");
-        Assertions.assertFalse(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertFalse(checkRule.check(null, gson.toJson(field)).isPass());
 
         field.setName("id");
-        Assertions.assertTrue(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertTrue(checkRule.check(null, gson.toJson(field)).isPass());
 
         field.setName("create_time");
-        Assertions.assertTrue(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertTrue(checkRule.check(null, gson.toJson(field)).isPass());
 
         field.setName("update_time");
-        Assertions.assertTrue(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertTrue(checkRule.check(null, gson.toJson(field)).isPass());
 
         field.setName("name");
-        Assertions.assertTrue(checkRule.check(gson.toJson(field)).isPass());
+        Assertions.assertTrue(checkRule.check(null, gson.toJson(field)).isPass());
     }
 
 }

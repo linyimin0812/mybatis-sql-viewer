@@ -1,6 +1,7 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
 import com.alibaba.fastjson.JSONObject;
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.enums.FieldTypeEnum;
 import io.github.linyimin.plugin.mock.schema.IndexField;
 import io.github.linyimin.plugin.mock.schema.TableField;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
  **/
 public class VarcharIndexLengthRule implements CheckRule {
     @Override
-    public Report check(String target) {
+    public Report check(Project project, String target) {
 
         CheckField checkField = JSONObject.parseObject(target, CheckField.class);
 
@@ -47,6 +48,6 @@ public class VarcharIndexLengthRule implements CheckRule {
 
     @Override
     public List<CheckScopeEnum> scopes() {
-        return Collections.singletonList(CheckScopeEnum.index);
+        return Collections.singletonList(CheckScopeEnum.index_field);
     }
 }

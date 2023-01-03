@@ -26,20 +26,20 @@ class IndexNamingRuleTest {
 
         CheckField checkField = new CheckField(Arrays.asList(field1, field1));
 
-        Assertions.assertTrue(checkRule.check(gson.toJson(checkField)).isPass());
+        Assertions.assertTrue(checkRule.check(null, gson.toJson(checkField)).isPass());
 
         field1.setKeyName("idx_name_id");
         field1.setNonUnique(0);
 
         checkField = new CheckField(Arrays.asList(field1, field1));
-        Assertions.assertFalse(checkRule.check(gson.toJson(checkField)).isPass());
+        Assertions.assertFalse(checkRule.check(null, gson.toJson(checkField)).isPass());
 
         field1.setKeyName("uk_name_id");
         field1.setNonUnique(0);
 
         checkField = new CheckField(Arrays.asList(field1, field1));
 
-        Assertions.assertTrue(checkRule.check(gson.toJson(checkField)).isPass());
+        Assertions.assertTrue(checkRule.check(null, gson.toJson(checkField)).isPass());
 
     }
 }

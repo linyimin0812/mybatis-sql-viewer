@@ -21,6 +21,7 @@ import io.github.linyimin.plugin.sql.parser.SqlParser;
 import io.github.linyimin.plugin.sql.parser.SqlType;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -35,6 +36,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.github.linyimin.plugin.constant.Constant.*;
@@ -306,15 +308,14 @@ public class SqlTabbedPane implements TabbedChangeListener {
             if (!validateResult.isSuccess()) {
                 statementRuleText.setText(validateResult.getErrorMsg());
             } else {
-                CheckScopeEnum scope = SqlParser.getCheckScope(sql);
-                Checker checker = CheckerHolder.getChecker(scope);
-                if (checker == null) {
-                    statementRuleText.setText("No rule checker for the statement.");
+
+                List<Report> reports = checkRules(sql);
+                if (CollectionUtils.isEmpty(reports)) {
+                    ApplicationManager.getApplication().invokeLater(() -> statementRuleText.setText("No rule checker for the statement."));
                     return;
                 }
 
-                List<Report> reports = checker.check(sql);
-                String ruleInfo = ResultConverter.convert2RuleInfo(scope, reports);
+                String ruleInfo = ResultConverter.convert2RuleInfo(SqlParser.getCheckScope(sql), reports);
 
                 ApplicationManager.getApplication().invokeLater(() -> {
                     if (StringUtils.isBlank(ruleInfo)) {
@@ -329,6 +330,18 @@ public class SqlTabbedPane implements TabbedChangeListener {
             e.printStackTrace(new PrintWriter(sw));
             statementRuleText.setText(String.format("Validate sql statement error.\n%s", sw));
         }
+    }
+
+    private List<Report> checkRules(String sql) {
+
+        List<Checker> checkers = CheckerHolder.getCheckers(SqlParser.getCheckScope(sql), CheckScopeEnum.index_hit);
+
+        List<Report> reports = new ArrayList<>();
+        for (Checker checker : checkers) {
+            reports.addAll(checker.check(project, sql));
+        }
+
+        return reports;
     }
 
     private void executeSql() {

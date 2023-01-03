@@ -40,6 +40,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -343,7 +344,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
                 ProcessResult<String> sqlResult = ApplicationManager.getApplication().runReadAction((Computable<ProcessResult<String>>) () -> SqlParamGenerateComponent.generateSql(project, configuration.getMethod(), configuration.getParams(), false));
 
                 if (sqlResult.isSuccess()) {
-                    configuration.setRawSql(sqlResult.getData());
+                    configuration.setSql(sqlResult.getData());
                     Icon icon = sqlCheck(sqlResult.getData());
                     methodTreeNode = new MethodTreeNode(namespaceTreeNode, configuration.getMethod(), icon);
 
@@ -394,8 +395,10 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
     }
 
     private ProcessResult<Boolean> checkIndex(String sql) {
-        // TODO:
-        return ProcessResult.success(true);
+        Checker checker = CheckerHolder.getChecker(CheckScopeEnum.index_hit);
+        List<Report> reports = checker.check(project, sql);
+        boolean allPass = reports.stream().allMatch(Report::isPass);
+        return ProcessResult.success(allPass);
     }
 
     private ProcessResult<Boolean> checkRule(String sql) {
@@ -407,7 +410,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             return ProcessResult.success(true);
         }
 
-        List<Report> reports = checker.check(sql);
+        List<Report> reports = checker.check(project, sql);
         if (CollectionUtils.isEmpty(reports)) {
             return ProcessResult.success(true);
         }

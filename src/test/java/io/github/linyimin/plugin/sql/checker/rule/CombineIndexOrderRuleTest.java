@@ -26,13 +26,13 @@ class CombineIndexOrderRuleTest {
 
         CheckField checkField = new CheckField(Arrays.asList(field1, field1));
 
-        Report report = checkRule.check(gson.toJson(checkField));
+        Report report = checkRule.check(null, gson.toJson(checkField));
 
         Assertions.assertFalse(report.isPass());
 
         checkField = new CheckField(Collections.singletonList(field1));
 
-        report = checkRule.check(gson.toJson(checkField));
+        report = checkRule.check(null, gson.toJson(checkField));
         Assertions.assertTrue(report.isPass());
 
     }

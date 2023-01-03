@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
@@ -16,7 +17,7 @@ import java.util.List;
  **/
 public class BigAndCompleteUpdateMethodRule implements CheckRule {
     @Override
-    public Report check(String target) {
+    public Report check(Project project, String target) {
 
         try {
             Update updateStatement = (Update) CCJSqlParserUtil.parse(target);

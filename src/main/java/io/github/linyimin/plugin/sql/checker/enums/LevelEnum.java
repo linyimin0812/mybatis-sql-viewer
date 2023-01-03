@@ -7,5 +7,6 @@ package io.github.linyimin.plugin.sql.checker.enums;
 public enum LevelEnum {
     mandatory,
     recommended,
-    for_reference
+    for_reference,
+    error
 }

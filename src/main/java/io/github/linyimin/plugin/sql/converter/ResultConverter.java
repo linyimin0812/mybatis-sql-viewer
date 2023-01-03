@@ -3,6 +3,7 @@ package io.github.linyimin.plugin.sql.converter;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
+import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
 import io.github.linyimin.plugin.sql.result.BaseResult;
 import io.github.linyimin.plugin.sql.result.InsertResult;
 import io.github.linyimin.plugin.sql.result.SelectResult;
@@ -17,6 +18,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -61,9 +63,7 @@ public class ResultConverter {
         StringBuilder sb = new StringBuilder("------[Execution Succeeded]------\n");
 
         if (StringUtils.isNotBlank(result.getSql())) {
-            String prompt = StringUtils.replace(Constant.DOUBLE_CLICK_PROMPT, "\n", " ");
-            String sql = StringUtils.replace(result.getSql(), prompt, "");
-            sb.append("[statement]: ").append(sql).append("\n");
+            sb.append("[statement]: ").append(result.getSql()).append("\n");
         }
 
         sb.append("[cost]: ").append(result.getCost()).append("(ms)").append("\n");
@@ -100,10 +100,18 @@ public class ResultConverter {
         StringBuilder sb = new StringBuilder();
 
         if (CollectionUtils.isEmpty(noPassReports)) {
-            sb.append("符合SQL规范要求, 以下信息仅供参考：\n").append("\n");
             noPassReports.addAll(Constant.DEFAULT_REPORT_MAP.getOrDefault(scope, new ArrayList<>()));
+            if (CollectionUtils.isEmpty(noPassReports)) {
+                sb.append("符合SQL规范要求");
+                return sb.toString();
+            }
+            sb.append("符合SQL规范要求, 以下信息仅供参考：\n").append("\n");
         } else {
-            sb.append("不符合SQL规范要求, 不满足以下规范：\n").append("\n");
+            Optional<Report> optional = noPassReports.stream().filter(report -> report.getLevel() == LevelEnum.error).findAny();
+            if (optional.isPresent()) {
+                return sb.append("Check rule error.\n").append(optional.get().getDesc()).toString();
+            }
+            sb.append("SQL可能不满足规范要求：\n").append("\n");
         }
 
         for (int i = 0; i < noPassReports.size(); i++) {

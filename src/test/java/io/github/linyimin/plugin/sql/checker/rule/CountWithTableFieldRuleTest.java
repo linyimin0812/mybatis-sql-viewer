@@ -14,28 +14,28 @@ class CountWithTableFieldRuleTest {
     @Test
     public void testCheck() {
         String sql = "SELECT COUNT(1) FROM t;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
         sql = "SELECT COUNT(id) FROM t;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
         sql = "SELECT COUNT(*) FROM t;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "SELECT COUNT(distinct a) FROM t;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "SELECT total FROM (SELECT COUNT(1) FROM t) AS t1;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
         sql = "SELECT total FROM (SELECT COUNT(id) FROM t) AS t1;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
         sql = "SELECT total FROM (SELECT COUNT(*) FROM t) AS t1;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "SELECT total FROM (SELECT COUNT( distinct id) FROM t) AS t1;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
     }
 

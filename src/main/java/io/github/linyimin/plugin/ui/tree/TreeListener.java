@@ -33,6 +33,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -116,22 +117,18 @@ public class TreeListener extends MouseAdapter {
             } else {
 
                 CheckScopeEnum scope = SqlParser.getCheckScope(sql);
-                Checker checker = CheckerHolder.getChecker(scope);
 
-                if (checker == null) {
-                    ApplicationManager.getApplication().invokeLater(() -> this.mybatisSqlScannerPanel.getStatementRuleText().setText("No checker for the statement."));
-                    return;
+                List<Checker> checkers = CheckerHolder.getCheckers(scope, CheckScopeEnum.index_hit);
+
+                List<Report> reports = new ArrayList<>();
+                for (Checker checker : checkers) {
+                    reports.addAll(checker.check(mybatisSqlScannerPanel.getProject(), sql));
                 }
 
-                List<Report> reports = checker.check(sql);
                 String ruleInfo = ResultConverter.convert2RuleInfo(scope, reports);
 
                 ApplicationManager.getApplication().invokeLater(() -> {
-                    if (StringUtils.isBlank(ruleInfo)) {
-                        this.mybatisSqlScannerPanel.getStatementRuleText().setText("满足规范要求");
-                    } else {
-                        this.mybatisSqlScannerPanel.getStatementRuleText().setText(ruleInfo);
-                    }
+                    this.mybatisSqlScannerPanel.getStatementRuleText().setText(ruleInfo);
                 });
             }
         } catch (Exception e) {

@@ -4,6 +4,7 @@ import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.visitor.SchemaStatVisitor;
 import com.alibaba.druid.stat.TableStat;
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
@@ -18,7 +19,7 @@ import java.util.Map;
  **/
 public class CorrelationTableLimitRule implements CheckRule {
     @Override
-    public Report check(String target) {
+    public Report check(Project project, String target) {
 
         SchemaStatVisitor visitor = parseSql(target);
 

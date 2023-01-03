@@ -96,7 +96,7 @@ public class Constant {
     );
 
     public static final Map<CheckScopeEnum, List<Report>> DEFAULT_REPORT_MAP = new HashMap<CheckScopeEnum, List<Report>>() {{
-        put(CheckScopeEnum.index, DEFAULT_INDEX_REPORTS);
+        put(CheckScopeEnum.index_field, DEFAULT_INDEX_REPORTS);
         put(CheckScopeEnum.naming_convention, DEFAULT_TABLE_REPORTS);
         put(CheckScopeEnum.select, DEFAULT_SELECT_REPORTS);
         put(CheckScopeEnum.update, DEFAULT_SELECT_REPORTS);
@@ -106,8 +106,6 @@ public class Constant {
     public static final Border LINE_BORDER = UIUtil.isUnderDarcula() ? new LineBorder(JBColor.BLACK) : new LineBorder(JBColor.lightGray);
 
     public static final String INPUT_SQL_PROMPT = "Please input sql statement.";
-
-    public static final String DOUBLE_CLICK_PROMPT = "-- Double-Click the 'statement', 'result' and 'stress' tab to update the sql with params\n";
 
     public static final String ROOT_NAME = "Mybatis Sql";
 

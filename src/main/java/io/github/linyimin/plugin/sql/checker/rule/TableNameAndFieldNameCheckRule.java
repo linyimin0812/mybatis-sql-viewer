@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
@@ -20,7 +21,7 @@ public class TableNameAndFieldNameCheckRule implements CheckRule {
     private final Pattern ONLY_DIGIT_IN_THE_MIDDLE_OF_UNDERSCORE = Pattern.compile("_\\d+_");
 
     @Override
-    public Report check(String target) {
+    public Report check(Project project, String target) {
 
        if (UPPERCASE.matcher(target).find() || START_WITH_DIGIT.matcher(target).find() || ONLY_DIGIT_IN_THE_MIDDLE_OF_UNDERSCORE.matcher(target).find()) {
            String desc = "表名、字段名必须使用小写字母或数字，禁止出现数字开头，禁止两个下划线中间只出现数字。\n" +

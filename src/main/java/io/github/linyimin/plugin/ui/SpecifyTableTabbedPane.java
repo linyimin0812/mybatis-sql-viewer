@@ -446,7 +446,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
     private void checkTableRule(DefaultTableModel model) {
         // check table name
         Checker checker = CheckerHolder.getChecker(CheckScopeEnum.naming_convention);
-        List<Report> reports = checker.check(parent.getTitleAt(parent.getSelectedIndex()));
+        List<Report> reports = checker.check(project, parent.getTitleAt(parent.getSelectedIndex()));
 
         boolean isPass = reports.stream().allMatch(Report::isPass);
 
@@ -459,7 +459,7 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         checker = CheckerHolder.getChecker(CheckScopeEnum.field);
         List<TableField> tableFields = Model2Field.parse(TableField.class, model);
         for (TableField field : tableFields) {
-            reports = checker.check(JSONObject.toJSONString(field));
+            reports = checker.check(project, JSONObject.toJSONString(field));
             isPass = reports.stream().allMatch(Report::isPass);
             if (!isPass) {
                 this.tableRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.naming_convention, reports));
@@ -469,13 +469,13 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
 
         // check table field composition
         checker = CheckerHolder.getChecker(CheckScopeEnum.field_composition);
-        reports = checker.check(JSONObject.toJSONString(tableFields));
+        reports = checker.check(project, JSONObject.toJSONString(tableFields));
 
         this.tableRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.naming_convention, reports));
     }
 
     private void checkIndexRule(DefaultTableModel tableModel, DefaultTableModel indexModel) {
-        Checker checker = CheckerHolder.getChecker(CheckScopeEnum.index);
+        Checker checker = CheckerHolder.getChecker(CheckScopeEnum.index_field);
         if (checker == null) {
             this.indexRuleText.setText("No checker for index checker");
             return;
@@ -484,8 +484,8 @@ public class SpecifyTableTabbedPane implements TabbedChangeListener {
         List<IndexField> indexFields = Model2Field.parse(IndexField.class, indexModel);
 
         CheckField checkField = new CheckField(tableFields, indexFields);
-        List<Report> reports = checker.check(JSONObject.toJSONString(checkField));
-        this.indexRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.index, reports));
+        List<Report> reports = checker.check(project, JSONObject.toJSONString(checkField));
+        this.indexRuleText.setText(ResultConverter.convert2RuleInfo(CheckScopeEnum.index_field, reports));
     }
 
     @Override

@@ -15,9 +15,8 @@ public enum CheckScopeEnum {
     field,
     field_composition,
 
-    index,
-
-    mapper_xml,
+    index_field,
+    index_hit,
 
     none
 }

@@ -14,19 +14,19 @@ class UseIsNullFunctionRule2Test {
     @Test
     public void testCheck() {
         String sql = "select * from table where column1 is null and column3 is not null;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "select * from table where  column1 is null and column3 <> null;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
         sql = "select * from table where isnull(column1) and isnull(column3);";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
 
         sql = "select case when name = null then 'default' else name end as name from table where id = 1;";
-        Assertions.assertFalse(checkRule.check(sql).isPass());
+        Assertions.assertFalse(checkRule.check(null, sql).isPass());
 
         sql = "select case when name is null then 'default' else name end as name from table where id = 1;";
-        Assertions.assertTrue(checkRule.check(sql).isPass());
+        Assertions.assertTrue(checkRule.check(null, sql).isPass());
     }
 
 }

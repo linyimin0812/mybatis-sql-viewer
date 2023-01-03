@@ -41,18 +41,6 @@ public class MybatisSqlConfiguration {
     }
 
     public void setSql(String sql) {
-        if (!GlobalConfig.isMybatisMode) {
-            this.sql = StringUtils.replace(sql, Constant.DOUBLE_CLICK_PROMPT, StringUtils.EMPTY);
-            return;
-        }
-        if (StringUtils.contains(sql, Constant.DOUBLE_CLICK_PROMPT)) {
-            this.sql = sql;
-        } else {
-            this.sql = Constant.DOUBLE_CLICK_PROMPT + sql;
-        }
-    }
-
-    public void setRawSql(String sql) {
         this.sql = sql;
     }
 

@@ -15,11 +15,11 @@ class TableFieldCompositionRuleTest {
 
         String target = "[{\"name\":\"id\",\"nullable\":false},{\"name\":\"create_time\",\"type\":\"datetime\",\"nullable\":false},{\"name\":\"update_time\",\"type\":\"datetime\",\"nullable\":false}]";
 
-        Assertions.assertTrue(checkRule.check(target).isPass());
+        Assertions.assertTrue(checkRule.check(null, target).isPass());
 
         target = "[{\"name\":\"age\",\"nullable\":false},{\"name\":\"create_time\",\"type\":\"datetime\",\"nullable\":false},{\"name\":\"update_time\",\"type\":\"datetime\",\"nullable\":false}]";
 
-        Assertions.assertFalse(checkRule.check(target).isPass());
+        Assertions.assertFalse(checkRule.check(null, target).isPass());
 
     }
 

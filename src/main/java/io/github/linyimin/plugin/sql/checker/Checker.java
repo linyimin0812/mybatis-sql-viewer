@@ -1,5 +1,6 @@
 package io.github.linyimin.plugin.sql.checker;
 
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
 import io.github.linyimin.plugin.sql.checker.rule.CheckRule;
 
@@ -20,11 +21,11 @@ public abstract class Checker {
         this.rules.add(rule);
     }
 
-    public List<Report> check(String target) {
+    public List<Report> check(Project project, String target) {
         List<Report> reports = new ArrayList<>();
 
         for (CheckRule rule : rules) {
-            Report report = rule.check(target);
+            Report report = rule.check(project, target);
             if (report != null) {
                 reports.add(report);
             }

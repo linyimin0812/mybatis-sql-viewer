@@ -1,6 +1,7 @@
 package io.github.linyimin.plugin.sql.checker.rule;
 
 import com.alibaba.fastjson.JSONObject;
+import com.intellij.openapi.project.Project;
 import io.github.linyimin.plugin.mock.schema.TableField;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
@@ -16,7 +17,7 @@ import java.util.List;
  **/
 public class VarcharLengthLimitRule implements CheckRule {
     @Override
-    public Report check(String target) {
+    public Report check(Project project, String target) {
 
         TableField field = JSONObject.parseObject(target, TableField.class);
 

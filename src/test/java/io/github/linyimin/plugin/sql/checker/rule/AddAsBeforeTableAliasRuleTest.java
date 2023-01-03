@@ -18,13 +18,13 @@ public class AddAsBeforeTableAliasRuleTest {
 
         String sql = "SELECT * FROM t1 a WHERE column1 = (SELECT MAX(column2) FROM t2) and column2 < 1 and column2 > 1 or column2 <> 8 and column2 = 0;";
 
-        Report report = checkRule.check(sql);
+        Report report = checkRule.check(null, sql);
 
         Assertions.assertFalse(report.isPass());
 
         sql = "SELECT * FROM t1 AS a WHERE column1 = (SELECT MAX(column2) FROM t2) and column2 < 1 and column2 > 1 or column2 <> 8 and column2 = 0;";
 
-        report = checkRule.check(sql);
+        report = checkRule.check(null, sql);
 
         Assertions.assertTrue(report.isPass());
 

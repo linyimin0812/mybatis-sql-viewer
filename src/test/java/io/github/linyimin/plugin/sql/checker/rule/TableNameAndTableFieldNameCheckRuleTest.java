@@ -13,22 +13,22 @@ class TableNameAndTableFieldNameCheckRuleTest {
     @Test
     public void testCheck() {
         String name = "aliyun_admin";
-        Assertions.assertTrue(checkRule.check(name).isPass());
+        Assertions.assertTrue(checkRule.check(null, name).isPass());
 
         name = "rdc_config";
-        Assertions.assertTrue(checkRule.check(name).isPass());
+        Assertions.assertTrue(checkRule.check(null, name).isPass());
 
         name = "level3_name";
-        Assertions.assertTrue(checkRule.check(name).isPass());
+        Assertions.assertTrue(checkRule.check(null, name).isPass());
 
         name = "AliyunAdmin";
-        Assertions.assertFalse(checkRule.check(name).isPass());
+        Assertions.assertFalse(checkRule.check(null, name).isPass());
 
         name = "rdcConfig";
-        Assertions.assertFalse(checkRule.check(name).isPass());
+        Assertions.assertFalse(checkRule.check(null, name).isPass());
 
         name = "level_3_name";
-        Assertions.assertFalse(checkRule.check(name).isPass());
+        Assertions.assertFalse(checkRule.check(null, name).isPass());
 
     }
 }
