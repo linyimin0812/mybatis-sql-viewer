@@ -26,13 +26,23 @@ public class DatasourceComponent {
     }
 
     public void updateDatasource() {
+        this.close();
         try {
-            if (dataSource != null && !dataSource.isClosed()) {
-                dataSource.close();
-            }
             dataSource = createDatasource();
         } catch (Exception ignored) {
-            if (dataSource != null && !dataSource.isClosed()) {
+            if (dataSource != null) {
+                dataSource.close();
+            }
+        }
+    }
+
+    public void close() {
+        try {
+            if (dataSource != null) {
+                dataSource.close();
+            }
+        } catch (Exception ignored) {
+            if (dataSource != null) {
                 dataSource.close();
             }
         }

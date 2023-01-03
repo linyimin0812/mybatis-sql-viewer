@@ -141,6 +141,9 @@ public class DatasourceDialog extends JDialog {
             password.setText(component.getPassword());
             database.setText(component.getDatabase());
 
+            DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
+            datasourceComponent.updateDatasource();
+
         });
 
     }
