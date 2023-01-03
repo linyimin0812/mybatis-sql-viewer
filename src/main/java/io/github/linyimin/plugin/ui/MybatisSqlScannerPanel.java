@@ -71,6 +71,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
     private JPanel sqlContentPanel;
     private JPanel sqlPanel;
     private JScrollPane indexScrollPane;
+    private JRadioButton errorRadioButton;
 
     private final Project project;
     private final InfoPane infoPane;
@@ -121,11 +122,13 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
         buttonGroup.add(complianceWithSpecRadioButton);
         buttonGroup.add(doesNotMeetSpecRadioButton);
         buttonGroup.add(fullTableScanRadioButton);
+        buttonGroup.add(errorRadioButton);
 
         this.allRadioButton.addMouseListener(new MouseCursorAdapter(this.allRadioButton));
         this.complianceWithSpecRadioButton.addMouseListener(new MouseCursorAdapter(this.complianceWithSpecRadioButton));
         this.doesNotMeetSpecRadioButton.addMouseListener(new MouseCursorAdapter(this.doesNotMeetSpecRadioButton));
         this.fullTableScanRadioButton.addMouseListener(new MouseCursorAdapter(this.fullTableScanRadioButton));
+        this.errorRadioButton.addMouseListener(new MouseCursorAdapter(this.errorRadioButton));
 
         this.allRadioButton.addActionListener(new AbstractAction() {
             @Override
@@ -187,6 +190,21 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             }
         });
 
+        this.errorRadioButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (errorRadioButton.isSelected()) {
+                    backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+                        @Override
+                        public void run(@NotNull ProgressIndicator indicator) {
+                            RootTreeNode root = getRootByType(FilterType.error);
+                            createTree(root);
+                        }
+                    });
+                }
+            }
+        });
+
     }
 
     private void initText() {
@@ -217,6 +235,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 ApplicationManager.getApplication().invokeLater(() -> {
+                    allRadioButton.setSelected(true);
                     scannerResultPanel.setLayout(new BorderLayout());
                     scannerResultPanel.remove(scannerResultContentPanel);
                     scannerResultPanel.add(infoPane.getInfoPane());
@@ -254,7 +273,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
                 FilterType type = FilterType.resolveByIcon(icon);
 
-                if (filterType == FilterType.all || icon == IconUtils.ERROR_ICON || filterType == type) {
+                if (filterType == FilterType.all || filterType == type) {
                     MethodTreeNode methodTreeNode = new MethodTreeNode(namespaceTreeNode, methodNode.getName(), icon);
                     methodTreeNode.setMybatisSqlScannerPanel(this).setConfiguration(((MethodTreeNode)methodNode).getConfiguration());
                     namespaceTreeNode.add(methodTreeNode);
@@ -426,7 +445,8 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
         all(null),
         compliance_spec(IconUtils.MAJOR_ICON),
         not_meet_spec(IconUtils.NOT_MEET_SPEC_ICON),
-        full_table_scan(IconUtils.FULL_SCAN_ICON);
+        full_table_scan(IconUtils.FULL_SCAN_ICON),
+        error(IconUtils.ERROR_ICON);
 
         private final Icon icon;
 
