@@ -21,7 +21,6 @@ import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.pojo2json.DefaultPOJO2JSONParser;
-import io.github.linyimin.plugin.pojo2json.RandomPOJO2JSONParser;
 import io.github.linyimin.plugin.sql.checker.Checker;
 import io.github.linyimin.plugin.sql.checker.CheckerHolder;
 import io.github.linyimin.plugin.sql.checker.Report;

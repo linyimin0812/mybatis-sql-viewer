@@ -88,6 +88,16 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         this.totalTabbedPanel.addMouseListener(new MouseCursorAdapter(this.totalTabbedPanel));
 
+        this.totalTabbedPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                int index = totalTabbedPanel.indexOfTab(TabbedComponentType.project.name());
+                if (event.getClickCount() == 2 && totalTabbedPanel.indexAtLocation(event.getX(), event.getY()) == index) {
+                    mybatisSqlScannerPanel.listen();
+                }
+            }
+        });
+
     }
 
     /**
@@ -136,15 +146,6 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
         // 监听tabbedpane点击事件
         totalTabbedPanel.addChangeListener(e -> totalTabbedPanelListener());
-
-        this.totalTabbedPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent event) {
-            if (event.getClickCount() == 2 && totalTabbedPanel.indexAtLocation(event.getX(), event.getY()) < TabbedComponentType.project.index) {
-                mybatisSqlScannerPanel.listen();
-            }
-            }
-        });
 
     }
 
