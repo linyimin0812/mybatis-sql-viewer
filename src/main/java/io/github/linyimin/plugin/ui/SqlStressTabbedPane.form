@@ -25,7 +25,7 @@
             <properties/>
             <border type="none"/>
             <children>
-              <grid id="db699" binding="sqlStressContentPane" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="true" same-size-vertically="true" hgap="-1" vgap="-1">
+              <grid id="db699" binding="sqlStressContentPane" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -33,243 +33,282 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <grid id="65430" binding="sqlContentPane" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="true" same-size-vertically="false" hgap="-1" vgap="-1">
-                    <margin top="0" left="0" bottom="0" right="0"/>
+                  <splitpane id="9225">
                     <constraints>
-                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                        <preferred-size width="200" height="200"/>
+                      </grid>
                     </constraints>
-                    <properties/>
+                    <properties>
+                      <oneTouchExpandable value="true"/>
+                      <orientation value="0"/>
+                      <resizeWeight value="0.5"/>
+                    </properties>
                     <border type="none"/>
                     <children>
-                      <grid id="7f3d3" binding="sqlAndLabelPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                      <grid id="65430" binding="sqlContentPane" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                         <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                            <preferred-size width="38" height="380"/>
-                          </grid>
+                          <splitpane position="left"/>
                         </constraints>
                         <properties/>
                         <border type="none"/>
                         <children>
-                          <component id="cc9e8" class="javax.swing.JLabel">
+                          <splitpane id="18f51">
                             <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+                              <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                <preferred-size width="200" height="200"/>
+                              </grid>
                             </constraints>
                             <properties>
-                              <text value="&lt;html&gt;&lt;b&gt;sql&lt;/b&gt;&lt;/html&gt;"/>
+                              <oneTouchExpandable value="true"/>
+                              <resizeWeight value="0.5"/>
                             </properties>
-                          </component>
-                          <grid id="dc5a2" binding="sqlPane" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="0" left="0" bottom="0" right="0"/>
-                            <constraints>
-                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                            </constraints>
-                            <properties/>
-                            <border type="none"/>
-                            <children/>
-                          </grid>
-                        </children>
-                      </grid>
-                      <grid id="4652a" binding="sqlTemplateAndLabelPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="0" left="0" bottom="0" right="0"/>
-                        <constraints>
-                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                            <preferred-size width="130" height="380"/>
-                          </grid>
-                        </constraints>
-                        <properties/>
-                        <border type="none"/>
-                        <children>
-                          <component id="8ff93" class="javax.swing.JLabel">
-                            <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
-                            </constraints>
-                            <properties>
-                              <text value="&lt;html&gt;&lt;b&gt;sql template&lt;/b&gt;&lt;/html&gt;"/>
-                            </properties>
-                          </component>
-                          <grid id="f89a1" binding="sqlTemplatePane" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="0" left="0" bottom="0" right="0"/>
-                            <constraints>
-                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                            </constraints>
-                            <properties/>
-                            <border type="none"/>
-                            <children/>
-                          </grid>
-                        </children>
-                      </grid>
-                    </children>
-                  </grid>
-                  <grid id="3b2ea" binding="configPane" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="true" same-size-vertically="false" hgap="-1" vgap="-1">
-                    <margin top="0" left="0" bottom="0" right="0"/>
-                    <constraints>
-                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                    </constraints>
-                    <properties/>
-                    <border type="none"/>
-                    <children>
-                      <grid id="2e2cc" binding="paramConfigPane" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                        <margin top="0" left="0" bottom="0" right="0"/>
-                        <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                        </constraints>
-                        <properties/>
-                        <border type="none"/>
-                        <children>
-                          <component id="52c4d" class="javax.swing.JLabel">
-                            <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
-                            </constraints>
-                            <properties>
-                              <text value="&lt;html&gt;&lt;b&gt;parameters&lt;/b&gt;&lt;/html&gt;"/>
-                            </properties>
-                          </component>
-                          <scrollpane id="7d2a5">
-                            <constraints>
-                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                            </constraints>
-                            <properties/>
                             <border type="none"/>
                             <children>
-                              <component id="ee653" class="javax.swing.JTable" binding="paramsConfigTable">
-                                <constraints/>
+                              <grid id="7f3d3" binding="sqlAndLabelPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                <margin top="0" left="0" bottom="0" right="0"/>
+                                <constraints>
+                                  <splitpane position="left"/>
+                                </constraints>
                                 <properties/>
-                              </component>
+                                <border type="none"/>
+                                <children>
+                                  <component id="cc9e8" class="javax.swing.JLabel">
+                                    <constraints>
+                                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties>
+                                      <text value="&lt;html&gt;&lt;b&gt;sql&lt;/b&gt;&lt;/html&gt;"/>
+                                    </properties>
+                                  </component>
+                                  <grid id="dc5a2" binding="sqlPane" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                    <margin top="0" left="0" bottom="0" right="0"/>
+                                    <constraints>
+                                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties/>
+                                    <border type="none"/>
+                                    <children/>
+                                  </grid>
+                                </children>
+                              </grid>
+                              <grid id="4652a" binding="sqlTemplateAndLabelPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                <margin top="0" left="0" bottom="0" right="0"/>
+                                <constraints>
+                                  <splitpane position="right"/>
+                                </constraints>
+                                <properties/>
+                                <border type="none"/>
+                                <children>
+                                  <component id="8ff93" class="javax.swing.JLabel">
+                                    <constraints>
+                                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties>
+                                      <text value="&lt;html&gt;&lt;b&gt;sql template&lt;/b&gt;&lt;/html&gt;"/>
+                                    </properties>
+                                  </component>
+                                  <grid id="f89a1" binding="sqlTemplatePane" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                    <margin top="0" left="0" bottom="0" right="0"/>
+                                    <constraints>
+                                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties/>
+                                    <border type="none"/>
+                                    <children/>
+                                  </grid>
+                                </children>
+                              </grid>
                             </children>
-                          </scrollpane>
+                          </splitpane>
                         </children>
                       </grid>
-                      <grid id="b61cd" binding="stressPane" layout-manager="GridLayoutManager" row-count="2" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                      <grid id="3b2ea" binding="configPane" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                         <margin top="0" left="0" bottom="0" right="0"/>
                         <constraints>
-                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <splitpane position="right"/>
                         </constraints>
                         <properties/>
                         <border type="none"/>
                         <children>
-                          <component id="32a77" class="javax.swing.JLabel">
+                          <splitpane id="e88f">
                             <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                                <preferred-size width="200" height="200"/>
+                              </grid>
                             </constraints>
                             <properties>
-                              <text value="&lt;html&gt;&lt;b&gt;stress config&lt;/b&gt;&lt;/html&gt;"/>
+                              <oneTouchExpandable value="true"/>
+                              <resizeWeight value="0.5"/>
                             </properties>
-                          </component>
-                          <grid id="db6ed" layout-manager="GridLayoutManager" row-count="2" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-                            <margin top="0" left="0" bottom="0" right="0"/>
-                            <constraints>
-                              <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
-                            </constraints>
-                            <properties/>
                             <border type="none"/>
                             <children>
-                              <component id="75cbc" class="javax.swing.JLabel">
+                              <grid id="2e2cc" binding="paramConfigPane" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                <margin top="0" left="0" bottom="0" right="0"/>
                                 <constraints>
-                                  <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
+                                  <splitpane position="left"/>
                                 </constraints>
-                                <properties>
-                                  <text value="压测时长(min)"/>
-                                </properties>
-                              </component>
-                              <component id="5a55d" class="javax.swing.JTextField" binding="stressDurationText">
+                                <properties/>
+                                <border type="none"/>
+                                <children>
+                                  <component id="52c4d" class="javax.swing.JLabel">
+                                    <constraints>
+                                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties>
+                                      <text value="&lt;html&gt;&lt;b&gt;parameters&lt;/b&gt;&lt;/html&gt;"/>
+                                    </properties>
+                                  </component>
+                                  <scrollpane id="7d2a5">
+                                    <constraints>
+                                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties/>
+                                    <border type="none"/>
+                                    <children>
+                                      <component id="ee653" class="javax.swing.JTable" binding="paramsConfigTable">
+                                        <constraints/>
+                                        <properties/>
+                                      </component>
+                                    </children>
+                                  </scrollpane>
+                                </children>
+                              </grid>
+                              <grid id="b61cd" binding="stressPane" layout-manager="GridLayoutManager" row-count="2" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                <margin top="0" left="0" bottom="0" right="0"/>
                                 <constraints>
-                                  <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                                    <preferred-size width="150" height="-1"/>
+                                  <splitpane position="right"/>
+                                </constraints>
+                                <properties/>
+                                <border type="none"/>
+                                <children>
+                                  <component id="32a77" class="javax.swing.JLabel">
+                                    <constraints>
+                                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties>
+                                      <text value="&lt;html&gt;&lt;b&gt;stress config&lt;/b&gt;&lt;/html&gt;"/>
+                                    </properties>
+                                  </component>
+                                  <grid id="db6ed" layout-manager="GridLayoutManager" row-count="2" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                                    <margin top="0" left="0" bottom="0" right="0"/>
+                                    <constraints>
+                                      <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties/>
+                                    <border type="none"/>
+                                    <children>
+                                      <component id="75cbc" class="javax.swing.JLabel">
+                                        <constraints>
+                                          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <text value="压测时长(min)"/>
+                                        </properties>
+                                      </component>
+                                      <component id="5a55d" class="javax.swing.JTextField" binding="stressDurationText">
+                                        <constraints>
+                                          <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                                            <preferred-size width="150" height="-1"/>
+                                          </grid>
+                                        </constraints>
+                                        <properties>
+                                          <text value="3"/>
+                                        </properties>
+                                      </component>
+                                      <component id="6eabc" class="javax.swing.JLabel">
+                                        <constraints>
+                                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <text value="值类型"/>
+                                        </properties>
+                                      </component>
+                                      <component id="a1722" class="javax.swing.JComboBox" binding="valueTypeCombobox">
+                                        <constraints>
+                                          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <model>
+                                            <item value="use sql directly"/>
+                                            <item value="configure parameters"/>
+                                          </model>
+                                        </properties>
+                                      </component>
+                                      <component id="3c0b0" class="javax.swing.JLabel">
+                                        <constraints>
+                                          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <text value="流量模型"/>
+                                        </properties>
+                                      </component>
+                                      <component id="4d06b" class="javax.swing.JComboBox" binding="trafficModelCombobox">
+                                        <constraints>
+                                          <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <model>
+                                            <item value="increase in a constant rate"/>
+                                            <item value="fixed concurrent threads"/>
+                                          </model>
+                                        </properties>
+                                      </component>
+                                      <component id="dc456" class="javax.swing.JLabel">
+                                        <constraints>
+                                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <text value="并发数"/>
+                                        </properties>
+                                      </component>
+                                      <component id="644b" class="javax.swing.JTextField" binding="concurrentNumText">
+                                        <constraints>
+                                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                                            <preferred-size width="150" height="-1"/>
+                                          </grid>
+                                        </constraints>
+                                        <properties>
+                                          <text value="2"/>
+                                        </properties>
+                                      </component>
+                                      <component id="db80" class="javax.swing.JLabel">
+                                        <constraints>
+                                          <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
+                                        </constraints>
+                                        <properties>
+                                          <text value="递增时长(s)"/>
+                                        </properties>
+                                      </component>
+                                      <component id="a4e0f" class="javax.swing.JTextField" binding="incrementDurationText">
+                                        <constraints>
+                                          <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                                            <preferred-size width="150" height="-1"/>
+                                          </grid>
+                                        </constraints>
+                                        <properties>
+                                          <text value="30"/>
+                                        </properties>
+                                      </component>
+                                    </children>
                                   </grid>
-                                </constraints>
-                                <properties>
-                                  <text value="3"/>
-                                </properties>
-                              </component>
-                              <component id="6eabc" class="javax.swing.JLabel">
-                                <constraints>
-                                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
-                                </constraints>
-                                <properties>
-                                  <text value="值类型"/>
-                                </properties>
-                              </component>
-                              <component id="a1722" class="javax.swing.JComboBox" binding="valueTypeCombobox">
-                                <constraints>
-                                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
-                                </constraints>
-                                <properties>
-                                  <model>
-                                    <item value="use sql directly"/>
-                                    <item value="configure parameters"/>
-                                  </model>
-                                </properties>
-                              </component>
-                              <component id="3c0b0" class="javax.swing.JLabel">
-                                <constraints>
-                                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
-                                </constraints>
-                                <properties>
-                                  <text value="流量模型"/>
-                                </properties>
-                              </component>
-                              <component id="4d06b" class="javax.swing.JComboBox" binding="trafficModelCombobox">
-                                <constraints>
-                                  <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
-                                </constraints>
-                                <properties>
-                                  <model>
-                                    <item value="increase in a constant rate"/>
-                                    <item value="fixed concurrent threads"/>
-                                  </model>
-                                </properties>
-                              </component>
-                              <component id="dc456" class="javax.swing.JLabel">
-                                <constraints>
-                                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
-                                </constraints>
-                                <properties>
-                                  <text value="并发数"/>
-                                </properties>
-                              </component>
-                              <component id="644b" class="javax.swing.JTextField" binding="concurrentNumText">
-                                <constraints>
-                                  <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                                    <preferred-size width="150" height="-1"/>
-                                  </grid>
-                                </constraints>
-                                <properties>
-                                  <text value="2"/>
-                                </properties>
-                              </component>
-                              <component id="db80" class="javax.swing.JLabel">
-                                <constraints>
-                                  <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="1" use-parent-layout="false"/>
-                                </constraints>
-                                <properties>
-                                  <text value="递增时长(s)"/>
-                                </properties>
-                              </component>
-                              <component id="a4e0f" class="javax.swing.JTextField" binding="incrementDurationText">
-                                <constraints>
-                                  <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                                    <preferred-size width="150" height="-1"/>
-                                  </grid>
-                                </constraints>
-                                <properties>
-                                  <text value="30"/>
-                                </properties>
-                              </component>
+                                  <component id="ad8b4" class="javax.swing.JButton" binding="stressButton" default-binding="true">
+                                    <constraints>
+                                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+                                    </constraints>
+                                    <properties>
+                                      <text value="stress"/>
+                                    </properties>
+                                  </component>
+                                </children>
+                              </grid>
                             </children>
-                          </grid>
-                          <component id="ad8b4" class="javax.swing.JButton" binding="stressButton" default-binding="true">
-                            <constraints>
-                              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-                            </constraints>
-                            <properties>
-                              <text value="stress"/>
-                            </properties>
-                          </component>
+                          </splitpane>
                         </children>
                       </grid>
                     </children>
-                  </grid>
+                  </splitpane>
                 </children>
               </grid>
             </children>
