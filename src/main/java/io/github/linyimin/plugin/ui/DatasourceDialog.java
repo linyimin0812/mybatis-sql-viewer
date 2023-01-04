@@ -37,8 +37,8 @@ public class DatasourceDialog extends JDialog {
     private JButton addConfiguration;
     private JButton deleteButton;
 
-    private JTextField nameText;
-    private JComboBox<String> nameComboBox;
+    private final JTextField nameText = new JTextField();
+    private final JComboBox<String> nameComboBox = new ComboBox<>();
 
     private final Project project;
     private final BackgroundTaskQueue backgroundTaskQueue;
@@ -55,8 +55,6 @@ public class DatasourceDialog extends JDialog {
         setLocationRelativeTo(null);
         getRootPane().setDefaultButton(saveConfiguration);
 
-        nameComboBox = new ComboBox<>();
-        nameText = new JTextField();
         namePanel.setLayout(new BorderLayout());
 
         host.getDocument().addDocumentListener(new DatasourceChangeListener());
