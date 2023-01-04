@@ -109,4 +109,6 @@ public class Constant {
 
     public static final String ROOT_NAME = "Mybatis Sql";
 
+    public static final String DATASOURCE_CONNECTED = "Server Connected.";
+
 }

@@ -154,6 +154,7 @@ public class SqlStressTabbedPane {
         this.initReportTextFields();
         this.initChartPanel();
 
+        this.sqlStressTabbedPane.addMouseListener(new MouseCursorAdapter(this.sqlStressTabbedPane));
     }
 
     private void initReportTextFields() {

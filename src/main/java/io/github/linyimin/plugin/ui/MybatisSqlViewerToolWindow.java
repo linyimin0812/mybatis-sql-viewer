@@ -100,6 +100,20 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
 
     }
 
+    public void scanMybatisSql(String namespace) {
+        int projectIndex = this.totalTabbedPanel.indexOfTab(TabbedComponentType.project.name());
+        if (projectIndex < 0) {
+            this.totalTabbedPanel.insertTab(TabbedComponentType.project.name(), null, this.mybatisSqlScannerPanel.getScannerResultPanel(), null, TabbedComponentType.project.index);
+        }
+        this.mybatisSqlScannerPanel.setNamespace(namespace);
+        int selectedIndex = this.totalTabbedPanel.getSelectedIndex();
+        if (projectIndex == selectedIndex) {
+            this.mybatisSqlScannerPanel.listen();
+        } else {
+            this.totalTabbedPanel.setSelectedIndex(TabbedComponentType.project.index);
+        }
+    }
+
     /**
      * 刷新tool window配置内容
      */
@@ -128,13 +142,7 @@ public class MybatisSqlViewerToolWindow extends SimpleToolWindowPanel {
         datasourceButton.addMouseListener(new MouseCursorAdapter(this.datasourceButton));
 
         this.mybatisSqlScanButton.addMouseListener(new MouseCursorAdapter(this.mybatisSqlScanButton));
-        this.mybatisSqlScanButton.addActionListener(e -> {
-            int projectIndex = this.totalTabbedPanel.indexOfTab(TabbedComponentType.project.name());
-            if (projectIndex < 0) {
-                this.totalTabbedPanel.insertTab(TabbedComponentType.project.name(), null, this.mybatisSqlScannerPanel.getScannerResultPanel(), null, TabbedComponentType.project.index);
-            }
-            this.totalTabbedPanel.setSelectedIndex(TabbedComponentType.project.index);
-        });
+        this.mybatisSqlScanButton.addActionListener(e -> scanMybatisSql(StringUtils.EMPTY));
 
         jumpButton.addMouseListener(new MouseCursorAdapter(this.jumpButton));
         jumpButton.addActionListener(e -> {

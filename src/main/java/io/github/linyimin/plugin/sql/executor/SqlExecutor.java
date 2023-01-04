@@ -2,6 +2,7 @@ package io.github.linyimin.plugin.sql.executor;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.util.containers.ContainerUtil;
+import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.DatasourceComponent;
 import io.github.linyimin.plugin.sql.converter.ResultConverter;
 import io.github.linyimin.plugin.sql.parser.SqlParser;
@@ -37,7 +38,7 @@ public class SqlExecutor {
         DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
 
         try (Connection ignored = datasourceComponent.getConnection()) {
-            return "Server Connected.";
+            return Constant.DATASOURCE_CONNECTED;
         } catch (Exception e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));

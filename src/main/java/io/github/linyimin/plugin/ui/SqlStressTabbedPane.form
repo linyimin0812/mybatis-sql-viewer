@@ -40,6 +40,7 @@
                       </grid>
                     </constraints>
                     <properties>
+                      <dividerSize value="5"/>
                       <oneTouchExpandable value="true"/>
                       <orientation value="0"/>
                       <resizeWeight value="0.5"/>

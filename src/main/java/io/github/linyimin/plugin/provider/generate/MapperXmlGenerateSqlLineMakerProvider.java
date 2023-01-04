@@ -10,6 +10,7 @@ import com.intellij.psi.xml.XmlTokenType;
 import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.utils.IconUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -33,7 +34,7 @@ public class MapperXmlGenerateSqlLineMakerProvider implements LineMarkerProvider
 
         XmlTag xmlTag = (XmlTag) tag;
 
-        if (!Constant.MYBATIS_OPS.contains(xmlTag.getName())) {
+        if (!Constant.MYBATIS_OPS.contains(xmlTag.getName()) && !StringUtils.equals(xmlTag.getName(), Constant.MAPPER)) {
             return null;
         }
 

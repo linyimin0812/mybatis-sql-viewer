@@ -130,22 +130,35 @@ public class DatasourceDialog extends JDialog {
         String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, component.getHost(), component.getPort(), component.getDatabase());
         url.setText(urlText);
 
-        nameComboBox.addActionListener(e -> {
+        nameComboBox.addActionListener(e -> datasourceChange());
 
-            String current = (String) nameComboBox.getSelectedItem();
-            component.setCurrent(current);
+    }
 
-            host.setText(component.getHost());
-            port.setText(component.getPort());
-            user.setText(component.getUser());
-            password.setText(component.getPassword());
-            database.setText(component.getDatabase());
+    private void datasourceChange() {
+        DatasourceConfigComponent component = ApplicationManager.getApplication().getComponent(DatasourceConfigComponent.class);
 
-            DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
-            datasourceComponent.updateDatasource();
+        String current = (String) nameComboBox.getSelectedItem();
 
+        component.setCurrent(current);
+
+        host.setText(component.getHost());
+        port.setText(component.getPort());
+        user.setText(component.getUser());
+        password.setText(component.getPassword());
+        database.setText(component.getDatabase());
+
+        DatasourceComponent datasourceComponent = project.getService(DatasourceComponent.class);
+        datasourceComponent.updateDatasource();
+
+        backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                String connectionInfo = SqlExecutor.testConnected(project);
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    testResult.setText(connectionInfo);
+                });
+            }
         });
-
     }
 
     private void updateDatasourceForPersistent() {

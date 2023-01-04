@@ -25,6 +25,8 @@ import io.github.linyimin.plugin.sql.checker.Checker;
 import io.github.linyimin.plugin.sql.checker.CheckerHolder;
 import io.github.linyimin.plugin.sql.checker.Report;
 import io.github.linyimin.plugin.sql.checker.enums.CheckScopeEnum;
+import io.github.linyimin.plugin.sql.checker.enums.LevelEnum;
+import io.github.linyimin.plugin.sql.executor.SqlExecutor;
 import io.github.linyimin.plugin.sql.parser.SqlParser;
 import io.github.linyimin.plugin.ui.tree.MethodTreeNode;
 import io.github.linyimin.plugin.ui.tree.NamespaceTreeNode;
@@ -32,6 +34,7 @@ import io.github.linyimin.plugin.ui.tree.RootTreeNode;
 import io.github.linyimin.plugin.ui.tree.TreeListener;
 import io.github.linyimin.plugin.utils.IconUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jetbrains.annotations.NotNull;
@@ -40,9 +43,9 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -81,6 +84,8 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
     private RootTreeNode allRoot = new RootTreeNode(Constant.ROOT_NAME);
 
     private final BackgroundTaskQueue backgroundTaskQueue;
+
+    private String namespace;
 
     public MybatisSqlScannerPanel(Project project) {
         this.project = project;
@@ -242,8 +247,15 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
                     scannerResultPanel.add(infoPane.getInfoPane());
                     infoPane.setText("Scan mybatis sql...");
                 });
-                allRoot = scanMybatisSql();
-                createTree(allRoot);
+                if (StringUtils.isBlank(namespace)) {
+                    allRoot = scanMybatisSql();
+                    createTree(allRoot);
+                } else {
+                    allRoot = new RootTreeNode(Constant.ROOT_NAME);
+                    boolean isConnected = StringUtils.equals(SqlExecutor.testConnected(project), Constant.DATASOURCE_CONNECTED);
+                    scanMybatisSql(allRoot, namespace, isConnected);
+                    createTree(allRoot);
+                }
                 ApplicationManager.getApplication().invokeLater(() -> {
                     scannerResultPanel.remove(infoPane.getInfoPane());
                     scannerResultPanel.add(scannerResultContentPanel);
@@ -323,7 +335,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
     }
 
-    private void scanMybatisSql(RootTreeNode root, String namespace) {
+    private void scanMybatisSql(RootTreeNode root, String namespace, boolean isConnected) {
 
         NamespaceTreeNode namespaceTreeNode = new NamespaceTreeNode(root, namespace);
         root.add(namespaceTreeNode);
@@ -345,7 +357,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
                 if (sqlResult.isSuccess()) {
                     configuration.setSql(sqlResult.getData());
-                    Icon icon = sqlCheck(sqlResult.getData());
+                    Icon icon = sqlCheck(sqlResult.getData(), isConnected);
                     methodTreeNode = new MethodTreeNode(namespaceTreeNode, configuration.getMethod(), icon);
 
                 } else {
@@ -360,7 +372,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
         }
     }
 
-    private Icon sqlCheck(String sql) {
+    private Icon sqlCheck(String sql, boolean isConnected) {
         try {
             // 语法校验
             ProcessResult<String> validateResult = SqlParser.validate(sql);
@@ -370,13 +382,15 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             }
 
             // 索引检查
-            ProcessResult<Boolean> indexCheckResult = checkIndex(sql);
-            if (!indexCheckResult.isSuccess()) {
-                return IconUtils.ERROR_ICON;
-            }
+            if (isConnected) {
+                ProcessResult<Boolean> indexCheckResult = checkIndex(sql);
+                if (!indexCheckResult.isSuccess()) {
+                    return IconUtils.ERROR_ICON;
+                }
 
-            if (!indexCheckResult.getData()) {
-                return IconUtils.FULL_SCAN_ICON;
+                if (!indexCheckResult.getData()) {
+                    return IconUtils.FULL_SCAN_ICON;
+                }
             }
 
             ProcessResult<Boolean> ruleCheckResult = checkRule(sql);
@@ -397,6 +411,13 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
     private ProcessResult<Boolean> checkIndex(String sql) {
         Checker checker = CheckerHolder.getChecker(CheckScopeEnum.index_hit);
         List<Report> reports = checker.check(project, sql);
+
+        Optional<Report> error = reports.stream().filter(report -> report.getLevel() == LevelEnum.error).findAny();
+
+        if (error.isPresent()) {
+            return ProcessResult.fail(error.get().getDesc());
+        }
+
         boolean allPass = reports.stream().allMatch(Report::isPass);
         return ProcessResult.success(allPass);
     }
@@ -421,11 +442,15 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
     }
 
     private RootTreeNode scanMybatisSql() {
+
         RootTreeNode root = new RootTreeNode(Constant.ROOT_NAME);
+
+        boolean isConnected = StringUtils.equals(SqlExecutor.testConnected(project), Constant.DATASOURCE_CONNECTED);
+
         // mapper 列表节点
         List<String> namespaces = ApplicationManager.getApplication().runReadAction((Computable<List<String>>) () -> MybatisXmlContentCache.acquireByNamespace(project, true));
         for (String namespace : namespaces) {
-            scanMybatisSql(root, namespace);
+            scanMybatisSql(root, namespace, isConnected);
         }
 
         return root;
@@ -441,6 +466,14 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
     public JScrollPane getIndexScrollPane() {
         return indexScrollPane;
+    }
+
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     public enum FilterType {

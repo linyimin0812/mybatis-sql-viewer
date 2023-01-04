@@ -34,6 +34,7 @@ public class MybatisSqlViewerToolWindowFactory implements ToolWindowFactory, Dum
         windowMap.put(project, mybatisSqlViewerToolWindow);
 
         subscribeParamChange(project);
+        subscribeScanIconClick(project);
 
     }
 
@@ -44,6 +45,17 @@ public class MybatisSqlViewerToolWindowFactory implements ToolWindowFactory, Dum
             @Override
             public void configChanged() {
                 windowMap.get(project).refresh(project);
+            }
+        });
+    }
+
+    private void subscribeScanIconClick(Project project) {
+        MessageBus messageBus = project.getMessageBus();
+        MessageBusConnection connect = messageBus.connect();
+        connect.subscribe(ConfigChangeNotifier.SCAN_ICON_CLICK_TOPIC, new ConfigChangeNotifier() {
+            @Override
+            public void configChanged(String config) {
+                windowMap.get(project).scanMybatisSql(config);
             }
         });
     }

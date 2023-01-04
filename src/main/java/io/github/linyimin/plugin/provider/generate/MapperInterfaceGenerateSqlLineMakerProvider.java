@@ -10,6 +10,7 @@ import io.github.linyimin.plugin.utils.IconUtils;
 import io.github.linyimin.plugin.utils.JavaUtils;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.util.Objects;
 
 /**
@@ -26,7 +27,7 @@ public class MapperInterfaceGenerateSqlLineMakerProvider implements LineMarkerPr
         }
 
         // 只处理Mapper接口中的内容
-        if (!JavaUtils.isMapperMethod(element)) {
+        if (!JavaUtils.isMapperInterface(element) && !JavaUtils.isMapperMethod(element)) {
             return null;
         }
 
