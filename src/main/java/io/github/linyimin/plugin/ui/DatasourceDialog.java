@@ -7,9 +7,11 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import io.github.linyimin.plugin.configuration.DatasourceConfigComponent;
+import io.github.linyimin.plugin.configuration.model.DatasourceConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
 import io.github.linyimin.plugin.sql.DatasourceComponent;
 import io.github.linyimin.plugin.sql.executor.SqlExecutor;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -17,6 +19,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 
 public class DatasourceDialog extends JDialog {
     private JPanel contentPane;
@@ -32,6 +35,7 @@ public class DatasourceDialog extends JDialog {
     // 通过addConfiguration button控制显示combo box或text field
     private JPanel namePanel;
     private JButton addConfiguration;
+    private JButton deleteButton;
 
     private JTextField nameText;
     private JComboBox<String> nameComboBox;
@@ -51,7 +55,9 @@ public class DatasourceDialog extends JDialog {
         setLocationRelativeTo(null);
         getRootPane().setDefaultButton(saveConfiguration);
 
-        initDatasource();
+        nameComboBox = new ComboBox<>();
+        nameText = new JTextField();
+        namePanel.setLayout(new BorderLayout());
 
         host.getDocument().addDocumentListener(new DatasourceChangeListener());
         port.getDocument().addDocumentListener(new DatasourceChangeListener());
@@ -70,49 +76,57 @@ public class DatasourceDialog extends JDialog {
 
         // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(e -> dispose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        this.deleteButton.setEnabled(true);
+
+        initDatasource();
+
+        nameComboBox.addActionListener(e -> datasourceChange());
+
     }
 
     private void addButtonMouseCursorAdapter() {
         this.saveConfiguration.addMouseListener(new MouseCursorAdapter(this.saveConfiguration));
         this.testConnection.addMouseListener(new MouseCursorAdapter(this.testConnection));
         this.addConfiguration.addMouseListener(new MouseCursorAdapter(this.addConfiguration));
+        this.deleteButton.addMouseListener(new MouseCursorAdapter(this.deleteButton));
     }
 
     private void addButtonActionListener() {
-        saveConfiguration.addActionListener((e) -> {
-
-            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    updateDatasourceForPersistent();
-                    ApplicationManager.getApplication().invokeLater(() -> {
-                        testResult.setText("Save success.");
-                    });
-                }
-            });
-        });
+        saveConfiguration.addActionListener((e) -> backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                updateDatasourceForPersistent();
+                ApplicationManager.getApplication().invokeLater(() -> testResult.setText("Save success."));
+            }
+        }));
 
         // 监听button点击事件
-        testConnection.addActionListener((e) -> {
+        testConnection.addActionListener((e) -> backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
 
-            backgroundTaskQueue.run(new Task.Backgroundable(project, Constant.APPLICATION_NAME) {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
+                updateDatasourceForPersistent();
+                String connectionInfo = SqlExecutor.testConnected(project);
 
-                    updateDatasourceForPersistent();
-                    String connectionInfo = SqlExecutor.testConnected(project);
+                ApplicationManager.getApplication().invokeLater(() -> testResult.setText(connectionInfo));
+            }
+        }));
 
-                    ApplicationManager.getApplication().invokeLater(() -> {
-                        testResult.setText(connectionInfo);
-                    });
-                }
-            });
-        });
+        addConfiguration.addActionListener(e -> addDatasource());
 
-        addConfiguration.addActionListener(e -> {
-            // 隐藏combobox, 显示text field用于创建新的数据源
-            displayNameFieldText();
-        });
+        deleteButton.addActionListener(e -> deleteDatasource());
+    }
+
+    private void deleteDatasource() {
+        DatasourceConfigComponent component = ApplicationManager.getApplication().getComponent(DatasourceConfigComponent.class);
+        String removedName = component.getName();
+        component.remove();
+        nameComboBox.removeItem(removedName);
+        if (StringUtils.isBlank(component.getName())) {
+            addDatasource();
+        }
+        nameComboBox.setSelectedItem(component.getName());
     }
 
     private void initDatasource() {
@@ -125,13 +139,20 @@ public class DatasourceDialog extends JDialog {
         password.setText(component.getPassword());
         database.setText(component.getDatabase());
 
-        displayNameComboBox();
+        if (StringUtils.isNotBlank(component.getName())) {
+            displayNameComboBox();
+            String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, component.getHost(), component.getPort(), component.getDatabase());
+            url.setText(urlText);
+        } else {
+            addDatasource();
+        }
 
-        String urlText = String.format(Constant.DATABASE_URL_TEMPLATE, component.getHost(), component.getPort(), component.getDatabase());
-        url.setText(urlText);
+    }
 
-        nameComboBox.addActionListener(e -> datasourceChange());
-
+    private void addDatasource() {
+        // 隐藏combobox, 显示text field用于创建新的数据源
+        displayNameFieldText();
+        this.deleteButton.setEnabled(false);
     }
 
     private void datasourceChange() {
@@ -154,9 +175,7 @@ public class DatasourceDialog extends JDialog {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 String connectionInfo = SqlExecutor.testConnected(project);
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    testResult.setText(connectionInfo);
-                });
+                ApplicationManager.getApplication().invokeLater(() -> testResult.setText(connectionInfo));
             }
         });
     }
@@ -176,13 +195,14 @@ public class DatasourceDialog extends JDialog {
 
         component.setCurrent(name);
 
-        component.getConfig()
-                .name(name)
-                .host(host.getText())
-                .port(port.getText())
-                .user(user.getText())
-                .password(String.valueOf(password.getPassword()))
-                .database(database.getText());
+        DatasourceConfiguration configuration = component.getConfig();
+
+        if (configuration == null) {
+            configuration = new DatasourceConfiguration();
+            component.addDatasourceConfiguration(configuration);
+        }
+
+        configuration.name(name).host(host.getText()).port(port.getText()).user(user.getText()).password(String.valueOf(password.getPassword())).database(database.getText());
 
         datasourceComponent.updateDatasource();
 
@@ -217,13 +237,16 @@ public class DatasourceDialog extends JDialog {
 
     private void displayNameFieldText() {
         // 隐藏combobox, 显示text field用于创建新的数据源
-        namePanel.setVisible(false);
+        host.setText(StringUtils.EMPTY);
+        port.setText(StringUtils.EMPTY);
+        user.setText(StringUtils.EMPTY);
+        password.setText(StringUtils.EMPTY);
+        database.setText(StringUtils.EMPTY);
+
+        nameText.setVisible(true);
         nameComboBox.setVisible(false);
         namePanel.remove(nameComboBox);
-
         namePanel.add(nameText);
-        namePanel.setVisible(true);
-        nameText.setVisible(true);
         nameText.setText("");
     }
 
@@ -231,12 +254,18 @@ public class DatasourceDialog extends JDialog {
 
         DatasourceConfigComponent component = ApplicationManager.getApplication().getComponent(DatasourceConfigComponent.class);
 
-        nameComboBox = new ComboBox<>(component.getAllDatasourceNames().toArray(new String[0]));
+        List<String> datasourceNames = component.getAllDatasourceNames();
+        nameComboBox.removeAllItems();
+        for (String name : datasourceNames) {
+            nameComboBox.addItem(name);
+        }
         nameComboBox.setSelectedItem(component.getName());
-        namePanel.setLayout(new BorderLayout());
+
+        namePanel.remove(nameText);
         namePanel.add(nameComboBox);
 
-        nameText = new JTextField();
         nameText.setVisible(false);
+        nameComboBox.setVisible(true);
+
     }
 }

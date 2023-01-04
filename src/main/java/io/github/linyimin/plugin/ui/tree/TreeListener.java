@@ -24,6 +24,7 @@ import io.github.linyimin.plugin.sql.parser.SqlParser;
 import io.github.linyimin.plugin.sql.result.SelectResult;
 import io.github.linyimin.plugin.ui.MouseCursorAdapter;
 import io.github.linyimin.plugin.ui.MybatisSqlScannerPanel;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -116,7 +117,14 @@ public class TreeListener extends MouseAdapter {
 
                 CheckScopeEnum scope = SqlParser.getCheckScope(sql);
 
-                List<Checker> checkers = CheckerHolder.getCheckers(scope, CheckScopeEnum.index_hit);
+                List<Checker> checkers;
+
+                boolean isConnected = StringUtils.equals(SqlExecutor.testConnected(mybatisSqlScannerPanel.getProject()), Constant.DATASOURCE_CONNECTED);
+                if (isConnected) {
+                    checkers = CheckerHolder.getCheckers(scope, CheckScopeEnum.index_hit);
+                } else {
+                    checkers = CheckerHolder.getCheckers(scope);
+                }
 
                 List<Report> reports = new ArrayList<>();
                 for (Checker checker : checkers) {

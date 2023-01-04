@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -30,14 +31,8 @@ public class DatasourceConfigComponent implements PersistentStateComponent<Datas
         if (Objects.isNull(config)) {
 
             config = new DatasourceConfig4Save();
-
             List<DatasourceConfiguration> configurations = new ArrayList<>();
-
-            DatasourceConfiguration configuration = initConfiguration();
-
-            configurations.add(configuration);
-
-            config.setCurrent("default");
+            config.setCurrent(StringUtils.EMPTY);
             config.setConfigurations(configurations);
 
         }
@@ -50,34 +45,14 @@ public class DatasourceConfigComponent implements PersistentStateComponent<Datas
             getState();
         }
 
-        if (StringUtils.isBlank(config.getCurrent())) {
-            config.setCurrent("default");
-        }
-
-        DatasourceConfiguration configuration = this.config.getConfigurations().stream()
+        return this.config.getConfigurations().stream()
                 .filter(temp -> StringUtils.equals(this.config.getCurrent(), temp.getName()))
                 .findFirst()
                 .orElse(null);
-
-        if (configuration == null) {
-            configuration = initConfiguration();
-            config.getConfigurations().add(configuration);
-        }
-
-        return configuration;
-
     }
 
-    private DatasourceConfiguration initConfiguration() {
-
-        return new DatasourceConfiguration()
-                .name("default")
-                .host("localhost")
-                .port("3306")
-                .user("root")
-                .password(StringUtils.EMPTY)
-                .database(StringUtils.EMPTY);
-
+    public void addDatasourceConfiguration(DatasourceConfiguration configuration) {
+        this.config.getConfigurations().add(configuration);
     }
 
     @Override
@@ -94,30 +69,65 @@ public class DatasourceConfigComponent implements PersistentStateComponent<Datas
     }
 
     public String getHost() {
+        if (this.getConfig() == null) {
+            return StringUtils.EMPTY;
+        }
         return this.getConfig().getHost();
     }
 
     public String getPort() {
+        if (this.getConfig() == null) {
+            return StringUtils.EMPTY;
+        }
         return this.getConfig().getPort();
     }
 
     public String getUser() {
+        if (this.getConfig() == null) {
+            return StringUtils.EMPTY;
+        }
         return this.getConfig().getUser();
     }
 
     public String getPassword() {
+        if (this.getConfig() == null) {
+            return StringUtils.EMPTY;
+        }
         return this.getConfig().getPassword();
     }
 
     public String getDatabase() {
+        if (this.getConfig() == null) {
+            return StringUtils.EMPTY;
+        }
         return this.getConfig().getDatabase();
     }
 
     public String getName() {
+        if (this.getConfig() == null) {
+            return StringUtils.EMPTY;
+        }
         return this.getConfig().getName();
     }
 
     public List<String> getAllDatasourceNames() {
         return this.config.getConfigurations().stream().map(DatasourceConfiguration::getName).collect(Collectors.toList());
+    }
+
+    public void remove() {
+        Optional<DatasourceConfiguration> optional = this.config.getConfigurations().stream()
+                .filter(temp -> StringUtils.equals(this.config.getCurrent(), temp.getName()))
+                .findFirst();
+
+        if (!optional.isPresent()) {
+            return;
+        }
+        List<DatasourceConfiguration> configurations = this.config.getConfigurations();
+        configurations.remove(optional.get());
+        if (configurations.size() > 0) {
+            this.config.setCurrent(configurations.get(0).getName());
+        } else {
+            this.config.setCurrent(StringUtils.EMPTY);
+        }
     }
 }
