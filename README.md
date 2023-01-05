@@ -5,6 +5,22 @@
 [中文](README.md) |
 [ENGLISH](README_EN.md)
 
+- [简介](#简介)
+- [安装](#安装)
+- [使用](#使用)
+  - [非mybatis模式](#非mybatis模式)
+  - [mybatis模式](#mybatis模式)
+    - [mybatis-sql扫描](#mybatis-sql扫描)
+  - [「sql」Tab](#sqltab)
+    - [1.「statement」Tab](#1-statementtab)
+    - [2.「result」Tab](#2-resulttab)
+    - [3.「stress Tab」](#3-stresstab)
+  - [「table」Tab](#tabletab)
+    - [1.「schema」Tab](#1-schematab)
+    - [2.「index」Tab](#2-indextab)
+    - [3.「mock」Tab](#3-mocktab)
+
+
 # 简介
 
 虽然写了很久的CRUD，但是依旧觉得写好CRUD是一件非常难且麻烦的事情，以下的情况在开发过程中应该都遇到过：
