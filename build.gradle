@@ -38,6 +38,28 @@ patchPluginXml {
     changeNotes = """
         <h4>2.0.0</h4>
         <ul>
+            <li>Supports mybatis mode and non-mybatis mode</li>
+            <li>SQL specification check</li>
+            <li>SQL index check</li>
+            <li>SQL stress</li>
+            <li>Table-building specification check</li>
+            <li>Table index specification check</li>
+            <li>Table data mock</li>
+            <li>Supports file and project dimensions MyBatis SQL scanning</li>
+        </ul>
+        <ul>
+            <li>支持mybatis模式和非mybatis模式</li>
+            <li>SQL规约检查</li>
+            <li>SQL索引检查</li>
+            <li>SQL压测</li>
+            <li>建表规约检查</li>
+            <li>索引规约检查</li>
+            <li>批量表数据mock</li>
+            <li>支持文件及项目维度mybatis sql扫描</li>
+        </ul>
+
+        <h4>1.0.6</h4>
+        <ul>
             <li>Support @Insert, @Delete, @Update and @Select annotations</li>
             <li>Beautify the style of SQL and JSON</li>
             <li>Fixed the bug where nested classes were parsed into JSON</li>

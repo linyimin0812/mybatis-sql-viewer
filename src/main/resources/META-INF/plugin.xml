@@ -7,22 +7,24 @@
     <idea-version since-build="201" />
 
     <description><![CDATA[
-    Mybatis-Sql-Viewer Plugin is a idea plugin for mybatis. <br />
 
-    <img src="https://linyimin-picture.oss-cn-hangzhou.aliyuncs.com/how-to-use.gif" />
+    Mybatis-Sql-Viewer是一款提高CRUD时编写SQL效率和质量的插件，支持mybatis模式和非mybatis模式。主要功能如下：<br/>
 
-    <br/>
-
-    Mybatis-Sql-Viewer is an enhanced plugin for idea to support mybatis,here is the main functions:
+    <b>mybatis模式(自动生成SQL语句, 包含非mybatis模式的功能)</b>
     <ul>
-        <li>navigate from the code to mapper and from the mapper back to code</li>
-        <li>The xml statement/method in the mapper file convert to sql statement, which supports parameters mock, data source configuration, and sql execution</li>
+        <li>mapper接口方法跳转到xml实现及xml实现跳转到对应mapper接口方法</li>
+        <li>mapper接口方法参数mock，并使用该参数将mapper接口方法的xml实现转换成sql语句</li>
+        <li>mybatis sql扫描，支持文件维度和项目维度进行扫描，并对SQL语句进行规约检查及索引检查</li>
     </ul>
 
-    Mybatis-Sql-Viewer是一款增强idea对mybatis支持的插件，主要功能如下：<br/>
+    <b>非mybatis模式(手动输入SQL语句)</b>
     <ul>
-        <li>快速从代码跳转到mapper及从mapper返回代码</li>
-        <li>mapper文件中的xml语句/方法转换成sql语句，支持参数mock、数据源配置、sql执行</li>
+        <li>SQL语句规约检查</li>
+        <li>SQL语句执行，返回执行结果及执行计划</li>
+        <li>SQL语句压测并输出压测报告</li>
+        <li>展示SQL语句中包含表的元数据信息，并进行建表规约检查</li>
+        <li>展示SQL语句中包含表的索引信息，并进行索引规约检查</li>
+        <li>对SQL语句中包含的表进行数据mock，支持多种mock规则及大批量数据mock</li>
     </ul>
 
     <br/>

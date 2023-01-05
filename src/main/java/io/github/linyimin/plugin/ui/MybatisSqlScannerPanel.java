@@ -20,7 +20,7 @@ import io.github.linyimin.plugin.cache.MybatisXmlContentCache;
 import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.constant.Constant;
-import io.github.linyimin.plugin.pojo2json.DefaultPOJO2JSONParser;
+import io.github.linyimin.plugin.pojo2json.RandomPOJO2JSONParser;
 import io.github.linyimin.plugin.sql.checker.Checker;
 import io.github.linyimin.plugin.sql.checker.CheckerHolder;
 import io.github.linyimin.plugin.sql.checker.Report;
@@ -344,7 +344,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
         for (XmlTag method : methods) {
             ProcessResult<MybatisSqlConfiguration> result = ApplicationManager.getApplication().runReadAction(
-                    (Computable<ProcessResult<MybatisSqlConfiguration>>) () -> SqlParamGenerateComponent.generate(method.getFirstChild(), new DefaultPOJO2JSONParser(), false)
+                    (Computable<ProcessResult<MybatisSqlConfiguration>>) () -> SqlParamGenerateComponent.generate(method.getFirstChild(), new RandomPOJO2JSONParser(), false)
             );
 
             MybatisSqlConfiguration configuration = result.getData();
