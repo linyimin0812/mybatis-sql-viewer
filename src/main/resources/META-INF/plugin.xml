@@ -8,6 +8,18 @@
 
     <description><![CDATA[
 
+    Mybatis-SQL-Viewer is a plugin that improves the efficiency and quality of writing SQL when CRUD, supporting both mybatis and non-mybatis modes. The main functions are as follows:<br/>
+    <ul>
+        <li>Supports mybatis mode and non-mybatis mode</li>
+        <li>SQL specification check</li>
+        <li>SQL index check</li>
+        <li>SQL stress</li>
+        <li>Table-building specification check</li>
+        <li>Table index specification check</li>
+        <li>Table data mock</li>
+        <li>Supports file and project dimensions MyBatis SQL scanning</li>
+    </ul>
+    <br/>
     Mybatis-Sql-Viewer是一款提高CRUD时编写SQL效率和质量的插件，支持mybatis模式和非mybatis模式。主要功能如下：<br/>
 
     <b>mybatis模式(自动生成SQL语句, 包含非mybatis模式的功能)</b>
