@@ -64,11 +64,13 @@ public class LexiconDialog extends JDialog {
 
         DefaultTableModel model = (DefaultTableModel) this.lexiconTable.getModel();
 
-        Vector<Vector<String>> dataVector = model.getDataVector();
+        Vector dataVector = model.getDataVector();
 
         List<Lexicon> lexicons = new ArrayList<>();
 
-        for (Vector<String> vector : dataVector) {
+        for (Object data :  dataVector) {
+            
+            Vector<String> vector = (Vector<String>) data;
 
             String name = vector.get(0);
             String content = vector.get(1);
