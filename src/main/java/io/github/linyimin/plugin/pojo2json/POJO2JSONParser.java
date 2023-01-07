@@ -94,9 +94,7 @@ public abstract class POJO2JSONParser {
         }
 
         String fieldKey = parseFieldKey(field);
-        if (fieldKey == null) {
-            return null;
-        }
+        
         Object fieldValue = parseFieldValue(field, level, ignoreProperties, psiClassGenerics);
         if (fieldValue == null) {
             return null;
