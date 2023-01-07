@@ -19,6 +19,7 @@
     - [1.「schema」Tab](#1-schematab)
     - [2.「index」Tab](#2-indextab)
     - [3.「mock」Tab](#3-mocktab)
+- [参考](#参考)
 
 
 # 简介
@@ -285,4 +286,18 @@ mock数据完成后，会存储主键id的范围（持久化存储到本地文�
 
 ![mock clean](./docs/mock_clean.jpg)
 
+# 参考
 
+在实现过程中参考了许多非常优秀的项目，拷贝了很多代码，特此感谢。
+
+[1. 阿里云JDBC压测](https://help.aliyun.com/document_detail/327250.html)
+
+[2. SQL Father - 模拟数据生成器（后端）](https://github.com/liyupi/sql-father-backend-public)
+
+[3. Java Mybatis SQL Scanner](https://github.com/q258523454/Java-Mybatis-SQL-Scanner)
+
+[4. 动手撸一个SQL规范检查工具](https://zhuanlan.zhihu.com/p/362200137)
+
+[5. pojo2json](https://github.com/organics2016/pojo2json)
+
+[6. mybatis-3](https://github.com/mybatis/mybatis-3)
