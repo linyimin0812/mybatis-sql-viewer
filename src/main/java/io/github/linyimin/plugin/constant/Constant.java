@@ -95,13 +95,15 @@ public class Constant {
             new Report().isPass(false).level(LevelEnum.for_reference).desc("禁止使用存储过程，存储过程难以调试和扩展，更没有移植性。")
     );
 
-    public static final Map<CheckScopeEnum, List<Report>> DEFAULT_REPORT_MAP = new HashMap<CheckScopeEnum, List<Report>>() {{
-        put(CheckScopeEnum.index_field, DEFAULT_INDEX_REPORTS);
-        put(CheckScopeEnum.naming_convention, DEFAULT_TABLE_REPORTS);
-        put(CheckScopeEnum.select, DEFAULT_SELECT_REPORTS);
-        put(CheckScopeEnum.update, DEFAULT_SELECT_REPORTS);
-        put(CheckScopeEnum.delete, DEFAULT_SELECT_REPORTS);
-    }};
+    public static final Map<CheckScopeEnum, List<Report>> DEFAULT_REPORT_MAP = new HashMap<CheckScopeEnum, List<Report>>();
+    
+    static {
+        DEFAULT_REPORT_MAP.put(CheckScopeEnum.index_field, DEFAULT_INDEX_REPORTS);
+        DEFAULT_REPORT_MAP.put(CheckScopeEnum.naming_convention, DEFAULT_TABLE_REPORTS);
+        DEFAULT_REPORT_MAP.put(CheckScopeEnum.select, DEFAULT_SELECT_REPORTS);
+        DEFAULT_REPORT_MAP.put(CheckScopeEnum.update, DEFAULT_SELECT_REPORTS);
+        DEFAULT_REPORT_MAP.put(CheckScopeEnum.delete, DEFAULT_SELECT_REPORTS);
+    }
 
     public static final Border LINE_BORDER = UIUtil.isUnderDarcula() ? new LineBorder(JBColor.BLACK) : new LineBorder(JBColor.lightGray);
 
