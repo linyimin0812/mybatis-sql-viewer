@@ -61,7 +61,12 @@
 
 # 安装
 
-`IntelliJ IDEA` > `Preferences` > `Plugins` > `Marketplace` > `Search for "mybatis sql viewer"` > `Install Plugin` > `Restart IntelliJ IDEA`
+- **IDEA中安装:**
+    - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search<b>"mybatis sql viewer"</b></kbd> > <kbd>Install</kbd>
+
+- **手动安装:**
+    - 在[releases](https://github.com/linyimin-bupt/mybatis-sql-viewer/releases)页面中下载最新版本的zip文件
+    - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd> -> 选择下载的文件安装
 
 # 使用
 
