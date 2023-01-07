@@ -22,6 +22,9 @@
     - [2.「index」Tab](#2-indextab)
     - [3.「mock」Tab](#3-mocktab)
 - [参考](#参考)
+- [Contributor](#-contributor)
+- [为项目添砖加瓦](#-为项目添砖加瓦)
+- [感谢支持](#感谢支持)
 
 
 # 简介
@@ -303,3 +306,18 @@ mock数据完成后，会存储主键id的范围（持久化存储到本地文�
 [5. pojo2json](https://github.com/organics2016/pojo2json)
 
 [6. mybatis-3](https://github.com/mybatis/mybatis-3)
+
+# ✨ Contributor
+
+[<kbd> <img src="https://avatars.githubusercontent.com/u/17776713?s=48&v=4" /> </kbd>](https://github.com/linyimin-bupt)
+[<kbd> <img src="https://avatars.githubusercontent.com/u/12124172?s=48&v=4" /> </kbd>](https://github.com/clickear)
+
+
+
+# 🤝 为项目添砖加瓦
+
+欢迎提出 Contributions, issues 与 feature requests!<br />随时查看 [issues page](https://github.com/linyimin-bupt/mybatis-sql-viewer/issues).
+
+# 🙏感谢支持
+
+如果这个项目对你产生了一点的帮助，请为这个项目点上一颗 ⭐️
