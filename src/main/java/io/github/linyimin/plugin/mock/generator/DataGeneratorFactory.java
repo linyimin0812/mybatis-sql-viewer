@@ -11,6 +11,8 @@ import java.util.Map;
  **/
 public class DataGeneratorFactory {
     
+    private static final Map<MockTypeEnum, DataGenerator> GENERATOR_MAP = new HashMap<MockTypeEnum, DataGenerator>();
+    
     static {
         GENERATOR_MAP.put(MockTypeEnum.database, new DatabaseDataGenerator());
         GENERATOR_MAP.put(MockTypeEnum.regex, new RegexDataGenerator());
@@ -20,8 +22,6 @@ public class DataGeneratorFactory {
         GENERATOR_MAP.put(MockTypeEnum.random, new RandomDataGenerator());
         GENERATOR_MAP.put(MockTypeEnum.none, new DefaultValueGenerator());
     }
-
-    private static final Map<MockTypeEnum, DataGenerator> GENERATOR_MAP = new HashMap<MockTypeEnum, DataGenerator>();
 
     private DataGeneratorFactory() {}
 
