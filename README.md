@@ -46,7 +46,7 @@
 
 ![普通开发流程](./docs/dev_process.svg)
 
-按照这种开发模式，需要重启好多次应用，对于每次启动都需要几分钟应用来说开发体验简直就是灾难。基于上述的问题，开发了mybatis-sql-viewer插件，基于此插件可以实现以下能力而不需要启动应用：
+按照这种开发模式，需要重启好多次应用，对于每次启动都需要几分钟的应用来说开发体验简直就是灾难。基于上述的问题，开发了mybatis-sql-viewer插件，基于此插件可以实现以下能力而不需要启动应用：
 
 ![mybatis-sql-viewer能力](./docs/mybatis-sql-viewer_function.svg)
 
