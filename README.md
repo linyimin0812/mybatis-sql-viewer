@@ -1,3 +1,5 @@
+[![plugin](https://img.shields.io/badge/IntelliJ%20IDEA%20Plugins-000000?logo=IntelliJ-idea&logoColor=white)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
+[![license](https://img.shields.io/github/license/linyimin-bupt/mybatis-sql-viewer)](https://github.com/linyimin-bupt/mybatis-sql-viewer)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/18713-mybatis-sql-viewer)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![Version](https://img.shields.io/jetbrains/plugin/v/18713.svg?label=version)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![](https://sonarcloud.io/api/project_badges/measure?project=linyimin-bupt_mybatis-sql-viewer&metric=alert_status)](https://sonarcloud.io/project/overview?id=linyimin-bupt_mybatis-sql-viewer)
