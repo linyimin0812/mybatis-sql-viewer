@@ -121,7 +121,3 @@ patchPluginXml {
 test {
     useJUnitPlatform()
 }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '7.4'
-}
