@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * @author banzhe
  * @date 2022/11/30 16:57
  **/
-public class DatabaseDataGenerator implements DataGenerator {
+public class DatabaseDataGenerator implements DataGenerator<Object> {
 
     private Project project;
 
@@ -38,9 +38,10 @@ public class DatabaseDataGenerator implements DataGenerator {
 
             SelectResult result = (SelectResult) SqlExecutor.executeSql(project, sql, false);
 
-            Vector<Vector<Object>> dataVector = result.getModel().getDataVector();
+            Vector dataVector = result.getModel().getDataVector();
 
-            for (Vector<Object> vector : dataVector) {
+            for (Object data : dataVector) {
+                Vector<Object> vector = (Vector<Object>) data;
                 contents.add(vector.get(0));
             }
 
