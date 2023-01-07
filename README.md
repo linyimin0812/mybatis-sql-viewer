@@ -70,6 +70,10 @@
 
 # 使用
 
+$\textcolor{red}{因为需要拉取数据库表的元数据信息、执行SQL，所以使用前需要配置一下数据源。}$ 支持多数据源配置，点击「datasource」按钮即可完成数据源的创建、选择、删除、测试。
+
+![](./docs/datasource.jpg)
+
 此插件有两种模式：mybatis模式和非mybatis模式。差别在于mybatis模式支持以下功能：
 
 - mapper接口方法参数mock
@@ -80,10 +84,6 @@
 - XML文件跳转mapper接口/方法
 - 基于mock参数将mapper接口方法的xml转换成真实SQL
 - 按照文件/项目维度扫描XML文件，并生成对应的真实SQL语句，并进行规约/索引相关校验
-
-因为需要拉取数据库表的元数据信息、执行SQL，所以使用前需要配置一下数据源。支持多数据源配置，点击「datasource」按钮即可完成数据源的创建、选择、删除、测试。
-
-![](./docs/datasource.jpg)
 
 ## 非mybatis模式
 
