@@ -138,7 +138,15 @@ public class DynamicContext {
             }
 
             if (parameterJSONObject != null) {
-                return JSONPath.eval(parameterJSONObject, strKey);
+
+                if (JSONPath.contains(parameterJSONObject, strKey)) {
+                    return JSONPath.eval(parameterJSONObject, strKey);
+                }
+
+                if (parameterJSONObject.size() == 1) {
+                    return parameterJSONObject.values().stream().findFirst().orElse(null);
+                }
+
             }
 
             if (parameterObject == null) {
