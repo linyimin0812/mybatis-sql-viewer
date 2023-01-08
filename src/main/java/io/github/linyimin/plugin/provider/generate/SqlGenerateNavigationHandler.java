@@ -43,7 +43,7 @@ public class SqlGenerateNavigationHandler implements GutterIconNavigationHandler
 
             activateWindow(mybatisSqlViewerToolWindow);
 
-            if (elt.getParent() instanceof PsiClass || StringUtils.equals(((XmlTag) elt.getParent()).getName(), Constant.MAPPER)) {
+            if (elt.getParent() instanceof PsiClass || (elt.getParent() instanceof  XmlTag && StringUtils.equals(((XmlTag) elt.getParent()).getName(), Constant.MAPPER))) {
                 String namespace = StringUtils.EMPTY;
                 if (elt.getParent() instanceof PsiClass) {
                     namespace = ((PsiClass) elt.getParent()).getQualifiedName();
