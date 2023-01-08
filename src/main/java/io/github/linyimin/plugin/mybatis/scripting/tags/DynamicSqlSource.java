@@ -2,6 +2,7 @@ package io.github.linyimin.plugin.mybatis.scripting.tags;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.mybatis.mapping.SqlSource;
 import io.github.linyimin.plugin.sql.formatter.MysqlFormatter;
 
@@ -25,9 +26,9 @@ public class DynamicSqlSource implements SqlSource {
     }
 
     @Override
-    public String getSql(Object parameterObject) {
+    public String getSql(List<SqlParamGenerateComponent.ParamNameType> types, Object parameterObject) {
 
-        DynamicContext context = new DynamicContext(parameterObject);
+        DynamicContext context = new DynamicContext(types, parameterObject);
 
         rootSqlNode.apply(context);
 

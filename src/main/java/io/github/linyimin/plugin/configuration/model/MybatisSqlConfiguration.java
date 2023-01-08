@@ -1,8 +1,6 @@
 package io.github.linyimin.plugin.configuration.model;
 
 import com.intellij.psi.PsiElement;
-import io.github.linyimin.plugin.configuration.GlobalConfig;
-import io.github.linyimin.plugin.constant.Constant;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -16,10 +14,8 @@ public class MybatisSqlConfiguration {
     private String method;
     private String params;
     private String sql;
-    private String result;
     private boolean defaultParams;
     private boolean updateSql = true;
-    private boolean rowBounds = false;
 
     public String getMethod() {
         return method;
@@ -45,14 +41,6 @@ public class MybatisSqlConfiguration {
         this.sql = sql;
     }
 
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
-    }
-
     public PsiElement getPsiElement() {
         return psiElement;
     }
@@ -73,7 +61,6 @@ public class MybatisSqlConfiguration {
         method = StringUtils.EMPTY;
         params = StringUtils.EMPTY;
         sql = StringUtils.EMPTY;
-        result = StringUtils.EMPTY;
         psiElement = null;
         defaultParams = false;
         updateSql = true;
@@ -85,13 +72,5 @@ public class MybatisSqlConfiguration {
 
     public void setUpdateSql(boolean updateSql) {
         this.updateSql = updateSql;
-    }
-
-    public boolean isRowBounds() {
-        return rowBounds;
-    }
-
-    public void setRowBounds(boolean rowBounds) {
-        this.rowBounds = rowBounds;
     }
 }

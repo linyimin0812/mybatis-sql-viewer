@@ -21,6 +21,7 @@ import io.github.linyimin.plugin.pojo2json.RandomPOJO2JSONParser;
 import io.github.linyimin.plugin.provider.MapperXmlProcessor;
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import io.github.linyimin.plugin.utils.JavaUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 
@@ -66,7 +67,7 @@ public class SqlParamGenerateComponent {
                 sqlConfig.setPsiElement(psiElement);
                 // 找不到对应的接口方法
                 sqlConfig.setMethod(statementId);
-                sqlConfig.setParams("");
+                sqlConfig.setParams("{}");
                 return ProcessResult.fail(String.format("method of %s is not exist.", statementId), sqlConfig);
             }
 
@@ -74,7 +75,6 @@ public class SqlParamGenerateComponent {
             configuration.setPsiElement(psiElement);
             configuration.setMethod(statementId);
             configuration.setParams("{}");
-            configuration.setRowBounds(false);
 
             return ProcessResult.success(configuration);
 
@@ -88,7 +88,6 @@ public class SqlParamGenerateComponent {
             sqlConfig.setMethod(statementId);
             sqlConfig.setParams(params);
             sqlConfig.setUpdateSql(true);
-            sqlConfig.setRowBounds(isRowBounds);
             if (parser instanceof RandomPOJO2JSONParser) {
                 sqlConfig.setDefaultParams(false);
             }
@@ -103,7 +102,6 @@ public class SqlParamGenerateComponent {
         configuration.setPsiElement(psiElement);
         configuration.setMethod(statementId);
         configuration.setParams(params);
-        configuration.setRowBounds(isRowBounds);
 
         return ProcessResult.success(configuration);
     }
@@ -118,18 +116,23 @@ public class SqlParamGenerateComponent {
 
     public static ProcessResult<String> generateSql(Project project, String methodQualifiedName, String params, boolean cache) {
 
+        MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
+
         try {
-            ProcessResult<String> processResult = getSqlFromAnnotation(project, methodQualifiedName, params);
+            ProcessResult<String> processResult = ApplicationManager.getApplication().runReadAction((Computable<? extends ProcessResult<String>>) () -> getSqlFromAnnotation(project, methodQualifiedName, params));
             if (processResult.isSuccess()) {
+
+                if (cache) {
+                    sqlConfig.setSql(processResult.getData());
+                    sqlConfig.setUpdateSql(false);
+                }
 
                 return processResult;
             }
 
-            processResult = getSqlFromXml(project, methodQualifiedName, params);
+            processResult = ApplicationManager.getApplication().runReadAction((Computable<? extends ProcessResult<String>>) () -> getSqlFromXml(project, methodQualifiedName, params));
 
             if (processResult.isSuccess() && cache) {
-                MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
-
                 sqlConfig.setSql(processResult.getData());
                 sqlConfig.setUpdateSql(false);
             }
@@ -163,14 +166,8 @@ public class SqlParamGenerateComponent {
             return ProcessResult.fail("annotation is not exist.");
         }
 
-        PsiAnnotation annotation = ApplicationManager.getApplication().runReadAction(new Computable<PsiAnnotation>() {
-            @Override
-            public PsiAnnotation compute() {
-                PsiAnnotation[] annotations = psiMethods.get(0).getAnnotations();
-                return Arrays.stream(annotations).filter(psiAnnotation -> MYBATIS_SQL_ANNOTATIONS.contains(psiAnnotation.getQualifiedName()))
-                        .findFirst().orElse(null);
-            }
-        });
+        PsiAnnotation[] annotations = psiMethods.get(0).getAnnotations();
+        PsiAnnotation annotation = Arrays.stream(annotations).filter(psiAnnotation -> MYBATIS_SQL_ANNOTATIONS.contains(psiAnnotation.getQualifiedName())).findFirst().orElse(null);
 
         if (annotation == null) {
             return ProcessResult.fail("There is no of annotation on the method.");
@@ -183,12 +180,11 @@ public class SqlParamGenerateComponent {
 
         String content = String.valueOf(JavaPsiFacade.getInstance(project).getConstantEvaluationHelper().computeConstantExpression(value));
 
-
         if (StringUtils.isBlank(content)) {
             return ProcessResult.success("The value of annotation is empty.");
         }
 
-        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(params);
+        String sql = new XMLLanguageDriver().createSqlSource(content).getSql(getMethodBodyParamList(psiMethods.get(0)), params);
 
         return ProcessResult.success(sql);
     }
@@ -198,8 +194,7 @@ public class SqlParamGenerateComponent {
 
             String namespace = qualifiedMethod.substring(0, qualifiedMethod.lastIndexOf("."));
 
-            Optional<String> optional = ApplicationManager.getApplication()
-                    .runReadAction((Computable<Optional<String>>) () -> MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst());
+            Optional<String> optional = MybatisXmlContentCache.acquireByNamespace(project, namespace).stream().map(XmlTag::getText).findFirst();
 
             if (!optional.isPresent()) {
                 return ProcessResult.fail("Oops! The plugin can't find the mapper file.");
@@ -212,13 +207,14 @@ public class SqlParamGenerateComponent {
                 return ProcessResult.fail(String.format("Oops! There is not %s in mapper file!!!", qualifiedMethod));
             }
 
-            String sql = sqlSourceMap.get(qualifiedMethod).getSql(params);
-
-            MybatisSqlConfiguration sqlConfig = project.getService(MybatisSqlStateComponent.class).getConfiguration();
-            if (sqlConfig.isRowBounds()) {
-                sql = String.format("%s\nLIMIT 0, 10", sql);
+            String methodName = qualifiedMethod.substring(qualifiedMethod.lastIndexOf(".") + 1);
+            List<PsiMethod> psiMethods = JavaUtils.findMethod(project, namespace, methodName);
+            List<ParamNameType> types = Collections.emptyList();
+            if (CollectionUtils.isNotEmpty(psiMethods)) {
+                types = getMethodBodyParamList(psiMethods.get(0));
             }
 
+            String sql = sqlSourceMap.get(qualifiedMethod).getSql(types, params);
             return ProcessResult.success(sql);
         } catch (Throwable t) {
             StringWriter sw = new StringWriter();
@@ -269,12 +265,11 @@ public class SqlParamGenerateComponent {
         PsiParameterList parameterList = psiMethod.getParameterList();
         PsiParameter[] parameters = parameterList.getParameters();
         for (PsiParameter param : parameters) {
-
             String paramAnnotationValue = getParamAnnotationValue(param);
             String name = StringUtils.isBlank(paramAnnotationValue) ? param.getName() : paramAnnotationValue;
-
-            ParamNameType paramNameType = ApplicationManager.getApplication().runReadAction((Computable<ParamNameType>) () -> new ParamNameType(name, param.getType()));
-            result.add(paramNameType);
+            if (!StringUtils.equals(param.getType().getCanonicalText(), "org.apache.ibatis.session.RowBounds")) {
+                result.add(new ParamNameType(name, param.getType()));
+            }
         }
         return result;
     }
@@ -299,13 +294,17 @@ public class SqlParamGenerateComponent {
     }
 
 
-    static class ParamNameType {
+    public static class ParamNameType {
         private final String name;
         private final PsiType psiType;
 
         public ParamNameType(String name, PsiType psiType) {
             this.name = name;
             this.psiType = psiType;
+        }
+
+        public PsiType getPsiType() {
+            return this.psiType;
         }
     }
 }

@@ -4,10 +4,12 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONPath;
 import com.alibaba.fastjson.parser.Feature;
+import io.github.linyimin.plugin.component.SqlParamGenerateComponent;
 import io.github.linyimin.plugin.mybatis.type.SimpleTypeRegistry;
 import ognl.OgnlContext;
 import ognl.OgnlRuntime;
 import ognl.PropertyAccessor;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.*;
 
@@ -26,33 +28,11 @@ public class DynamicContext {
     private final StringJoiner sqlBuilder = new StringJoiner(" ");
     private int uniqueNumber = 0;
 
-    public DynamicContext(Object parameterObject) {
+    public DynamicContext(List<SqlParamGenerateComponent.ParamNameType> types, Object parameterObject) {
 
-        bindings = new ContextMap(parameterObject);
+        bindings = new ContextMap(types, parameterObject);
 
-        bindings.put(PARAMETER_OBJECT_KEY, parameterObject);
-
-        if (parameterObject instanceof Collection) {
-            bindings.put("collection", parameterObject);
-
-            if (parameterObject instanceof List) {
-                bindings.put("list", parameterObject);
-            }
-            return;
-        }
-        if (parameterObject != null && parameterObject.getClass().isArray()) {
-            bindings.put("array", parameterObject);
-            return;
-        }
-
-        if (parameterObject != null && JSONObject.isValidArray(parameterObject.toString())) {
-            JSONArray array = JSONObject.parseArray(parameterObject.toString(), Feature.DisableCircularReferenceDetect);
-            bindings.put("collection", array);
-            bindings.put("list", array);
-            bindings.put("array", array);
-        }
-
-        if (parameterObject != null && JSONObject.isValidObject(parameterObject.toString())) {
+        if (parameterObject != null) {
             JSONObject object = JSONObject.parseObject(parameterObject.toString());
             if (object.size() != 1) {
                 return;
@@ -60,7 +40,7 @@ public class DynamicContext {
             Collection<Object> values = object.values();
             for (Object value : values) {
                 if (JSONObject.isValidArray(value.toString())) {
-                    JSONArray array = JSONObject.parseArray(value.toString());
+                    JSONArray array = JSONObject.parseArray(value.toString(), Feature.DisableCircularReferenceDetect);
                     bindings.put("collection", array);
                     bindings.put("list", array);
                     bindings.put("array", array);
@@ -95,32 +75,24 @@ public class DynamicContext {
 
         private static final long serialVersionUID = 2977601501966151582L;
         private JSONObject parameterJSONObject;
-        private final Object parameterObject;
+        private List<SqlParamGenerateComponent.ParamNameType> types;
+        private boolean hasReturned = false;
 
-        public ContextMap(Object parameterObject) {
-
-            this.parameterObject = parameterObject;
+        public ContextMap(List<SqlParamGenerateComponent.ParamNameType> types, Object parameterObject) {
 
             if (parameterObject == null) {
-                this.parameterJSONObject = null;
                 return;
             }
 
-            if (parameterObject.getClass() == Date.class) {
-                parameterObject = parameterObject.toString();
-            }
+            this.types = types;
+            this.parameterJSONObject = JSONObject.parseObject(parameterObject.toString(), Feature.DisableCircularReferenceDetect);
 
-            String parameterObjectStr = parameterObject.toString();
-
-            if (!SimpleTypeRegistry.isSimpleType(parameterObject.getClass())) {
-                parameterObjectStr = JSONObject.toJSONString(parameterObject);
-            }
-
-            if (JSONObject.isValidObject(parameterObjectStr)) {
-                this.parameterJSONObject = JSONObject.parseObject(parameterObjectStr);
-                this.processRowBounds();
-            } else {
-                this.parameterJSONObject = null;
+            if (CollectionUtils.isNotEmpty(this.types) && this.types.size() == 1 && this.parameterJSONObject.values().size() == 1) {
+                String clazz = this.types.get(0).getPsiType().getCanonicalText();
+                if (SimpleTypeRegistry.isSimpleType(clazz)) {
+                    Object value = this.parameterJSONObject.values().stream().findAny().orElse(null);
+                    super.put(PARAMETER_OBJECT_KEY, value);
+                }
             }
         }
 
@@ -129,59 +101,22 @@ public class DynamicContext {
 
             String strKey = (String) key;
 
+            Object value = null;
+
             if (super.containsKey(strKey)) {
-                return super.get(strKey);
-            }
-
-            if (strKey.contains(ForEachSqlNode.ITEM_PREFIX)) {
-                return JSONPath.eval(this, strKey);
-            }
-
-            if (parameterJSONObject != null) {
-
-                if (JSONPath.contains(parameterJSONObject, strKey)) {
-                    return JSONPath.eval(parameterJSONObject, strKey);
-                }
-
-                if (parameterJSONObject.size() == 1) {
-                    return parameterJSONObject.values().stream().findFirst().orElse(null);
-                }
-
-            }
-
-            if (parameterObject == null) {
-                return null;
-            }
-
-            if (SimpleTypeRegistry.isSimpleType(parameterObject.getClass())) {
-                return parameterObject;
-            }
-
-            return null;
-        }
-
-        private void processRowBounds() {
-            if (this.parameterJSONObject.size() != 2) {
-                return;
-            }
-            for (Map.Entry<String, Object> entry : this.parameterJSONObject.entrySet()) {
-                if (!(entry.getValue() instanceof JSONObject)) {
-                    return;
-                }
-                JSONObject json = (JSONObject) entry.getValue();
-                if (json.size() == 2 && json.containsKey("limit") && json.containsKey("offset")) {
-                    this.parameterJSONObject.remove(entry.getKey());
+                value = super.get(strKey);
+            } else if (strKey.contains(ForEachSqlNode.ITEM_PREFIX)) {
+                value = JSONPath.eval(this, strKey);
+            } else if (parameterJSONObject != null && JSONPath.contains(parameterJSONObject, strKey)) {
+                value = JSONPath.eval(parameterJSONObject, strKey);
+            }else if (CollectionUtils.isNotEmpty(this.types) && this.types.size() == 1 && !hasReturned) {
+                String clazz = this.types.get(0).getPsiType().getCanonicalText();
+                if (SimpleTypeRegistry.isSimpleType(clazz)) {
+                    value = super.get(PARAMETER_OBJECT_KEY);
                 }
             }
-
-            if (this.parameterJSONObject.size() != 1) {
-                return;
-            }
-
-            Object obj = new ArrayList<>(this.parameterJSONObject.values()).get(0);
-            if (obj instanceof JSONObject) {
-                parameterJSONObject = (JSONObject) obj;
-            }
+            hasReturned = true;
+            return value;
         }
     }
 

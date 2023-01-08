@@ -2,7 +2,6 @@ package io.github.linyimin.plugin.configuration;
 
 import io.github.linyimin.plugin.configuration.model.MybatisSqlConfiguration;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -21,7 +20,6 @@ public class MybatisSqlStateComponent {
             config.setMethod(StringUtils.EMPTY);
             config.setParams(StringUtils.EMPTY);
             config.setSql(StringUtils.EMPTY);
-            config.setResult(StringUtils.EMPTY);
         }
 
         return config;

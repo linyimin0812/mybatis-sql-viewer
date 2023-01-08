@@ -2,6 +2,7 @@ package io.github.linyimin.plugin.mybatis.scripting.tags;
 
 import io.github.linyimin.plugin.mybatis.parsing.GenericTokenParser;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -114,7 +115,7 @@ public class ForEachSqlNode implements SqlNode {
         private final String item;
 
         public FilteredDynamicContext(DynamicContext delegate, String itemIndex, String item, int i) {
-            super(null);
+            super(Collections.emptyList(), null);
             this.delegate = delegate;
             this.index = i;
             this.itemIndex = itemIndex;
@@ -163,7 +164,7 @@ public class ForEachSqlNode implements SqlNode {
         private boolean prefixApplied;
 
         public PrefixedContext(DynamicContext delegate, String prefix) {
-            super(null);
+            super(Collections.emptyList(), null);
             this.delegate = delegate;
             this.prefix = prefix;
             this.prefixApplied = false;

@@ -5,6 +5,7 @@ import io.github.linyimin.plugin.utils.LoadXmlUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class XMLMapperBuilderTest {
@@ -29,7 +30,7 @@ public class XMLMapperBuilderTest {
 
         SqlSource sqlSource = sqlSourceMap.get("fruit.testBasic");
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql(null));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), null));
 
     }
 
@@ -52,9 +53,7 @@ public class XMLMapperBuilderTest {
 
         SqlSource sqlSource = sqlSourceMap.get("fruit.testBind");
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("testBind"));
-
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"name\": \"testBind\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"testBind\"}"));
 
     }
 
@@ -78,7 +77,7 @@ public class XMLMapperBuilderTest {
                 "  name = 'testChoose'";
 
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("testChoose"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"testChoose\"}"));
 
         expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -89,11 +88,11 @@ public class XMLMapperBuilderTest {
                 "WHERE\n" +
                 "  name = 'testBind'";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"name\": \"testBind\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"testBind\"}"));
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"name\": \"testBind\", \"category\": \"apple\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"testBind\", \"category\": \"apple\"}"));
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"name\": \"testBind\", \"category\": \"banana\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"testBind\", \"category\": \"banana\"}"));
 
         expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -104,7 +103,7 @@ public class XMLMapperBuilderTest {
                 "WHERE\n" +
                 "  category = 'banana'";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"category\": \"banana\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"category\": \"banana\"}"));
 
         expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -116,7 +115,7 @@ public class XMLMapperBuilderTest {
                 "  category = 'banana'\n" +
                 "  AND price = 10.00";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"category\": \"banana\", \"price\": 10.00}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"category\": \"banana\", \"price\": 10.00}"));
 
         expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -126,7 +125,7 @@ public class XMLMapperBuilderTest {
                 "  fruits\n" +
                 "WHERE\n" +
                 "  category = 'apple'";
-        Assertions.assertEquals(expectedSql, sqlSource.getSql(null));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), null));
     }
 
     @Test
@@ -143,7 +142,7 @@ public class XMLMapperBuilderTest {
                 "VALUES\n" +
                 "  ('Jonathan', 'apple', 10.00)";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"fruits\":[{\"name\": \"Jonathan\", \"price\": 10.00, \"category\": \"apple\"}]}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"fruits\":[{\"name\": \"Jonathan\", \"price\": 10.00, \"category\": \"apple\"}]}"));
 
         expectedSql = "INSERT INTO\n" +
                 "  fruits (name, category, price)\n" +
@@ -151,7 +150,7 @@ public class XMLMapperBuilderTest {
                 "  ('Jonathan', 'apple', 10.00),\n" +
                 "  ('Mcintosh', 'apple', 12.00)";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"fruits\":[{\"name\": \"Jonathan\", \"price\": 10.00, \"category\": \"apple\"},{\"name\": \"Mcintosh\", \"price\": 12.00, \"category\": \"apple\"}]}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"fruits\":[{\"name\": \"Jonathan\", \"price\": 10.00, \"category\": \"apple\"},{\"name\": \"Mcintosh\", \"price\": 12.00, \"category\": \"apple\"}]}"));
 
     }
 
@@ -174,7 +173,7 @@ public class XMLMapperBuilderTest {
                 "  category = 'apple'\n" +
                 "  AND (name = 'Jonathan')";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"apples\":[\"Jonathan\", \"Mcintosh\"]}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"apples\":[\"Jonathan\", \"Mcintosh\"]}"));
 
         expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -189,7 +188,7 @@ public class XMLMapperBuilderTest {
                 "    OR name = 'Fuji'\n" +
                 "  )";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"apples\":[\"Jonathan\",\"Mcintosh\", \"Fuji\"]}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"apples\":[\"Jonathan\",\"Mcintosh\", \"Fuji\"]}"));
 
         expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -201,7 +200,7 @@ public class XMLMapperBuilderTest {
                 "  category = 'apple'\n" +
                 "  AND ()";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"apples\":[\"Mcintosh\"]}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"apples\":[\"Mcintosh\"]}"));
     }
 
     @Test
@@ -224,7 +223,7 @@ public class XMLMapperBuilderTest {
                 "  AND category = 'apple'\n" +
                 "  AND price = 100.0";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"price\": 100.0, \"category\": \"apple\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"price\": 100.0, \"category\": \"apple\"}"));
 
         expectedSql = "SELECT\n" +
                 "  name,\n" +
@@ -238,7 +237,7 @@ public class XMLMapperBuilderTest {
                 "  AND price = 500.0\n" +
                 "  AND name = 'Fuji'";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"price\": 500.0, \"category\": \"apple\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"price\": 500.0, \"category\": \"apple\"}"));
     }
 
     @Test
@@ -259,7 +258,7 @@ public class XMLMapperBuilderTest {
                 "WHERE\n" +
                 "  category = 'apple'";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("apple"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"category\": \"apple\"}"));
     }
 
     @Test
@@ -281,7 +280,7 @@ public class XMLMapperBuilderTest {
                 "  category = 'apple'\n" +
                 "  AND price > 100.00";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"category\": \"apple\", \"price\": 100.00}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"category\": \"apple\", \"price\": 100.00}"));
 
     }
 
@@ -302,7 +301,7 @@ public class XMLMapperBuilderTest {
                 "WHERE\n" +
                 "  name = 'Jonathan'";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"name\": \"Jonathan\", \"price\": 10.00, \"category\": \"apple\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"Jonathan\", \"price\": 10.00, \"category\": \"apple\"}"));
 
         expectedSql = "UPDATE\n" +
                 "  fruits\n" +
@@ -311,7 +310,7 @@ public class XMLMapperBuilderTest {
                 "WHERE\n" +
                 "  name = 'Jonathan'";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"name\": \"Jonathan\", \"category\": \"apple\"}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"Jonathan\", \"category\": \"apple\"}"));
 
         expectedSql = "UPDATE\n" +
                 "  fruits\n" +
@@ -320,7 +319,7 @@ public class XMLMapperBuilderTest {
                 "WHERE\n" +
                 "  name = 'Jonathan'";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("{\"name\": \"Jonathan\", \"price\": 10.00}"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"name\": \"Jonathan\", \"price\": 10.00}"));
 
     }
 
@@ -343,7 +342,7 @@ public class XMLMapperBuilderTest {
                 "  category = 'apple'\n" +
                 "  OR price = 200";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql(null));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), null));
     }
 
     @Test
@@ -365,6 +364,6 @@ public class XMLMapperBuilderTest {
                 "  category = 'apple'\n" +
                 "  AND price = 10.00";
 
-        Assertions.assertEquals(expectedSql, sqlSource.getSql("10.00"));
+        Assertions.assertEquals(expectedSql, sqlSource.getSql(Collections.emptyList(), "{\"price\": 10.00}"));
     }
 }

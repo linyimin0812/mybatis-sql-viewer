@@ -230,7 +230,6 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
 
         RTextScrollPane statementRuleScroll = new RTextScrollPane(statementRuleText);
         statementRuleScroll.setBorder(new EmptyBorder(JBUI.emptyInsets()));
-
         statementRulePanel.add(statementRuleScroll);
     }
 
@@ -325,7 +324,7 @@ public class MybatisSqlScannerPanel implements TabbedChangeListener {
             scanTreeResultPanel.setLayout(new BorderLayout());
             scanTreeResultPanel.add(scrollPane);
             // 默认选中第一个方法
-            if (root.getChildAt(0) != null && root.getChildAt(0).getChildAt(0) != null) {
+            if (root.getChildren().length > 0 && root.getChildAt(0) != null && root.getChildAt(0).getChildAt(0) != null) {
                 SimpleNode node = root.getChildAt(0).getChildAt(0);
                 structureTreeModel.expand(node, simpleTree, simpleTree::setSelectionPath);
                 this.treeListener.updateSqlPanel(((MethodTreeNode)node).getConfiguration());
