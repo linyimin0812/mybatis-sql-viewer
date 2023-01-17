@@ -34,3 +34,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: gradle wrapper && ./gradlew build sonarqube --info
+
+      - name: Codecov
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: curl -Os https://uploader.codecov.io/latest/linux/codecov && chmod +x codecov && ./codecov
