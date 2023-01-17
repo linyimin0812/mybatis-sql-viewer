@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.jetbrains.intellij' version '0.6.5'
     id "org.sonarqube" version "3.5.0.2730"
+    id "jacoco"
 }
 
 group 'org.linyimin'
@@ -118,6 +119,14 @@ patchPluginXml {
     """
 }
 
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
+    }
+}
+
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
