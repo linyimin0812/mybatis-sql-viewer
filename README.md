@@ -3,6 +3,10 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/18713-mybatis-sql-viewer)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![Version](https://img.shields.io/jetbrains/plugin/v/18713.svg?label=version)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![](https://sonarcloud.io/api/project_badges/measure?project=linyimin-bupt_mybatis-sql-viewer&metric=alert_status)](https://sonarcloud.io/project/overview?id=linyimin-bupt_mybatis-sql-viewer)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=linyimin-bupt_mybatis-sql-viewer&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=linyimin-bupt_mybatis-sql-viewer)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=linyimin-bupt_mybatis-sql-viewer&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=linyimin-bupt_mybatis-sql-viewer)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=linyimin-bupt_mybatis-sql-viewer&metric=bugs)](https://sonarcloud.io/summary/new_code?id=linyimin-bupt_mybatis-sql-viewer)
+
 [![codecov](https://codecov.io/gh/linyimin-bupt/mybatis-sql-viewer/branch/master/graph/badge.svg?token=HIN7SU9HH5)](https://codecov.io/gh/linyimin-bupt/mybatis-sql-viewer)
 
 [中文](README.md) |
