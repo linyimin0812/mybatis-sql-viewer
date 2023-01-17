@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies, run tests, and collect coverage
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: gradle build && pwd && ls -al && cd ./build && ls -al && cd ./reports && ls -al
+        run: gradle build && pwd && ls -al && cd ./build && ls -al && cd ./reports && ls -al && cd ./tests/ && ls -al && cd ./../../ && cd ./jacoco && ls -al
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
