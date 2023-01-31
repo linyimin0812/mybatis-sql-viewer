@@ -11,26 +11,6 @@
 [中文](README.md) |
 [ENGLISH](README_EN.md)
 
-- [简介](#简介)
-- [安装](#安装)
-- [使用](#使用)
-  - [非mybatis模式](#非mybatis模式)
-  - [mybatis模式](#mybatis模式)
-    - [mybatis-sql扫描](#mybatis-sql扫描)
-  - [sql tab: sql生成&执行&压测](#sqltab)
-    - [1. statement tab: sql生成](#1-statementtab)
-    - [2. result tab: sql执行](#2-resulttab)
-    - [3. stress tab: sql压测](#3-stresstab)
-  - [table tab: sql表&索引信息&数据mock](#tabletab)
-    - [1. schema tab: 表信息](#1-schematab)
-    - [2. index tab: 表索引信息](#2-indextab)
-    - [3. mock tab: 表数据mock](#3-mocktab)
-- [参考](#参考)
-- [Contributor](#-contributor)
-- [为项目添砖加瓦](#-为项目添砖加瓦)
-- [感谢支持](#感谢支持)
-
-
 # 简介
 
 虽然写了很久的CRUD，但是依旧觉得写好CRUD是一件非常难且麻烦的事情，以下的情况在开发过程中应该都遇到过：
