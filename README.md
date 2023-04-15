@@ -11,25 +11,26 @@
 [中文](README.md) |
 [ENGLISH](README_EN.md)
 
-# 简介
+# 1. 简介
 
 虽然写了很久的CRUD，但是依旧觉得写好CRUD是一件非常难且麻烦的事情，以下的情况在开发过程中应该都遇到过：
 
-- SQL测试好麻烦，写错了SQL字段或者表名称，修改完要重启(几分钟过去了)
-- 造数据好麻烦，特别是还存在表关联的情况，数据内容不真实，还容易超出字段长度，让人抓狂
+- SQL的编写需要细心，写错了SQL字段或者表名称，修改完要重启(几分钟过去了)
+- SQL编写好后进行测试时，造数据也好麻烦，特别是还存在表关联的情况，数据内容不真实，还容易超出字段长度，让人抓狂
 - SQL好不容易能跑了，又会有以下的疑问
   - 符不符合SQL开发规范？
-  - 是否能命中索引？
-  - 性能怎么样，是否会存在慢SQL？
-  - 日常环境数据太少，如何模拟SQL在线上运行的真实情况？
+  - 是否能命中索引？又可能命中哪个索引？
+  - 日常环境数据太少，如何模拟SQL在生产环境下运行的真实情况？
+  - 性能怎么样，最大TPS可以达到多少？数量大时是否会存在慢SQL？
+  - TP99/TP90、最大RT/平均RT、平均TPS是多少呢？
 
 对于使用Mybatis的开发者还会存在这些问题：
 
 - Mapper接口方法和XML标签不对应，修改完要重启(又几分钟过去了)
-- XML中多写了一个`,`，又没有错误提示，接口测试调用时才发现，修改完又又要重启(好多个几分钟过去了)
+- XML中多写了一个逗号或者分号，又没有错误提示，接口测试调用时才发现，修改完又又要重启(好多个几分钟过去了)
 - 这个Mapper接口对应的是哪个XML文件？找找十几秒过去了
 - 这个XMl文件对应的是哪个Mapper接口？找找十几秒又过去了
-- 这个项目中有多少个XML文件？里面是否存在慢SQL？是否都符合开发规范？
+- 这个项目中有多少个XML文件？有多少SQL语句？里面是否存在慢SQL？是否都符合开发规范？
 
 ![普通开发流程](./docs/dev_process.svg)
 
@@ -37,13 +38,23 @@
 
 ![mybatis-sql-viewer能力](./docs/mybatis-sql-viewer_function.svg)
 
+基于此插件以上的问题在**编码阶段**即可解决：
+
+- SQL的编写好麻烦，写错了SQL字段或者表名称，修改完需要重启 --> **语法校验**
+- SQL编写好后进行测试时，造数据麻烦，特别是存在表关联的情况，数据内容不真实，容易超出字段长度报错 --> **多种数据mock方式，自动关联**
+- SQL好不容易跑起来了，又会有以下的疑问：
+  - 符不符合SQL开发规范？ --> **SQL规范检查**
+  - 是否能命中索引，可能命中哪个索引？ --> **SQL索引检查&SQL执行计划**
+  - 日常环境数据量太少，如何模拟SQL在生产环境下运行的真实情况？ --> **支持大批量数据mock**
+  - 性能怎么样，最大TPS可以达到多少？数量大时是否会存在慢SQL？ --> **SQL语句压测，结果一目了然**
+
 基于此插件可以提高CRUD的效率及SQL质量，开发流程可以转换为如下模式：
 
 ![基于mybatis-sql-viewer插件的开发流程](./docs/mybatis-sql-viewer_dev_process.svg)
 
 上述的规约均来自《阿里巴巴Java开发手册》中的MySQL数据库章节。
 
-# 安装
+# 2. 安装
 
 - **IDEA中安装:**
     - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search<b>"mybatis sql viewer"</b></kbd> > <kbd>Install</kbd>
@@ -52,7 +63,7 @@
     - 在[releases](https://github.com/linyimin-bupt/mybatis-sql-viewer/releases)页面中下载最新版本的zip文件
     - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd> -> 选择下载的文件安装
 
-# 使用
+# 3. 使用
 
 **因为需要拉取数据库表的元数据信息、执行SQL，所以使用前需要配置一下数据源。**
 
@@ -63,6 +74,8 @@
 支持多数据源配置，点击「datasource」按钮即可完成数据源的创建、选择、删除、测试。
 
 ![](./docs/datasource.jpg)
+
+## 3.1 模式
 
 此插件有两种模式：mybatis模式和非mybatis模式。差别在于mybatis模式支持以下功能：
 
@@ -75,13 +88,13 @@
 - 基于mock参数将mapper接口方法的xml转换成真实SQL
 - 按照文件/项目维度扫描XML文件，并生成对应的真实SQL语句，并进行规约/索引相关校验
 
-## 非mybatis模式
+### 3.1.1 非mybatis模式
 
 将`mybatis mode`的勾选框关闭即可使用`非mybatis模式`，然后在「statement」Tab左栏手写SQL即可。
 
 ![](./docs/mybatis-mode.jpg)
 
-## mybatis模式
+### 3.1.2 mybatis模式
 
 将`mybatis mode`的勾选框选中即可使用`mybatis模式`，`mybatis模式`主要添加了mapper接口方法参数mock、文件跳转及mybatis文件扫描的功能。
 
@@ -89,17 +102,17 @@
 
 ![随机参数](./docs/param_random.jpg)
 
-### mybatis sql扫描
+### 3.1.3 mybatis sql扫描
 
 支持文件和项目两个维度扫描。
 
-1. 文件维度扫描
+#### 3.1.3.1. 文件维度扫描
 
 点击`<mapper namespace="xxx.xxx.xxx">`或者`namespace`对应的mapper接口旁边的「sql」图标即可完成文件维度mybatis sql的扫描
 
 ![文件维度扫描](./docs/scan_file.jpg)
 
-2. 项目维度
+#### 3.1.3.2 项目维度
 
 点击「mybatis sql scan」即可进行项目维度mybatis sql的扫描
 
@@ -126,21 +139,21 @@
 - error：存在错误的SQL语句，可能是SQL编写错误，参数错误，数据库连接错误等
 
 
-## 「sql」Tab
+## 3.2 SQL语句
 
-### 1. 「statement」Tab
+### 3.2.1. 语法校验&规约检查
 
 对于「非mybatis模式」需要左栏编写SQL语句，「mybatis」模式则需要在mapper接口或XML文件中点击「sql」图标生成SQL，右栏自动进行语法校验和规规约校验
 
-1. SQL语法校验
+1. **SQL语法校验**
 
 ![statement效果之语法校验](./docs/sql_statement_syntax.jpg)
 
-2. 规约校验
+2. **规约校验**
 
 ![statement效果之规约检查](./docs/sql_statement_rule.jpg)
 
-### 2. 「result」Tab
+### 3.2.2. SQL执行
 
 点击「result」tab后会自动执行「statement」Tab中的SQL语句。执行结果由3部分组成：执行信息、执行计划及执行结果。
 
@@ -150,7 +163,7 @@
 
 ![result效果](./docs/result.jpg)
 
-### 3. 「stress」Tab
+### 3.2.3. SQL压测
 
 点击「stress」Tab进行压测配置，配置页面如下：
 
@@ -192,7 +205,7 @@
 
 ![压测报告](./docs/stress_report.jpg)
 
-## 「table」Tab
+## 3.3 SQL表
 
 点击「table」Tab时会对「statement」Tab中的SQL语句进行解析，提取出表名称，然后每个表作为一个Tab。如以下语句：
 
@@ -216,21 +229,21 @@ SQL语句中包含了两个表：`CITY`和`COUNTRY`，所以会产生两个Tab�
 
 ![specify table tab](./docs/specify_table.jpg)
 
-### 1. 「schema」Tab
+### 3.3.1. 字段
 
 1. 左栏显示表的字段信息：字段名称、类型、是否可为NULL、默认值、索引、注释说明等信息
 2. 右栏显示对表进行建表规约检查的结果：如表名、字段名是否包含大写字母或特殊字符等检查
 
 ![schema tab](./docs/schema_tab.jpg)
 
-### 2. 「index」Tab
+### 3.3.2. 索引
 
 1. 左栏显示表的索引信息
 2. 右栏显示对索引进行规约检查的结果
 
 ![schema tab](./docs/schema_index.jpg)
 
-### 3. 「mock」Tab
+### 3.3.3. 数据mock
 
 mock表数据，支持批量数据mock，左栏进行mock数据类型配置，右栏显示mock结果
 
@@ -259,7 +272,7 @@ mock表数据，支持批量数据mock，左栏进行mock数据类型配置，�
 - increment：递增
 - fixed：固定值
 - regex：正则
-- none：不进行mock，生成insert语句时包含此字段
+- none：不进行mock，生成insert语句时不包含此字段
 
 
 **词库创建**
@@ -286,7 +299,7 @@ mock数据完成后，会存储主键id的范围（持久化存储到本地文�
 
 ![mock clean](./docs/mock_clean.jpg)
 
-# 参考
+# 4. 参考
 
 在实现过程中参考了许多非常优秀的项目，拷贝了很多代码，特此感谢。
 
