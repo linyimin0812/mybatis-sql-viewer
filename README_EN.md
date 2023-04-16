@@ -307,7 +307,7 @@ After the completion of mock data, the range of primary key IDs will be stored (
 
 ![mock clean](./docs/mock_clean.jpg)
 
-# 5. Configuration
+# 4. Configuration
 
 <kbd>Preferences(Settings)</kbd> > <kbd>Tools</kbd> > <kbd>Mybatis Sql Viewer</kbd>
 
