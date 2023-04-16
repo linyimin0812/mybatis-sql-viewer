@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-          gradle-version: 7.6
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
