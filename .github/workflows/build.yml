@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+          gradle-version: 7.6
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
@@ -29,7 +30,6 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
-          gradle-version: 7.6
       - name: Build and analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
