@@ -83,8 +83,8 @@ This plugin supports two modes: MyBatis mode and non-MyBatis mode. The differenc
     - Random parameters
     - Default parameters
     - Custom parameters
-- Navigate from mapper interface/method to XML file
-- Navigate from XML file to mapper interface/method
+- Navigate from mapper interface/method to XML file([Configurable](#4-Configuration))
+- Navigate from XML file to mapper interface/method([Configurable](#4-Configuration))
 - Convert mapper interface method XML to real SQL based on mock parameters
 - Scan XML files based on file/project dimensions, generate corresponding real SQL statements, and perform specification/index verification
 
@@ -307,7 +307,13 @@ After the completion of mock data, the range of primary key IDs will be stored (
 
 ![mock clean](./docs/mock_clean.jpg)
 
-# 4. Reference
+# 5. Configuration
+
+<kbd>Preferences(Settings)</kbd> > <kbd>Tools</kbd> > <kbd>Mybatis Sql Viewer</kbd>
+
+![](./docs/mybatis-sql-viewer-configuration.png)
+
+# 5. Reference
 
 Many excellent projects were referenced and much code was copied during the implementation process. I would like to express my gratitude for this.
 

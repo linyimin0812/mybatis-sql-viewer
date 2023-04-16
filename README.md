@@ -83,8 +83,8 @@
   - 随机参数
   - 默认参数
   - 自定义参数
-- mapper接口/方法跳转XML文件
-- XML文件跳转mapper接口/方法
+- mapper接口/方法跳转XML文件([可配置](#4-配置))
+- XML文件跳转mapper接口/方法([可配置](#4-配置))
 - 基于mock参数将mapper接口方法的xml转换成真实SQL
 - 按照文件/项目维度扫描XML文件，并生成对应的真实SQL语句，并进行规约/索引相关校验
 
@@ -299,7 +299,13 @@ mock数据完成后，会存储主键id的范围（持久化存储到本地文�
 
 ![mock clean](./docs/mock_clean.jpg)
 
-# 4. 参考
+# 4. 配置
+
+相关配置：<kbd>Preferences(Settings)</kbd> > <kbd>Tools</kbd> > <kbd>Mybatis Sql Viewer</kbd>
+
+![](./docs/mybatis-sql-viewer-configuration.png)
+
+# 5. 参考
 
 在实现过程中参考了许多非常优秀的项目，拷贝了很多代码，特此感谢。
 

@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'org.linyimin'
-version '2.0.0'
+version '2.0.1'
 
 sonarqube {
   properties {
@@ -46,6 +46,13 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+        <h4>2.0.1</h4>
+        <ul>
+            <li>Support for configurable file navigation</li>
+        </ul>
+        <ul>
+            <li>支持文件跳转可配置化</li>
+        </ul>
         <h4>2.0.0</h4>
         <ul>
             <li>Supports mybatis mode and non-mybatis mode</li>

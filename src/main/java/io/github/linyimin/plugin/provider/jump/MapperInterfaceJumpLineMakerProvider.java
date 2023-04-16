@@ -9,6 +9,7 @@ import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.xml.XmlTag;
 import io.github.linyimin.plugin.configuration.GlobalConfig;
 import io.github.linyimin.plugin.provider.MapperInterfaceProcessor;
+import io.github.linyimin.plugin.settings.SqlViewerSettingsState;
 import io.github.linyimin.plugin.utils.IconUtils;
 import io.github.linyimin.plugin.utils.JavaUtils;
 import org.apache.commons.collections.CollectionUtils;
@@ -27,7 +28,9 @@ public class MapperInterfaceJumpLineMakerProvider extends RelatedItemLineMarkerP
     @Override
     protected void collectNavigationMarkers(@NotNull PsiElement element, @NotNull Collection<? super RelatedItemLineMarkerInfo> result) {
 
-        if (!GlobalConfig.isMybatisMode) {
+        SqlViewerSettingsState state = SqlViewerSettingsState.getInstance();
+
+        if (!GlobalConfig.isMybatisMode || !state.fileJumpEnable) {
             return;
         }
 
