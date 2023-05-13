@@ -56,7 +56,7 @@ public class Constant {
 
     public static String SQL_STATEMENT_LOADING_PROMPT = "Loading SQL Statement...";
 
-    public static final String SOURCE_CODE = "https://github.com/linyimin-bupt/mybatis-sql-viewer";
+    public static final String SOURCE_CODE = "https://github.com/linyimin0812/mybatis-sql-viewer";
 
 
     public static final List<Report> DEFAULT_INDEX_REPORTS = Arrays.asList(

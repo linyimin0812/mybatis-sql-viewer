@@ -1,5 +1,5 @@
 [![plugin](https://img.shields.io/badge/IntelliJ%20IDEA%20Plugins-000000?logo=IntelliJ-idea&logoColor=white)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
-[![license](https://img.shields.io/github/license/linyimin-bupt/mybatis-sql-viewer)](https://github.com/linyimin-bupt/mybatis-sql-viewer)
+[![license](https://img.shields.io/github/license/linyimin0812/mybatis-sql-viewer)](https://github.com/linyimin0812/mybatis-sql-viewer)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/18713-mybatis-sql-viewer)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![Version](https://img.shields.io/jetbrains/plugin/v/18713.svg?label=version)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![](https://sonarcloud.io/api/project_badges/measure?project=linyimin-bupt_mybatis-sql-viewer&metric=alert_status)](https://sonarcloud.io/project/overview?id=linyimin-bupt_mybatis-sql-viewer)
@@ -60,7 +60,7 @@ The above conventions are all from the MySQL database chapter in the "Alibaba Ja
     - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search<b>"mybatis sql viewer"</b></kbd> > <kbd>Install</kbd>
 
 - **Manual Installation:**
-    - Download the latest version of the zip file from the [releases](https://github.com/linyimin-bupt/mybatis-sql-viewer/releases) page
+    - Download the latest version of the zip file from the [releases](https://github.com/linyimin0812/mybatis-sql-viewer/releases) page
     - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd> -> Install the downloaded file
 
 # 3. Usage
@@ -331,12 +331,12 @@ Many excellent projects were referenced and much code was copied during the impl
 
 # ✨ Contributor
 
-[<kbd> <img src="https://avatars.githubusercontent.com/u/17776713?s=48&v=4" /> </kbd>](https://github.com/linyimin-bupt)
+[<kbd> <img src="https://avatars.githubusercontent.com/u/17776713?s=48&v=4" /> </kbd>](https://github.com/linyimin0812)
 [<kbd> <img src="https://avatars.githubusercontent.com/u/12124172?s=48&v=4" /> </kbd>](https://github.com/clickear)
 
 # 🤝 Contribute to the project.
 
-Contributions, issues and feature requests! <br />Feel free to check [issues page](https://github.com/linyimin-bupt/mybatis-sql-viewer/issues).
+Contributions, issues and feature requests! <br />Feel free to check [issues page](https://github.com/linyimin0812/mybatis-sql-viewer/issues).
 
 # 🙏Thank you for your support.
 

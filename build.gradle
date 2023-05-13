@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'org.linyimin'
-version '2.0.1'
+version '2.0.2'
 
 sonarqube {
   properties {
@@ -46,6 +46,13 @@ intellij {
 }
 patchPluginXml {
     changeNotes = """
+        <h4>2.0.2</h4>
+        <ul>
+            <li>Fixing jump link error</li>
+        </ul>
+        <ul>
+            <li>修复跳转链接错误问题</li>
+        </ul>
         <h4>2.0.1</h4>
         <ul>
             <li>Support for configurable file navigation</li>

@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>org.linyimin.mybatis-sql-viewer</id>
     <name>Mybatis Sql Viewer</name>
-    <vendor email="linyimin520812@gmail.com" url="https://github.com/linyimin-bupt">linyimin</vendor>
+    <vendor email="linyimin520812@gmail.com" url="https://github.com/linyimin0812">linyimin</vendor>
 
 
     <idea-version since-build="201" />
@@ -40,7 +40,7 @@
     </ul>
 
     <br/>
-    <a href="https://github.com/linyimin-bupt/mybatis-sql-viewer">Github</a> Welcome to star(欢迎star)
+    <a href="https://github.com/linyimin0812/mybatis-sql-viewer">Github</a> Welcome to star(欢迎star)
     <br/>
     ]]></description>
 

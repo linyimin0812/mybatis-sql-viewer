@@ -1,5 +1,5 @@
 [![plugin](https://img.shields.io/badge/IntelliJ%20IDEA%20Plugins-000000?logo=IntelliJ-idea&logoColor=white)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
-[![license](https://img.shields.io/github/license/linyimin-bupt/mybatis-sql-viewer)](https://github.com/linyimin-bupt/mybatis-sql-viewer)
+[![license](https://img.shields.io/github/license/linyimin0812/mybatis-sql-viewer)](https://github.com/linyimin0812/mybatis-sql-viewer)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/18713-mybatis-sql-viewer)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![Version](https://img.shields.io/jetbrains/plugin/v/18713.svg?label=version)](https://plugins.jetbrains.com/plugin/18713-mybatis-sql-viewer)
 [![](https://sonarcloud.io/api/project_badges/measure?project=linyimin-bupt_mybatis-sql-viewer&metric=alert_status)](https://sonarcloud.io/project/overview?id=linyimin-bupt_mybatis-sql-viewer)
@@ -60,7 +60,7 @@
     - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search<b>"mybatis sql viewer"</b></kbd> > <kbd>Install</kbd>
 
 - **手动安装:**
-    - 在[releases](https://github.com/linyimin-bupt/mybatis-sql-viewer/releases)页面中下载最新版本的zip文件
+    - 在[releases](https://github.com/linyimin0812/mybatis-sql-viewer/releases)页面中下载最新版本的zip文件
     - <kbd>Preferences(Settings)</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd> -> 选择下载的文件安装
 
 # 3. 使用
@@ -323,14 +323,14 @@ mock数据完成后，会存储主键id的范围（持久化存储到本地文�
 
 # ✨ Contributor
 
-[<kbd> <img src="https://avatars.githubusercontent.com/u/17776713?s=48&v=4" /> </kbd>](https://github.com/linyimin-bupt)
+[<kbd> <img src="https://avatars.githubusercontent.com/u/17776713?s=48&v=4" /> </kbd>](https://github.com/linyimin0812)
 [<kbd> <img src="https://avatars.githubusercontent.com/u/12124172?s=48&v=4" /> </kbd>](https://github.com/clickear)
 
 
 
 # 🤝 为项目添砖加瓦
 
-欢迎提出 Contributions, issues 与 feature requests!<br />随时查看 [issues page](https://github.com/linyimin-bupt/mybatis-sql-viewer/issues).
+欢迎提出 Contributions, issues 与 feature requests!<br />随时查看 [issues page](https://github.com/linyimin0812/mybatis-sql-viewer/issues).
 
 # 🙏感谢支持
 
